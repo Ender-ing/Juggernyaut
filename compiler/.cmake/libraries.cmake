@@ -22,7 +22,7 @@ endfunction()
 
 # Create a library from / (the root directory of /compiler)
 add_library(JuggernyautBaseLibrary SHARED)
-target_sources_search(JuggernyautBaseLibrary ${JUG_SOURCE_DIR}/*.base.cpp FALSE)
+target_sources_search(JuggernyautBaseLibrary ${JUG_SOURCE_DIR}/base.*.cpp FALSE)
 # Expose library exports
 target_compile_definitions(JuggernyautBaseLibrary PRIVATE JUG_BASE_LIBRARY_EXPORTS)
 # Attach manifest data
