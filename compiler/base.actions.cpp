@@ -18,10 +18,11 @@
 // Shorten the syntax for defining an action
 #define DEFINE_ACTION(FLAG1, FLAG2, DESCRIPTION, ARGS, FUNCTION){   \
     {                                                               \
-        "-" FLAG1, "--" FLAG2,                                      \
-        #DESCRIPTION,                                               \
-        #ARGS                                                       \
+        "-" FLAG1,                                                  \
+        "--" FLAG2,                                                 \
+        DESCRIPTION                                                 \
     },                                                              \
+    ARGS,                                                           \
     [](const ActionNextFunction getNextArg) FUNCTION                \
 }                                                                   \
 
@@ -41,11 +42,7 @@ namespace Base {
         //  ]
         //  function (true - normal -> continue, false - error -> terminate) // Must always return a boolean value
         // ]
-        std::unordered_map<
-            ActionInfo,
-            ActionFunction,
-            ActionInfoHash_internal
-            > map = {
+        const ActionsList actions = {
             /*
             {
                 {"-frc-stdo", "--force-standard-output"},
@@ -57,7 +54,7 @@ namespace Base {
             DEFINE_ACTION(
                 "sf", "strict-flags",
                 "Terminate process when unknown flags are detected.",
-                "",
+                {},
                 {
                     REPORT(Comms::START_REPORT, Comms::ACTION_REPORT, "Enabled 'strict flags' mode!", Comms::END_REPORT);
 
@@ -70,7 +67,7 @@ namespace Base {
             DEFINE_ACTION(
                 "p", "protocol",
                 "Set the data output protocol.",
-                "<mode> - c/console (console, default) | s/server (language server)",
+                { "<mode> - c/console (console, default) | s/server (language server)" },
                 {
                     // Get the next argument and save it!
                     std::string protocolText;
@@ -113,7 +110,7 @@ namespace Base {
             DEFINE_ACTION(
                 "v", "version",
                 "Get the plain version string. (No extra console output will be made as long as no errors occur)",
-                "",
+                {},
                 {
                     REPORT(Comms::START_REPORT, Comms::NORMAL_REPORT, Info::version, Comms::END_REPORT);
 
@@ -127,7 +124,7 @@ namespace Base {
             DEFINE_ACTION(
                 "i", "input",
                 "Set a path for the main user input file.",
-                "<path>",
+                { "<path>" },
                 {
                     // Get the next argument and save it!
                     bool success = getNextArg(Base::InitialConfigs::mainPath, true);
@@ -163,7 +160,7 @@ namespace Base {
             DEFINE_ACTION(
                 "l", "license",
                 "Get license text.",
-                "",
+                {},
                 {
                     // Report action
                     REPORT(Comms::START_REPORT, Comms::ACTION_REPORT, "Printing license text!",
@@ -191,13 +188,31 @@ namespace Base {
             )
         };
 
+        // The help menu!
+        void printHelpMenu() {
+            REPORT(Comms::START_REPORT, Comms::NORMAL_REPORT, "Options:\n");
+            for (int i = 0; i < actions.size(); i++) {
+                REPORT("    ", actions[i].info[0], "/", actions[i].info[1], " \t ", actions[i].info[2]);
+                for (int j = 0; j < actions[i].input.size(); j++) {
+                    REPORT("\n    \t\t\t\t", actions[i].input[j]);
+                }
+                REPORT("\n");
+            }
+            REPORT(Comms::END_REPORT);
+        }
+
         // Get an action function using one flag
         // [true - success, false - failure]
         bool getActionFunctionByFlag(const std::string& flag, ActionFunction &store) {
-            for (const auto& pair : map) {
-                if (pair.first[0] == flag || pair.first[1] == flag) {
-                    store = pair.second;
-                    return true;
+            if (flag == "-h" || flag == "--help") {
+                printHelpMenu();
+                return true;
+            } else {
+                for (int i = 0; i < actions.size(); i++) {
+                    if (actions[i].info[0] == flag || actions[i].info[1] == flag) {
+                        store = actions[i].func;
+                        return true;
+                    }
                 }
             }
             return false;
