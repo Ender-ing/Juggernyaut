@@ -1,0 +1,73 @@
+# MIT License
+
+This MIT License applies to:
+
+- The Juggernyaut Compiler
+    (All the source code, libraries, and executables
+    directly related to translating Juggernyaut code into target code)
+- The Juggernyaut programming language
+    (Encompassing the aggregation of the syntax, semantics, and features of the
+    language itself)
+- The documentation of the Juggernyaut programming language
+    (Any materials created by Ender-ing explaining the concepts, keywords, and
+    overall structure of the language)
+- The extension(s) made by Ender-ing to help users with the use of the
+    Juggernyaut programming language
+
+but DOES NOT extend to any software or works created using the Juggernyaut
+programming language.
+
+As such, when reading the term "Software", one should
+assume all of the aforementioned included elements to be part of said term.
+
+Copyright (c) 2026 Ender.ing (<https://github.com/Ender-ing>),
+    Endering (<https://marketplace.visualstudio.com/publishers/Endering>),
+    0xENDER (<https://github.com/0xENDER>)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Warning Against Harmful Use
+
+The use of the Software and any of its outputs for any purpose that could cause
+harm to others, including but not limited to malicious activities, illegal
+activities, discriminatory or hateful activities, or activities that violate
+the rights of others is strongly discouraged.
+
+Responsibility for any negative consequences that may arise from the misuse of
+this Software and any of its outputs solely falls on the actively engaged
+parties.
+
+## Contribution Statement
+
+Any contributions made to the Software, including but not limited to patches,
+bug fixes, enhancements, or new features, are assumed to be made under the
+terms of the MIT License and other conditions included in this document, unless
+the contributor explicitly states otherwise in the Software's source code.
+
+By contributing to the Software, you represent that you have the right to
+contribute your code and that your contribution does not violate any
+third-party rights, including but not limited to copyright, patent, or
+trademark rights.
+
+If you are contributing code that is subject to a different license, please
+clearly indicate the license in your contribution and provide any necessary
+permissions for its use.
+
+Any contributions made without explicit statements are assumed to fall under
+this license!

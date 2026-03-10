@@ -1,0 +1,28 @@
+1 VERSIONINFO
+FILEVERSION @IN_BIN_MAJOR@,@IN_BIN_MINOR@,@IN_BIN_PATCH@,@IN_BIN_EXTRA@
+PRODUCTVERSION @IN_MAIN_BIN_MAJOR@,@IN_MAIN_BIN_MINOR@,@IN_MAIN_BIN_PATCH@,@IN_MAIN_BIN_EXTRA@
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L // VOS_NT_WINDOWS32
+FILETYPE 0x1L // VFT_APP
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0" // U.S. English, Unicode
+        BEGIN
+            VALUE "CompanyName", "Ender-ing GitHub Organisation"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Ender-ing GitHub Organisation"
+            VALUE "FileDescription", "@IN_BIN_DESCRIPTION@"
+            VALUE "FileVersion", "@IN_BIN_VERSION_NAME@"
+            VALUE "InternalName", "@IN_BIN_NAME@"
+            VALUE "OriginalFilename", "@IN_BIN_NAME@"
+            VALUE "ProductName", "Juggernyaut"
+            VALUE "ProductVersion", "@IN_MAIN_BIN_VERSION_NAME@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252 // U.S. English, Windows ANSI
+    END
+END
