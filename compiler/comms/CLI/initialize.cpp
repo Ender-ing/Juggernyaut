@@ -22,7 +22,7 @@ namespace Comms {
             /**
              *   ,-.       _,---._ __  / \
              *  /  )    .-'       `./ /   \
-             * (  (   ,'            `/    /|  juggernyaut v???
+             * (  (   ,'            `/    /|  Juggernyaut v???
              *  \  `-"             \'\   / |
              *   `.              ,  \ \ /  |  Copyright (C) 2025 Ender-ing GitHub Organisation
              *    /`.          ,'-`----Y   |
@@ -38,7 +38,7 @@ namespace Comms {
             std::cout << color(" /  )    .-'       `./", Color::golden_rod)
                 << color(" /   \\", Color::light_sea_green) << std::endl;
             std::cout << color("(  (   ,'            `", Color::golden_rod)
-                << color("/    /|  juggernyaut ", Color::light_sea_green) << color("v", Color::blue_violet)
+                << color("/    /|  Juggernyaut ", Color::light_sea_green) << color("v", Color::blue_violet)
                 << color(MAIN_TARGET_BINARY_VERSION, Color::blue_violet) << std::endl;
             std::cout << color(" \\  `-\"             \\'", Color::golden_rod)
                 << color("\\   / |", Color::light_sea_green) << std::endl;
