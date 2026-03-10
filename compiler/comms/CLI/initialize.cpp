@@ -24,7 +24,7 @@ namespace Comms {
              *  /  )    .-'       `./ /   \
              * (  (   ,'            `/    /|  Juggernyaut v???
              *  \  `-"             \'\   / |
-             *   `.              ,  \ \ /  |  Copyright (C) 2025 Ender-ing GitHub Organisation
+             *   `.              ,  \ \ /  |  Copyright (C) 2026 Ender-ing GitHub Organisation
              *    /`.          ,'-`----Y   |
              *   (            ;        |   '
              *   |  ,-.    ,-'         |  /
@@ -43,7 +43,7 @@ namespace Comms {
             std::cout << color(" \\  `-\"             \\'", Color::golden_rod)
                 << color("\\   / |", Color::light_sea_green) << std::endl;
             std::cout << color("  `.              ,  \\", Color::golden_rod)
-                << color(" \\ /  |  Copyright (C) 2025 Ender-ing GitHub Organisation", Color::light_sea_green)
+                << color(" \\ /  |  Copyright (C) 2026 Ender-ing GitHub Organisation", Color::light_sea_green)
                 << std::endl;
             std::cout << color("   /`.          ,'", Color::golden_rod) << color("-", Color::light_sea_green)
                 << color("`", Color::golden_rod) << color("----Y   |", Color::light_sea_green) << std::endl;
