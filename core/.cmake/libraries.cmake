@@ -2,24 +2,6 @@
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS ON)
 
-# Files search
-function(target_sources_search TARGET FILE_PATHS IS_RECURSIVE)
-    # Choose search type
-    if(IS_RECURSIVE)
-        file(GLOB_RECURSE SEARCH_FILES ${FILE_PATHS})
-    else()
-        file(GLOB SEARCH_FILES ${FILE_PATHS})
-    endif()
-    # Add files to the target's sources
-    foreach(file_path ${SEARCH_FILES})
-        message(STATUS "[BUILD] Adding '${TARGET}' target source: '${file_path}'")
-        target_sources(${TARGET}
-            PRIVATE
-            ${file_path}
-        )
-    endforeach()
-endfunction()
-
 # Create a library from / (the root directory of /compiler)
 add_library(JuggernyautBaseLibrary SHARED)
 target_sources_search(JuggernyautBaseLibrary ${JUG_CORE_SOURCE_DIR}/base.*.cpp FALSE)

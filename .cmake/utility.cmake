@@ -1,3 +1,21 @@
+# Files search
+function(target_sources_search TARGET FILE_PATHS IS_RECURSIVE)
+    # Choose search type
+    if(IS_RECURSIVE)
+        file(GLOB_RECURSE SEARCH_FILES ${FILE_PATHS})
+    else()
+        file(GLOB SEARCH_FILES ${FILE_PATHS})
+    endif()
+    # Add files to the target's sources
+    foreach(file_path ${SEARCH_FILES})
+        message(STATUS "[BUILD] Adding '${TARGET}' target source: '${file_path}'")
+        target_sources(${TARGET}
+            PRIVATE
+            ${file_path}
+        )
+    endforeach()
+endfunction()
+
 # .ini value reader
 function(get_ini_value INI_FILE INI_SECTION KEY OUTPUT_VARIABLE)
     # Get file contents
