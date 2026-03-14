@@ -19,15 +19,14 @@ options {
 
 //// Parser Rules
 
-start
-    :   (
-            expression (SYM_NEWLINE | SYM_SEMICOLON)+
-            |
-            (SYM_NEWLINE | SYM_SEMICOLON)+
-        )* EOF
-    ; /* This is the start scope! */
+program
+    : SYM_SEMICOLON*
+        (expr SYM_SEMICOLON+)*
+        EOF
+    ; /* This is the initial scope in a file! */
 
 // Expressions
-expression
-    : TMP //TMP
-    ; /* All supported expressions */
+expr
+    : TMP
+    | TMP2
+    ;

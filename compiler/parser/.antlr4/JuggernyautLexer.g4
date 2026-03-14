@@ -18,3 +18,6 @@ import LexerIgnores, LexerSymbols;
 TMP
     : 'TMP'
     ;
+TMP2
+    : 'TMP2'
+    ;

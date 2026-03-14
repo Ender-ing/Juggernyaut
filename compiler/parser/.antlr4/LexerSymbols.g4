@@ -13,11 +13,6 @@ options {
     language=Cpp;
 }
 
-// New lines
-SYM_NEWLINE
-    : [\n]
-    ; // Newline characters need to have their own tokens!
-
 SYM_SEMICOLON
     : ';'
     ;
