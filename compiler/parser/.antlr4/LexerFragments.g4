@@ -1,6 +1,6 @@
 /**
  *
- * This is the ANTLR grammar file for the PolarFrankie Lexer!
+ * This is the ANTLR grammar file for the Juggernyaut Lexer!
  *
  * (Fragments)
  *
