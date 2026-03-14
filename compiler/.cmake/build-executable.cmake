@@ -1,7 +1,7 @@
 # Add executable and include relevant files
 message(STATUS "[BUILD] Adding executable target 'JuggernyautCompiler'...")
 add_executable(
-    JuggernyautCompiler ${JUG_MAIN_CPP_PATH}
+    JuggernyautCompiler ${JUG_CORE_MAIN_CPP_PATH}
 )
 
 # Handle dynamic libraries
@@ -9,7 +9,7 @@ target_link_directories(JuggernyautCompiler PRIVATE "$<TARGET_FILE_DIR:Juggernya
 
 # Attach manifest data
 # The first use of the "attach_manifest_data" function must be for the main executable!
-attach_manifest_data(JuggernyautCompiler)
+attach_manifest_data(JuggernyautCompiler ${JUG_CORE_MANIFEST_FILE})
 
 # Re-do symbolic linking (POST BUILD)
 manage_symbolic_links(JuggernyautCompiler "jug")
@@ -21,7 +21,7 @@ add_internal_target_cxx_flags(JuggernyautCompiler FALSE)
 #
 
 # Include project libraries
-include(${JUG_CMAKE_DIR}/libraries.cmake)
+include(${JUG_CORE_CMAKE_DIR}/libraries.cmake)
 
 # Link C++ libraries
 # Basic in-house libraries

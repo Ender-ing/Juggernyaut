@@ -22,11 +22,11 @@ endfunction()
 
 # Create a library from / (the root directory of /compiler)
 add_library(JuggernyautBaseLibrary SHARED)
-target_sources_search(JuggernyautBaseLibrary ${JUG_SOURCE_DIR}/base.*.cpp FALSE)
+target_sources_search(JuggernyautBaseLibrary ${JUG_CORE_SOURCE_DIR}/base.*.cpp FALSE)
 # Expose library exports
 target_compile_definitions(JuggernyautBaseLibrary PRIVATE JUG_BASE_LIBRARY_EXPORTS)
 # Attach manifest data
-attach_manifest_data(JuggernyautBaseLibrary)
+attach_manifest_data(JuggernyautBaseLibrary ${JUG_CORE_MANIFEST_FILE})
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautBaseLibrary FALSE)
 # Link other libraries to the library
@@ -37,11 +37,11 @@ target_link_libraries(JuggernyautBaseLibrary PUBLIC JuggernyautCommsLibrary)
 
 # Create a library from /comms
 add_library(JuggernyautCommsLibrary SHARED)
-target_sources_search(JuggernyautCommsLibrary ${JUG_SOURCE_DIR}/comms/*.cpp TRUE)
+target_sources_search(JuggernyautCommsLibrary ${JUG_CORE_SOURCE_DIR}/comms/*.cpp TRUE)
 # Expose library exports
 target_compile_definitions(JuggernyautCommsLibrary PRIVATE JUG_COMMS_LIBRARY_EXPORTS)
 # Attach manifest data
-attach_manifest_data(JuggernyautCommsLibrary)
+attach_manifest_data(JuggernyautCommsLibrary ${JUG_CORE_MANIFEST_FILE})
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCommsLibrary FALSE)
 # Link other libraries to the library
@@ -50,11 +50,11 @@ target_link_libraries(JuggernyautCommsLibrary PUBLIC fmt::fmt)
 
 # Create a library from /common
 add_library(JuggernyautCommonLibrary SHARED)
-target_sources_search(JuggernyautCommonLibrary ${JUG_SOURCE_DIR}/common/*.cpp TRUE)
+target_sources_search(JuggernyautCommonLibrary ${JUG_CORE_SOURCE_DIR}/common/*.cpp TRUE)
 # Expose library exports
 target_compile_definitions(JuggernyautCommonLibrary PRIVATE JUG_COMMON_LIBRARY_EXPORTS)
 # Attach manifest data
-attach_manifest_data(JuggernyautCommonLibrary)
+attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE})
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
 
@@ -63,11 +63,11 @@ add_library(JuggernyautParserLibrary SHARED
     ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS} # ANTLR4
     ${ANTLR_JuggernyautGrammarParser_CXX_OUTPUTS} # ANTLR4
 )
-target_sources_search(JuggernyautParserLibrary ${JUG_SOURCE_DIR}/parser/*.cpp TRUE)
+target_sources_search(JuggernyautParserLibrary ${JUG_CORE_SOURCE_DIR}/parser/*.cpp TRUE)
 # Expose library exports
 target_compile_definitions(JuggernyautParserLibrary PRIVATE JUG_PARSER_LIBRARY_EXPORTS)
 # Attach manifest data
-attach_manifest_data(JuggernyautParserLibrary)
+attach_manifest_data(JuggernyautParserLibrary ${JUG_CORE_MANIFEST_FILE})
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautParserLibrary TRUE)
 # ANTLR4

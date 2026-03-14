@@ -114,17 +114,17 @@ else()
         COMMAND ${GIT_PATCH_EXECUTABLE}
           --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/CMakeLists.txt
-            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
+            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
           || true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
-            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
+            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
           || true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
-            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
+            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
           || true
       # CUSTOM MODIFICATIONS>
       BUILD_COMMAND ""

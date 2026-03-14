@@ -100,11 +100,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${JUG_BINARY_DIR}/Release/${JUG_BINAR
 
 # Attach manifest.ini info to targets!
 # (Only supports executables and dynamic libraries!)
-function(attach_manifest_data TARGET)
+function(attach_manifest_data TARGET MANIFEST)
     message(STATUS "[BUILD] Attaching manifest data to target: ${TARGET}")
     # Set versioning info
-    get_ini_value(${JUG_CORE_MANIFEST_FILE} "TARGET:${TARGET}" "VERSION" INI_VERSION)
-    #get_ini_value(${JUG_CORE_MANIFEST_FILE} "TARGET:${TARGET}" "SOVERSION" INI_SOVERSION)
+    get_ini_value(${MANIFEST} "TARGET:${TARGET}" "VERSION" INI_VERSION)
+    #get_ini_value(${MANIFEST} "TARGET:${TARGET}" "SOVERSION" INI_SOVERSION)
 
     # Update target info
     set_target_properties(${TARGET} PROPERTIES # THIS DOESN'T WORK!
@@ -136,7 +136,7 @@ function(attach_manifest_data TARGET)
     list(GET version_list 1 IN_BIN_MINOR)
     list(GET version_list 2 IN_BIN_PATCH)
     list(GET version_list 3 IN_BIN_EXTRA)
-    get_ini_value(${JUG_CORE_MANIFEST_FILE} "TARGET:${TARGET}" "DESCRIPTION" IN_BIN_DESCRIPTION)
+    get_ini_value(${MANIFEST} "TARGET:${TARGET}" "DESCRIPTION" IN_BIN_DESCRIPTION)
     set(IN_BIN_VERSION_NAME ${INI_VERSION})
 
     # Get target type
