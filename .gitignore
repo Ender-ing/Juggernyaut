@@ -1,4 +1,4 @@
-*/.build
-*/.deps
-*/.dist
+.build
+.deps
+.dist
 .antlr
