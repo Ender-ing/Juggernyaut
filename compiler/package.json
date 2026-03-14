@@ -1,0 +1,19 @@
+{
+    "scripts": {
+        "build-cmake-win-32": "cd ../.build && cmake ../compiler -DCMAKE_BUILD_TYPE=Release -A Win32",
+        "build-cmake-win-64": "cd ../.build && cmake ../compiler -DCMAKE_BUILD_TYPE=Release -A x64",
+        "build-cmake-lix-32": "cd ../.build && cmake ../compiler -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x86",
+        "build-cmake-lix-64": "cd ../.build && cmake ../compiler -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x64",
+        "build-binary": "cd ../.build && cmake --build . --config Release --parallel 3",
+        "build-base": "cd ../.build && cmake --build . --config Release --parallel 3 --target FrankieBaseLibrary",
+        "build-common": "cd ../.build && cmake --build . --config Release --parallel 3 --target FrankieCommonLibrary",
+        "build-comms": "cd ../.build && cmake --build . --config Release --parallel 3 --target FrankieCommsLibrary",
+        "build-parser": "cd ../.build && cmake --build . --config Release --parallel 3 --target FrankieParserLibrary",
+        "debug-build-cmake": "cd ../.build && cmake ../compiler -DCMAKE_BUILD_TYPE=Debug",
+        "debug-build-binary": "cd ../.build && cmake --build . --config Debug",
+        "win-clean": "rd /s /q ../.build && rd /s /q .dist",
+        "lix-clean": "rm -f -r ../.build && rm -f -r .dist",
+        "win64": "cd .. && mkdir .build && cd compiler && npm run build-cmake-win-64 && npm run build-binary",
+        "lix64": "cd .. && mkdir .build && cd compiler && npm run build-cmake-lix-64 && npm run build-binary"
+    }
+}
