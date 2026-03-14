@@ -1,4 +1,11 @@
-*/.build
-*/.deps
-*/.dist
+# NodeJS
+node_modules
+# VSCode Extension
+extensions/VSCode/scripts/*.js
+extensions/VSCode/LICENSE
+*.vsix
+
+.build
+.deps
+.dist
 .antlr

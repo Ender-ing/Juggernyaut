@@ -1,6 +1,6 @@
 # Basic info
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-project(juggernyaut_compiler)
+project(juggernyaut_server)
 #enable_testing()
 
 # Stop build when errors occur
@@ -16,19 +16,19 @@ set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.deps)
 set(JUG_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.dist)
 
 # Directories
-set(JUG_COMPILER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
-set(JUG_COMPILER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(JUG_COMPILER_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
-set(JUG_COMPILER_MAIN_CPP_PATH ${JUG_COMPILER_SOURCE_DIR}/main.cpp)
+set(JUG_SERVER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
+set(JUG_SERVER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(JUG_SERVER_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
+#set(JUG_SERVER_MAIN_CPP_PATH ${JUG_SERVER_SOURCE_DIR}/main.cpp)
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
-info("[START] Configuring Juggernyaut Compiler...")
+info("[START] Configuring Juggernyaut Language Server...")
 
 # CMake modules path
 set(CMAKE_MODULE_PATH
     # CMake files folder
     ${JUG_CMAKE_DIR}
-    ${JUG_COMPILER_CMAKE_DIR}
+    ${JUG_SERVER_CMAKE_DIR}
     # Build folder
     ${CMAKE_BINARY_DIR}
     # Append existing paths
@@ -39,7 +39,4 @@ set(CMAKE_MODULE_PATH
 include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Manage dependencies
-include(${JUG_COMPILER_CMAKE_DIR}/dependencies.cmake)
-
-# Build the compiler executable!
-include(${JUG_COMPILER_CMAKE_DIR}/build-executable.cmake)
+include(${JUG_SERVER_CMAKE_DIR}/dependencies.cmake)

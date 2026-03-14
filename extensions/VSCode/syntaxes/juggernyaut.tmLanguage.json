@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Juggernyaut",
+  "scopeName": "source.juggernyaut",
+  "patterns": [
+    {
+      "include": "#root-order"
+    }
+  ],
+  "repository": {
+    "root-order": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#keywords"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.documentation.juggernyaut",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": [
+            {
+              "include": "#comment-highlights"
+            }
+          ]
+        },
+        {
+          "name": "comment.line.double-slash.juggernyaut",
+          "begin": "//",
+          "end": "\\\n",
+          "patterns": [
+            {
+              "include": "#comment-highlights"
+            }
+          ]
+        }
+      ]
+    },
+    "comment-highlights": {
+      "patterns": [
+        {
+          "name": "comment.highlight.warning.juggernyaut",
+          "match": "(?<![^\\s])(@!.+)(?=\\n)",
+          "captures": {
+            "1": {
+              "name": "invalid.warning.juggernyaut"
+            }
+          }
+        },
+        {
+          "name": "comment.highlight.title.juggernyaut",
+          "match": "(?<![^\\s])(@[^\\s]+)",
+          "captures": {
+            "1": {
+              "name": "markup.inserted.juggernyaut"
+            }
+          }
+        },
+        {
+          "name": "comment.highlight.escape.juggernyaut",
+          "begin": "{(?=[^\\n]*\\}[^\\n]*)",
+          "end": "}",
+          "captures": {
+            "0": {
+              "name": "markup.italic.juggernyaut"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#root-order"
+            },
+            {
+              "name": "markup.italic.juggernyaut",
+              "match": "[^\\n]+?"
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.logic.juggernyaut",
+          "match": "\\b(TMP|TMP2)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.juggernyaut",
+          "match": ";"
+        }
+      ]
+    }
+  }
+}

@@ -16,30 +16,37 @@ set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.deps)
 set(JUG_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.dist)
 
 # Directories
-set(JUG_COMPILER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
-set(JUG_COMPILER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(JUG_COMPILER_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
-set(JUG_COMPILER_MAIN_CPP_PATH ${JUG_COMPILER_SOURCE_DIR}/main.cpp)
+set(JUG_CORE_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
+set(JUG_CORE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(JUG_CORE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
-info("[START] Configuring Juggernyaut Compiler...")
+info("[START] Configuring Juggernyaut Core...")
 
 # CMake modules path
 set(CMAKE_MODULE_PATH
     # CMake files folder
     ${JUG_CMAKE_DIR}
-    ${JUG_COMPILER_CMAKE_DIR}
+    ${JUG_CORE_CMAKE_DIR}/ANTLR4
+    ${JUG_CORE_CMAKE_DIR}
     # Build folder
     ${CMAKE_BINARY_DIR}
     # Append existing paths
     ${CMAKE_MODULE_PATH}
 )
 
+# ANTLR4 files generation configuration
+set(JUG_ANTLR4_LEXER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautLexer.g4)
+set(JUG_ANTLR4_PARSER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautParser.g4)
+
 # CMake functions & macros
 include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Manage dependencies
-include(${JUG_COMPILER_CMAKE_DIR}/dependencies.cmake)
+include(${JUG_CORE_CMAKE_DIR}/dependencies.cmake)
 
-# Build the compiler executable!
-include(${JUG_COMPILER_CMAKE_DIR}/build-executable.cmake)
+# Generate ANTLR4
+include(${JUG_CORE_CMAKE_DIR}/ANTLR4-gen.cmake)
+
+# Generate Core libraries
+include(${JUG_CORE_CMAKE_DIR}/libraries.cmake)

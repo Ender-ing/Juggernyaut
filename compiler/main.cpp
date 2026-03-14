@@ -7,18 +7,18 @@
 #include <fstream>
 
 // Common headers
-#include "common/headers.hpp"
-#include "common/debug.hpp"
+#include "../core/common/headers.hpp"
+#include "../core/common/debug.hpp"
 
 // CLI/LSP
-#include "comms/comms.hpp"
+#include "../core/comms/comms.hpp"
 
 // Parser
-#include "parser/parser.hpp"
+#include "../core/parser/parser.hpp"
 
 // Base
-#include "base.config.hpp"
-#include "base.info.hpp"
+#include "../core/base.config.hpp"
+#include "../core/base.info.hpp"
 
 int main (int argc, const char *argv[]) {
     // Test for memory leaks
