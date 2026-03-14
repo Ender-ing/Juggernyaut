@@ -1,0 +1,107 @@
+{
+    "name": "juggernyaut",
+    "main": "scripts/extension.js",
+    "browser": "scripts/extension.light.js",
+    "displayName": "Juggernyaut",
+    "description": "All you need to start working with the J command programming language!",
+    "version": "0.0.1",
+    "preview": true,
+    "engines": {
+        "vscode": "^1.94.0"
+    },
+    "publisher": "Endering",
+    "contributes": {
+        "configurationDefaults": {
+            "[juggernyaut]": {
+                "editor.maxTokenizationLineLength": 2500,
+                "editor.formatOnSave": true,
+                "editor.formatOnType": true
+            },
+            "files.associations": {
+                "*.jug": "juggernyaut"
+            }
+        },
+        "languages": [
+            {
+                "id": "juggernyaut",
+                "aliases": [
+                    "Juggernyaut",
+                    "Jug"
+                ],
+                "extensions": [
+                    ".jug"
+                ],
+                "formatter": {
+                    "scheme": "file",
+                    "language": "juggernyaut"
+                },
+                "configuration": "./configurations/juggernyaut-language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "juggernyaut",
+                "scopeName": "source.juggernyaut",
+                "path": "./syntaxes/juggernyaut.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "juggernyaut",
+                "path": "./snippets/juggernyaut.code-snippets.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "juggernyaut.docs",
+                "title": "Check the latest Juggernyaut documentation!",
+                "category": "Juggernyaut"
+            }
+        ],
+        "files": [
+            {
+                "language": "juggernyaut",
+                "scheme": "file",
+                "pattern": "**/*.jug"
+            }
+        ]
+    },
+    "activationEvents": [
+        "onLanguage:juggernyaut",
+        "workspaceContains:**/*.jug"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Ender-ing/juggernyaut.git"
+    },
+    "homepage": "https://ender.ing/",
+    "categories": [
+        "Programming Languages",
+        "Snippets",
+        "Language Packs",
+        "Formatters"
+    ],
+    "keywords": [
+        "jug",
+        "juggernyaut",
+        "programming language",
+        "general programming language"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "vsce-package": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/supplements/VSCode-Extension",
+        "win-copy-license": "xcopy /y ..\\..\\LICENSE .",
+        "lix-copy-license": "cp ../../LICENSE .",
+        "win-delete-vsix": "del juggernyaut*.vsix",
+        "lix-delete-vsix": "rm -f juggernyaut*.vsix",
+        "win-delete-license": "del LICENSE",
+        "lix-delete-license": "rm -f LICENSE",
+        "win-package": "npm run win-delete-vsix && npm run win-delete-license && npm run win-copy-license && npm run build && npm run vsce-package && npm run win-delete-license",
+        "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run vsce-package && npm run lix-delete-license"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.94.0",
+        "@vscode/vsce": "^3.2.1",
+        "typescript": "^5.6.3"
+    }
+}

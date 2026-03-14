@@ -1,0 +1,72 @@
+{
+    "languageId": "polarfrankie",
+    "comments": {
+        "lineComment": ";;",
+        "blockComment": [";;?", "?;;"]
+    },
+    "brackets": [
+        ["(", ")"]
+    ],
+    "autoClosingPairs": [
+        ["(", ")"],
+        {
+            "open": "\"",
+            "close": "\"",
+            "notIn": ["string"]
+        },
+        {
+            "open": ";;?",
+            "close": "?;;",
+            "notIn": ["string"]
+        }
+    ],
+    "surroundingPairs": [
+        ["(", ")"],
+        ["\"", "\""]
+    ],
+    "autoCloseBefore": ";:.,=) \n\t\n",
+    "folding": {
+        "markers": {
+            "start": "^\\s*//\\s*#?region\\b",
+            "end": "^\\s*//\\s*#?endregion\\b"
+        }
+    },
+    "onEnterRules": [
+        {
+            // e.g. ;;? | ?;;
+            "beforeText": {
+                "pattern": "^\\s*;;\\?$"
+            },
+            "afterText": {
+                "pattern": "^\\s*\\?;;$"
+            },
+            "action": {
+                "indent": "none",
+                "appendText": " ;  \n"
+            }
+        },
+        {
+            // e.g. ;;? ...|
+            "beforeText": {
+                "pattern": "(^\\s*;;\\?(?!\\?)([^\\?]|\\?(?!;;))*$)"
+            },
+            "action": {
+                "indent": "none",
+                "appendText": " ;  "
+            }
+        },
+        {
+            // e.g.  ;  ...|
+            "beforeText": {
+                "pattern": "^(\\t|[ ])*[ ];([ ]([^;]|(?<!\\?);;)*)?$"
+            },
+            "previousLineText": {
+                "pattern": "(?=^(\\s*(;;\\?|;)).*)(?=(?!(\\s*\\?;;)))"
+            },
+            "action": {
+                "indent": "none",
+                "appendText": ";  "
+            }
+        }
+    ]
+}

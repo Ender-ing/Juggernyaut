@@ -1,0 +1,19 @@
+{
+    "DocumentationComment": {
+		"prefix": ["/**", "cd", "doc"],
+		"body": [
+			"/**",
+			" *  @brief",
+            " *  $0",
+			"**/"
+		],
+		"description": "Documentation Comment"
+	},
+    "Note Comment": {
+		"prefix": ["//", "cn", "note"],
+		"body": [
+			"// @note $0"
+		],
+		"description": "Note Comment"
+	}
+}
