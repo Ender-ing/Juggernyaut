@@ -4,6 +4,9 @@ All reports, ranging from simple messages to fatal errors, must be reported thro
 directory.
 This is done as to allow a uniform experience when using either consoles or IDEs!
 
+> [!CRITICAL]
+> This library must be moved to the compiler's codebase!
+
 > [!IMPORTANT]
 > Make sure to keep all your variables and functions inside the `Comms` namespace!
 
