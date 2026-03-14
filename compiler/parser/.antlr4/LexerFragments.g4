@@ -15,5 +15,5 @@ options {
 
 // Ignored whitespace
 fragment WHITESPACE_
-    : [ \t\r]
+    : [ \t\r\n]
     ;
