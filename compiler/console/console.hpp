@@ -21,14 +21,6 @@
     Console::report(Console::ReportInputs{__VA_ARGS__})             \
 
 namespace Console {
-    // Communication mode
-    // (may need to introduce more complex modes!)
-    enum Mode {
-        CLI_MODE = 0xFFF00001,
-        LSP_MODE = 0xFFF00002
-    };
-    extern Mode mode;
-
     // General compiler status
     namespace ProcessReport {
         // It may become necessary to introduce static tracking variables to keep up with more complex error reports

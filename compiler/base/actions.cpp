@@ -44,49 +44,6 @@ namespace Base {
                 }
             ),
             DEFINE_ACTION(
-                "p", "protocol",
-                "Set the data output protocol.",
-                { "<mode> - c/console (console, default) | s/server (language server)" },
-                {
-                    // Get the next argument and save it!
-                    std::string protocolText;
-                    bool success = getNextArg(protocolText, true);
-
-                    // Check if the action was successful!
-                    if (!success) {
-                        // Missing input argument!
-                        REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Missing the <mode> input argument! (-p, --protocol)", Console::END_REPORT);
-                        ACTION_FATAL_FAILURE;
-                    }
-                    
-                    // Set communication protocol
-                    if (protocolText == "s" || protocolText == "server") {
-                        // Then set the protocol to 'server'
-                        REPORT(Console::START_REPORT, Console::ACTION_REPORT,
-                            "Communications protocol has been set to 'server' mode!", Console::END_REPORT);
-                        Console::mode = Console::LSP_MODE;
-                    } else if (protocolText == "c" || protocolText == "console") {
-                        // Then set the protocol to 'console'
-                        REPORT(Console::START_REPORT, Console::ACTION_REPORT,
-                            "Communications protocol has been set to 'console' mode!", Console::END_REPORT);
-                        Console::mode = Console::CLI_MODE;
-                    } else {
-                        // Incorrect input value!
-                        REPORT(Console::START_REPORT, Console::WARNING_REPORT,
-                            "Incorrect <mode> value ('", protocolText,"') detected! (-p, --protocol)",
-                            "\nExpected values are: s/server, or c/console.", Console::END_REPORT);
-                        // Fallback to console mode
-                        Console::mode = Console::CLI_MODE;
-                    }
-
-                    // Reinitalise the protocol with the new value
-                    Console::initalize();
-
-                    ACTION_PROGRESS;
-                }
-            ),
-            DEFINE_ACTION(
                 "v", "version",
                 "Get the plain version string. (No extra console output will be made as long as no errors occur)",
                 {},
