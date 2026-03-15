@@ -4,22 +4,20 @@
 **/
 
 // ANTLR4 imports
-#include "antlr4-runtime.h"
+#include "antlr4.hpp"
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
 // Parser
 #include "parser.hpp"
-#include "listeners/errors.hpp"
-
-// Comms
-#include "../comms/comms.hpp"
 
 namespace Parser {
     namespace Debug {
+        
         // Check for syntax errors
         // [true -> success, false -> failure]
-        bool syntaxCheck (std::string file_contents) {
+        bool syntaxCheck (std::string file_contents, TokenReport onTokenCall, TreeReport onTreeCall,
+            Listeners::ErrorListener lexerErrorListener, Listeners::ErrorListener parserErrorListener) {
             // Use the file's input
             antlr4::ANTLRInputStream input(file_contents);
 
@@ -31,27 +29,22 @@ namespace Parser {
             GeneratedParser::JuggernyautParser parser(&tokens);
 
             // Check for syntax errors
-            Listeners::ErrorListener lexerErrorListener("Lexer");
-            Listeners::ErrorListener parserErrorListener("Parser");
             lexer.removeErrorListeners();// remove default parser error listeners.
             lexer.addErrorListener(&lexerErrorListener);
             parser.removeErrorListeners();// remove default parser error listeners.
             parser.addErrorListener(&parserErrorListener);
 
-            // Print tokens
+            // Pass tokens
             tokens.fill();
-            REPORT(Comms::START_REPORT, Comms::DEBUG_REPORT, "Tokens: \n");
             for (auto token : tokens.getTokens()) {
-                REPORT(token->toString(), "\n");
+                onTokenCall((const std::string) token->toString());
             }
-            REPORT(Comms::END_REPORT);
 
             // Get the start tree!
             antlr4::tree::ParseTree *tree = parser.program();
 
-            // Print the parse tree!
-            auto s = tree->toStringTree(&parser);
-            REPORT(Comms::START_REPORT, Comms::DEBUG_REPORT, "Parse Tree: \n", s, Comms::END_REPORT);
+            // Pass the parse tree!
+            onTreeCall((const std::string) tree->toStringTree(&parser));
 
             return Listeners::errorsDetected;
         }

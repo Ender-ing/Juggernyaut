@@ -5,11 +5,23 @@
 
 #pragma once
 
+
 // ANTLR4 imports
-#include "antlr4-runtime.h"
+namespace antlr4 {
+    class BaseErrorListener;
+    class Recognizer;
+    class Token;
+    class Parser;
+    namespace dfa { class DFA;}
+    namespace atn { class atn::ATNConfigSet; }
+}
+namespace antlrcpp { class BitSet; }
 
 #include "../../common/headers.hpp"
 #include "../dynamic.hpp" // JUG_PARSER_API
+
+// Basic C++ headers
+#include <memory>
 
 namespace Parser {
     namespace Listeners {

@@ -79,6 +79,15 @@ int main (int argc, const char *argv[]) {
         }
         // Debug
         Parser::Debug::syntaxCheck(file_contents);
+        REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens: \n");
+        Parser::Debug::syntaxCheck(file_contents,
+            [](const std::string tokenText){
+                REPORT(tokenText, "\n");
+            },
+            [](const std::string treeText){
+                REPORT(Console::END_REPORT);
+                REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Parse Tree: \n", treeText, Console::END_REPORT);
+            }, lexerDebugErrorListener, parserDebugErrorListener);
     }
 
     // Check for requested termination
