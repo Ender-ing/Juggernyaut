@@ -2,19 +2,6 @@
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS ON)
 
-# Create a library from /comms
-add_library(JuggernyautCommsLibrary SHARED)
-target_sources_search(JuggernyautCommsLibrary ${JUG_CORE_SOURCE_DIR}/comms/*.cpp TRUE)
-# Expose library exports
-target_compile_definitions(JuggernyautCommsLibrary PRIVATE JUG_COMMS_LIBRARY_EXPORTS)
-# Attach manifest data
-attach_manifest_data(JuggernyautCommsLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
-# Add compiler flags
-add_internal_target_cxx_flags(JuggernyautCommsLibrary FALSE)
-# Link other libraries to the library
-add_dependencies(JuggernyautCommsLibrary fmt::fmt)
-target_link_libraries(JuggernyautCommsLibrary PUBLIC fmt::fmt)
-
 # Create a library from /common
 add_library(JuggernyautCommonLibrary SHARED)
 target_sources_search(JuggernyautCommonLibrary ${JUG_CORE_SOURCE_DIR}/common/*.cpp TRUE)
@@ -53,14 +40,10 @@ add_custom_command(TARGET JuggernyautParserLibrary
                     COMMAND ${CMAKE_COMMAND}
                            -E copy ${ANTLR4_DYNAMIC_LIBRARY_COPY_NAME} .
                     WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-# Link other libraries to the library
-add_dependencies(JuggernyautParserLibrary JuggernyautCommsLibrary) # TMP
-target_link_libraries(JuggernyautParserLibrary PUBLIC JuggernyautCommsLibrary) # TMP
 
 # Expose the core libraries
 set(CORE_LIBRARIES
     JuggernyautCommonLibrary
-    JuggernyautCommsLibrary
     JuggernyautParserLibrary
     PARENT_SCOPE
 )

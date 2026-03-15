@@ -65,27 +65,3 @@ if(NOT EXISTS ${JUG_DEPENDENCIES_ANTLR4_JAR_PATH})
 else()
     message(STATUS "[DEPENDENCIES] ANTLR4 jar is present!")
 endif()
-
-# {fmt}
-option(USE_INSTALLED_FMT "Ignore or use installed FMT" OFF) # Default OFF - not using installed fmt
-if(USE_INSTALLED_FMT)
-    find_package(fmt)
-endif()
-if(fmt)
-    message(STATUS "[DEPENDENCIES] {fmt} library is present!")
-else()
-    # Download {fmt}
-    message(STATUS "[DEPENDENCIES] Fetching {fmt}...")
-    set(JUG_DEP_FMT_LIB_PATH ${JUG_DEPENDENCIES_DIR}/fmt)
-    if(EXISTS ${JUG_DEP_FMT_LIB_PATH}/CMakeLists.txt)
-        FetchContent_Declare(fmt
-            GIT_TAG ${FMT_LIB_VERSION}
-            SOURCE_DIR ${JUG_DEP_FMT_LIB_PATH})
-    else()
-        FetchContent_Declare(fmt
-            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-            GIT_TAG ${FMT_LIB_VERSION}
-            SOURCE_DIR ${JUG_DEP_FMT_LIB_PATH})
-    endif()
-    FetchContent_MakeAvailable(fmt)
-endif()
