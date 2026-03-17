@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(juggernyaut)
 #enable_testing()
 
-
 # Shared directories
 set(JUG_BUILD_DIR ${CMAKE_BINARY_DIR})
 set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
@@ -17,5 +16,7 @@ info("[START] Configuring Juggernyaut...")
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
+set(JUG_GLOBAL_BUILD ON)
 add_subdirectory(core)
 add_subdirectory(compiler)
+add_subdirectory(server)

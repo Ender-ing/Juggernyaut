@@ -15,11 +15,15 @@ set(JUG_LICENSE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE)
 set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.deps)
 set(JUG_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.dist)
 
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    add_subdirectory(../core ${JUG_BUILD_DIR}/server_core)
+endif()
+
 # Directories
 set(JUG_SERVER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
 set(JUG_SERVER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(JUG_SERVER_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
-#set(JUG_SERVER_MAIN_CPP_PATH ${JUG_SERVER_SOURCE_DIR}/main.cpp)
+set(JUG_SERVER_MAIN_CPP_PATH ${JUG_SERVER_SOURCE_DIR}/main.cpp)
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
 info("[START] Configuring Juggernyaut Language Server...")
@@ -40,3 +44,6 @@ include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Manage dependencies
 include(${JUG_SERVER_CMAKE_DIR}/dependencies.cmake)
+
+# Build the server executable!
+include(${JUG_SERVER_CMAKE_DIR}/build-executable.cmake)
