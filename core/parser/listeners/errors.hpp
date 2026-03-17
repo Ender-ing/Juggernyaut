@@ -23,6 +23,7 @@ namespace Parser {
                 const char* stage; // "Lexer" or "Parser"
             public:
                 // Constructors
+                ErrorListener() = default; // Don't even know what this does...
                 ErrorListener(const char* stageName) : stage(stageName) {}
                 ErrorListener(const std::string& stageName) : stage(stageName.c_str()) {}
 
