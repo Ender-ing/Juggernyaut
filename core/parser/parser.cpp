@@ -11,14 +11,13 @@
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
-#include "listeners/errors.hpp"
-
 namespace Parser {
     namespace Debug {
         
         // Check for syntax errors
         // [true -> success, false -> failure]
-        bool syntaxCheck (std::string file_contents, TokenReport onTokenCall, TreeReport onTreeCall) {
+        bool syntaxCheck (std::string file_contents, TokenReport onTokenCall, TreeReport onTreeCall,
+            Listeners::ErrorListener *lexerErrorListener, Listeners::ErrorListener *parserErrorListener) {
             // Use the file's input
             antlr4::ANTLRInputStream input(file_contents);
 
@@ -30,12 +29,10 @@ namespace Parser {
             GeneratedParser::JuggernyautParser parser(&tokens);
 
             // Check for syntax errors
-            Listeners::ErrorListener lexerErrorListener("Lexer");
-            Listeners::ErrorListener parserErrorListener("Parser");
             lexer.removeErrorListeners();// remove default parser error listeners.
-            lexer.addErrorListener(&lexerErrorListener);
+            lexer.addErrorListener(lexerErrorListener);
             parser.removeErrorListeners();// remove default parser error listeners.
-            parser.addErrorListener(&parserErrorListener);
+            parser.addErrorListener(parserErrorListener);
 
             // Pass tokens
             tokens.fill();
