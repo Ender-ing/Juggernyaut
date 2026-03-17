@@ -3,13 +3,14 @@
  * Parser implementations
 **/
 
+// Parser
+#include "parser.hpp"
+
 // ANTLR4 imports
 #include "antlr4.hpp"
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
-// Parser
-#include "parser.hpp"
 #include "listeners/errors.hpp"
 
 namespace Parser {
