@@ -144,7 +144,7 @@ namespace Base {
             REPORT(Console::START_REPORT, Console::NORMAL_REPORT, "Options:\n");
             for (size_t i = 0; i < actions.size(); i++) {
                 REPORT("    ", actions[i].info[0], "/", actions[i].info[1], " \t ", actions[i].info[2]);
-                for (int j = 0; j < actions[i].input.size(); j++) {
+                for (size_t j = 0; j < actions[i].input.size(); j++) {
                     REPORT("\n    \t", actions[i].input[j]);
                 }
                 REPORT("\n");
@@ -159,7 +159,7 @@ namespace Base {
                 printHelpMenu();
                 return true;
             } else {
-                for (int i = 0; i < actions.size(); i++) {
+                for (size_t i = 0; i < actions.size(); i++) {
                     if (actions[i].info[0] == flag || actions[i].info[1] == flag) {
                         store = actions[i].func;
                         return true;
