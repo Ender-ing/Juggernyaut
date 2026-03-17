@@ -77,6 +77,76 @@ int main (int argc, const char *argv[]) {
             Console::finalize();
             return Console::ProcessReport::programStatus;
         }
+
+        // Debug (TMP)
+        // Listen for syntax-related errors
+        class DebugErrorListener : public Parser::Listeners::ErrorListener {
+            private:
+                // (Storing a std::string value will result in a C4251 MSVC warning)
+                const char* stage; // "Lexer" or "Parser"
+            public:
+                // Constructors
+                DebugErrorListener(const char* stageName) : stage(stageName) { }
+                DebugErrorListener(const std::string& stageName) : stage(stageName.c_str()) {}
+
+                // ANTLR4 functions
+                void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
+                    size_t charPositionInLine, const std::string &msg, std::exception_ptr e) override {
+                    REPORT(Console::END_REPORT);
+
+                    // Get the starting position
+                    Console::IndividualReport::startLine = line;
+                    Console::IndividualReport::startColumn = charPositionInLine;
+
+                    // Determine the end position
+                    std::string tokenText;
+                    if (offendingSymbol) {
+                        // TMP
+                        tokenText = offendingSymbol->getText();
+                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + tokenText.length();
+                    } else {
+                        // TMP
+                        tokenText = "<N/A>";
+                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + 1;
+                    }
+                    Console::IndividualReport::endLine = line; // TMP
+
+                    // Update stage data
+                    Console::IndividualReport::stage = this->stage;
+
+                    // Report the error
+                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                        msg, "(Token Text: '", tokenText, "')",
+                        Console::END_REPORT);
+
+                    REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "\n");
+                }
+                void reportAmbiguity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa, size_t startIndex,
+                    size_t stopIndex, bool exact, const antlrcpp::BitSet &ambigAlts, antlr4::atn::ATNConfigSet *configs)
+                    override {
+
+                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Ambiguity reported from index ",
+                        startIndex ," to index " , stopIndex, Console::END_REPORT);
+                }
+                void reportAttemptingFullContext(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
+                    size_t startIndex, size_t stopIndex, const antlrcpp::BitSet &conflictingAlts,
+                    antlr4::atn::ATNConfigSet *configs) override {
+
+                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Attempting full context reported from index ",
+                        startIndex ," to index " , stopIndex, Console::END_REPORT);
+                }
+                void reportContextSensitivity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
+                    size_t startIndex, size_t stopIndex, size_t prediction,
+                    antlr4::atn::ATNConfigSet *configs) override {
+
+                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Context sensitivity reported from index ",
+                        startIndex ," to index " , stopIndex, Console::END_REPORT);
+                }
+        };
+
+        DebugErrorListener lexerDebugErrorListener("Lexer");
+        DebugErrorListener parserDebugErrorListener("Parser");
+
         REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens: \n");
         Parser::Debug::syntaxCheck(file_contents,
             [](const std::string tokenText){
@@ -85,7 +155,7 @@ int main (int argc, const char *argv[]) {
             [](const std::string treeText){
                 REPORT(Console::END_REPORT);
                 REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Parse Tree: \n", treeText, Console::END_REPORT);
-            });
+            }, &lexerDebugErrorListener, &parserDebugErrorListener);
     }
 
     // Check for requested termination
