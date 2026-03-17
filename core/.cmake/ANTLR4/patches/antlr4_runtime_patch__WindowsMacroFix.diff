@@ -1,0 +1,113 @@
+# Fix <Windows.h> macro collisions
+# Fix: ParseTreeType::ERROR
+--- a/runtime/Cpp/runtime/src/tree/ParseTreeType.h
++++ b/runtime/Cpp/runtime/src/tree/ParseTreeType.h
+@@ -15,5 +15,5 @@
+   enum class ParseTreeType : size_t {
+     TERMINAL = 1,
+-    ERROR = 2,
++    ERRONEOUS = 2,
+     RULE = 3,
+   };
+--- a/runtime/Cpp/runtime/src/tree/ErrorNode.h
++++ b/runtime/Cpp/runtime/src/tree/ErrorNode.h
+@@ -13,5 +13,5 @@
+   class ANTLR4CPP_PUBLIC ErrorNode : public TerminalNode {
+   public:
+-    static bool is(const tree::ParseTree &parseTree) { return parseTree.getTreeType() == tree::ParseTreeType::ERROR; }
++    static bool is(const tree::ParseTree &parseTree) { return parseTree.getTreeType() == tree::ParseTreeType::ERRONEOUS; }
+ 
+     static bool is(const tree::ParseTree *parseTree) { return parseTree != nullptr && is(*parseTree); }
+--- a/runtime/Cpp/runtime/src/tree/ErrorNodeImpl.h
++++ b/runtime/Cpp/runtime/src/tree/ErrorNodeImpl.h
+@@ -26,5 +26,5 @@
+     Token *symbol;
+ 
+-    explicit ErrorNodeImpl(Token *symbol) : ErrorNode(ParseTreeType::ERROR), symbol(symbol) {}
++    explicit ErrorNodeImpl(Token *symbol) : ErrorNode(ParseTreeType::ERRONEOUS), symbol(symbol) {}
+ 
+     virtual Token* getSymbol() const override;
+--- a/runtime/Cpp/runtime/src/tree/TerminalNode.h
++++ b/runtime/Cpp/runtime/src/tree/TerminalNode.h
+@@ -15,5 +15,5 @@
+     static bool is(const tree::ParseTree &parseTree) {
+       const auto treeType = parseTree.getTreeType();
+-      return treeType == ParseTreeType::TERMINAL || treeType == ParseTreeType::ERROR;
++      return treeType == ParseTreeType::TERMINAL || treeType == ParseTreeType::ERRONEOUS;
+     }
+ 
+# Fix: ATNSimulator::ERROR
+--- a/runtime/Cpp/runtime/src/atn/ATNSimulator.h
+--- b/runtime/Cpp/runtime/src/atn/ATNSimulator.h
+@@ -18,5 +18,5 @@
+   public:
+     /// Must distinguish between missing edge and edge we know leads nowhere.
+-    static const Ref<dfa::DFAState> ERROR;
++    static const Ref<dfa::DFAState> SIMULATOR_ERROR;
+     const ATN &atn;
+ 
+--- a/runtime/Cpp/runtime/src/atn/ATNSimulator.cpp
+--- b/runtime/Cpp/runtime/src/atn/ATNSimulator.cpp
+@@ -15,5 +15,5 @@
+ using namespace antlr4::atn;
+ 
+-const Ref<DFAState> ATNSimulator::ERROR = std::make_shared<DFAState>(std::numeric_limits<int>::max());
++const Ref<DFAState> ATNSimulator::SIMULATOR_ERROR = std::make_shared<DFAState>(std::numeric_limits<int>::max());
+ 
+ ATNSimulator::ATNSimulator(const ATN &atn, PredictionContextCache &sharedContextCache)
+--- a/runtime/Cpp/runtime/src/atn/LexerATNSimulator.cpp
+--- b/runtime/Cpp/runtime/src/atn/LexerATNSimulator.cpp
+@@ -146,5 +146,5 @@
+     }
+ 
+-    if (target == ERROR.get()) {
++    if (target == SIMULATOR_ERROR.get()) {
+       break;
+     }
+@@ -200,10 +200,10 @@
+       // we got nowhere on t, don't throw out this knowledge; it'd
+       // cause a failover from DFA later.
+-      addDFAEdge(s, t, ERROR.get());
++      addDFAEdge(s, t, SIMULATOR_ERROR.get());
+     }
+     delete reach;
+ 
+     // stop when we can't match any more char
+-    return ERROR.get();
++    return SIMULATOR_ERROR.get();
+   }
+ 
+--- a/runtime/Cpp/runtime/src/atn/ParserATNSimulator.cpp
+--- b/runtime/Cpp/runtime/src/atn/ParserATNSimulator.cpp
+@@ -189,5 +189,5 @@
+     }
+ 
+-    if (D == ERROR.get()) {
++    if (D == SIMULATOR_ERROR.get()) {
+       // if any configs in previous dipped into outer context, that
+       // means that input up to t actually finished entry rule
+@@ -292,6 +292,6 @@
+   std::unique_ptr<ATNConfigSet> reach = computeReachSet(previousD->configs.get(), t, false);
+   if (reach == nullptr) {
+-    addDFAEdge(dfa, previousD, t, ERROR.get());
+-    return ERROR.get();
++    addDFAEdge(dfa, previousD, t, SIMULATOR_ERROR.get());
++    return SIMULATOR_ERROR.get();
+   }
+ 
+@@ -1310,5 +1310,5 @@
+ 
+ dfa::DFAState *ParserATNSimulator::addDFAState(dfa::DFA &dfa, dfa::DFAState *D) {
+-  if (D == ERROR.get()) {
++  if (D == SIMULATOR_ERROR.get()) {
+     return D;
+   }
+--- a/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
+--- b/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
+@@ -72,5 +72,5 @@
+   if (existingTargetState != nullptr) {
+     _decisions[_currentDecision].SLL_DFATransitions++; // count only if we transition over a DFA state
+-    if (existingTargetState == ERROR.get()) {
++    if (existingTargetState == SIMULATOR_ERROR.get()) {
+       _decisions[_currentDecision].errors.push_back(
+         ErrorInfo(_currentDecision, previousD->configs.get(), _input, _startIndex, _sllStopIndex, false)

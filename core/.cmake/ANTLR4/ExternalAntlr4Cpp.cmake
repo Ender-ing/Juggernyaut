@@ -126,6 +126,11 @@ else()
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
           || true
+        COMMAND ${GIT_PATCH_EXECUTABLE}
+          --forward --force --fuzz=0
+            -p1 -d ${ANTLR4_ROOT}
+            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__WindowsMacroFix.diff
+          || true
       # CUSTOM MODIFICATIONS>
       BUILD_COMMAND ""
       BUILD_IN_SOURCE 1
