@@ -1,0 +1,90 @@
+on:
+  workflow_call: # Added this line to make it reusable
+    inputs:
+      windows_system:
+        required: false
+        type: string
+        default: windows-latest
+      build_platform:
+        required: true
+        type: string
+      build_platform_name:
+        required: true
+        type: string
+      build_mode:
+        required: true
+        type: string
+      bundle_binaries:
+        required: true
+        type: boolean
+
+jobs:
+
+  # Windows
+  build-binaries-on-windows:
+    name: Windows ${{inputs.build_platform_name}}
+    runs-on: ${{inputs.windows_system}}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 23
+      uses: actions/setup-java@v3
+      with:
+        java-version: '23'
+        distribution: 'temurin'
+
+    - name: Get MSVC tools arch
+      run: |
+        $arch = "${{inputs.build_platform_name}}"
+        if ($arch -eq "x86_64") {
+          echo "MSVC_ARCH=x64" >> $env:GITHUB_ENV
+        } elseif ($arch -eq "x86_32") {
+          echo "MSVC_ARCH=x86" >> $env:GITHUB_ENV
+        } elseif ($arch -eq "arm64") {
+          echo "MSVC_ARCH=x86_amd64" >> $env:GITHUB_ENV
+        } elseif ($arch -eq "arm32") {
+          echo "MSVC_ARCH=x86_arm" >> $env:GITHUB_ENV
+        } else {
+          Write-Error "Couldn't determine architecture version to use with MSVC!"
+          exit 1
+        }
+
+    - name: Install Visual Studio Build Tools
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+      with:
+        arch: ${{env.MSVC_ARCH}}
+        sdk: 10.0.26100.0
+
+    - name: Make the ".build" directory
+      run: mkdir ${{github.workspace}}/.build
+
+    - name: Configure CMake
+      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -A ${{inputs.build_platform}}
+      working-directory: .build
+
+    - name: Build
+      run: cmake --build . --config ${{inputs.build_mode}} --parallel 3
+      working-directory: .build
+
+    # TO-DO: ADD TESTS!
+
+    - name: Extract version (optional)
+      if: inputs.bundle_binaries
+      run: |
+        $version = (Get-Item "frankie.exe").VersionInfo.FileVersion
+        if ($version) {
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+        } else {
+          Write-Error "Couldn't get VERSION info from the generated binaries!"
+          exit 1
+        }
+      working-directory: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/
+
+    - name: Upload Binaries Artifact (optional)
+      if: inputs.bundle_binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: PolarFrankie-${{inputs.build_mode}}-v${{env.VERSION}}-Windows-${{inputs.build_platform_name}}
+        path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/

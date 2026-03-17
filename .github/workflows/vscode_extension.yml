@@ -1,0 +1,61 @@
+name: VSCode Extension
+on:
+  push:
+    branches: 
+    - "main"
+  pull_request:
+    branches: 
+    - "main"
+  workflow_call: # Added this line to make it reusable
+    # Add inputs here if needed. Example:
+    inputs:
+      upload_artifact:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+
+  # Windows
+  build-vscode-extension-on-windows-latest:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup NodeJS
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    - name: Install NodeJS dependencies
+      run: npm i
+      working-directory: ${{github.workspace}}/extensions/VSCode
+
+    - name: Package the VSCode Extension
+      run: npm run win-package
+      working-directory: ${{github.workspace}}/extensions/VSCode
+
+    - name: Get VSCode Extension version
+      id: get-file
+      run: |
+        $FilePath = Get-ChildItem -Path "./" -Filter "*.vsix" | Select-Object -First 1 | Select-Object -ExpandProperty FullName
+        if ($FilePath) {
+          $FileName = Split-Path -Path $FilePath -Leaf
+          $VersionWithExt = $FileName.Replace("juggernyaut-", "")
+          $NewFileName = "Juggernyaut-VSCode-v$VersionWithExt";
+          mv $FileName $NewFileName # Rename the file
+          echo "VSCODE_EXT_FILE_NAME=$NewFileName" >> $env:GITHUB_ENV
+        } else {
+          Write-Error "No .vsix files found in ${{github.workspace}}/extensions/VSCode/"
+        }
+      working-directory: ${{github.workspace}}/extensions/VSCode
+
+    - name: Upload Binaries Artifact (optional)
+      if: inputs.upload_artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.VSCODE_EXT_FILE_NAME}}
+        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME}}
