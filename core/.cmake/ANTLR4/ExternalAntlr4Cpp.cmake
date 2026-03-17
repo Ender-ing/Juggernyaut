@@ -196,6 +196,10 @@ target_include_directories(antlr4_shared
     INTERFACE
         ${ANTLR4_INCLUDE_DIRS}
 )
+# FIX: Ignore known warnings in VS2026
+if(MSVC)
+    target_compile_options(antlr4_shared INTERFACE /wd4251 /wd4275)
+endif()
 
 if(ANTLR4_SHARED_LIBRARIES)
   set_target_properties(antlr4_shared PROPERTIES

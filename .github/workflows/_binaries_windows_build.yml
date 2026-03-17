@@ -73,7 +73,7 @@ jobs:
     - name: Extract version (optional)
       if: inputs.bundle_binaries
       run: |
-        $version = (Get-Item "frankie.exe").VersionInfo.FileVersion
+        $version = (Get-Item "jug.exe").VersionInfo.FileVersion
         if ($version) {
           echo "VERSION=$version" >> $env:GITHUB_ENV
         } else {
@@ -86,5 +86,5 @@ jobs:
       if: inputs.bundle_binaries
       uses: actions/upload-artifact@v4
       with:
-        name: PolarFrankie-${{inputs.build_mode}}-v${{env.VERSION}}-Windows-${{inputs.build_platform_name}}
+        name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-Windows-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/

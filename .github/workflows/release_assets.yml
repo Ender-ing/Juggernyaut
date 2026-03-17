@@ -23,15 +23,8 @@ jobs:
       upload_artifact: true
 
   # binaries binaries
-  build-binaries-debug:
-    name: Generate 'Debug' binaries
-    uses: ./.github/workflows/_binaries_dynamic_build.yml
-    with:
-      build_mode: Debug
-      bundle_binaries: true
   build-binaries-release:
     name: Generate 'Release' binaries
-    needs: build-binaries-debug
     uses: ./.github/workflows/_binaries_dynamic_build.yml
     with:
       build_mode: Release
@@ -44,7 +37,6 @@ jobs:
       contents: write # Allow this workflow job to create a release
     needs:
     - build-vscode-extension
-    - build-binaries-debug
     - build-binaries-release
     steps:
       - name: Checkout code
