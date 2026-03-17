@@ -13,6 +13,11 @@ endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
+# Fix ANTLR4-related glitch on Windows
+if (MSVC)
+    add_compile_definitions(NOMINMAX)
+endif()
+
 # Force PIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
