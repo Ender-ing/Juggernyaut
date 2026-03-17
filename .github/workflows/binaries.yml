@@ -1,0 +1,28 @@
+name: Binaries
+on:
+  push:
+    branches:
+    - "main"
+  pull_request:
+    branches:
+    - "main"
+
+# -win32-arm64 -win32-ia32 -win32-x64 -darwin-arm64 -darwin-x64 -linux-arm64 -linux-armv7l -linux-x64 -mas-arm64 -mas-x64
+
+jobs:
+
+  # Debug
+  build-binaries-debug:
+    name: Debug
+    uses: ./.github/workflows/_binaries_dynamic_build.yml
+    with:
+      build_mode: Debug
+      bundle_binaries: false
+
+  # Release
+  build-binaries-release:
+    name: Release
+    uses: ./.github/workflows/_binaries_dynamic_build.yml
+    with:
+      build_mode: Release
+      bundle_binaries: false

@@ -1,0 +1,100 @@
+on:
+  workflow_call: # Added this line to make it reusable
+    inputs:
+      build_mode:
+        required: true
+        type: string
+      bundle_binaries:
+        required: true
+        type: boolean
+
+# https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+
+jobs:
+
+  # x86_64
+  build-binaries-on-windows-x86-64:
+    name: Windows x64
+    uses: ./.github/workflows/_binaries_windows_build.yml
+    with:
+      build_platform: x64
+      build_platform_name: x86_64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+  build-binaries-on-linux-x86-64:
+    name: Linux x64
+    uses: ./.github/workflows/_binaries_linux_build.yml
+    with:
+      linux_system: ubuntu-latest
+      build_platform: x64
+      build_platform_name: x86_64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+  build-binaries-on-mac-x86-64:
+    name: MacOS x64
+    uses: ./.github/workflows/_binaries_mac_build.yml
+    with:
+      mac_system: macos-26-intel
+      build_platform: x64
+      build_platform_name: x86_64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+
+  # x86_32
+  build-binaries-on-windows-x86-32:
+    name: Windows x86
+    uses: ./.github/workflows/_binaries_windows_build.yml
+    with:
+      build_platform: Win32
+      build_platform_name: x86_32
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+  build-binaries-on-linux-x86-32:
+    name: Linux x86
+    uses: ./.github/workflows/_binaries_linux_build.yml
+    with:
+      linux_system: ubuntu-latest
+      build_platform: x86
+      build_platform_name: x86_32
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+
+  # ARM64
+  build-binaries-on-windows-arm64:
+    name: Windows ARM64
+    uses: ./.github/workflows/_binaries_windows_build.yml
+    with:
+      windows_system: windows-11-arm
+      build_platform: ARM64
+      build_platform_name: arm64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+  build-binaries-on-linux-arm64:
+    name: Linux ARM64
+    uses: ./.github/workflows/_binaries_linux_build.yml
+    with:
+      linux_system: ubuntu-24.04-arm
+      build_platform: ARM64
+      build_platform_name: arm64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+  build-binaries-on-mac-arm64:
+    name: MacOS ARM64
+    uses: ./.github/workflows/_binaries_mac_build.yml
+    with:
+      mac_system: macos-26
+      build_platform: ARM64
+      build_platform_name: arm64
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}
+
+  #ARM32
+  build-binaries-on-linux-arm32:
+    name: Linux ARM
+    uses: ./.github/workflows/_binaries_linux_build.yml
+    with:
+      linux_system: ubuntu-24.04-arm
+      build_platform: ARM
+      build_platform_name: arm32
+      build_mode: ${{inputs.build_mode}}
+      bundle_binaries: ${{inputs.bundle_binaries}}

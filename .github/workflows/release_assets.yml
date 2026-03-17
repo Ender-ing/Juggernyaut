@@ -1,0 +1,118 @@
+name: Release Assets
+on:
+  # Normal web release
+  push:
+    tags:
+      - 'v*'
+  # Command draft release (not ready!)
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: 'Release ID (check https://api.github.com/repos/Ender-ing/Juggernyaut/releases)'
+        required: true
+        default: 0
+        type: number
+
+jobs:
+
+  # VSCode
+  build-vscode-extension:
+    name: Build VSCode package
+    uses: ./.github/workflows/vscode_extension.yml
+    with:
+      upload_artifact: true
+
+  # binaries binaries
+  build-binaries-debug:
+    name: Generate 'Debug' binaries
+    uses: ./.github/workflows/_binaries_dynamic_build.yml
+    with:
+      build_mode: Debug
+      bundle_binaries: true
+  build-binaries-release:
+    name: Generate 'Release' binaries
+    needs: build-binaries-debug
+    uses: ./.github/workflows/_binaries_dynamic_build.yml
+    with:
+      build_mode: Release
+      bundle_binaries: true
+
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allow this workflow job to create a release
+    needs:
+    - build-vscode-extension
+    - build-binaries-debug
+    - build-binaries-release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: List Artifacts
+        run: |
+          #!/bin/bash
+          set -ex
+          gh api repos/${{github.repository}}/actions/runs/${{github.run_id}}/artifacts --jq '.artifacts[] | .name' | tr -d '"' | tee artifacts.txt
+        working-directory: ${{github.workspace}}
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Attach Artifacts
+        run: |
+          #!/bin/bash
+          set -ex
+
+          # Choose the proper release ID
+          release_id_1="${{github.event.inputs.release_id}}"
+          release_id_2="${{github.ref_name}}"
+          release_id_1_len=""${#release_id_1}
+          if [ $release_id_1_len -gt 5 ]; then
+            release_id="$release_id_1"
+          else
+            release_id="$release_id_2"
+          fi
+
+          # Upload annd check assets!
+          function upload_asset() {
+            local asset_path="$1"
+            echo "Uploading asset: $asset_path"
+            gh release upload $release_id "$asset_path" --repo ${{github.repository}} --clobber
+            if [ $? -ne 0 ]; then
+              echo "Failed to upload asset: $asset_path"
+              exit 1
+            fi
+          }
+
+          while IFS= read -r artifact_name; do
+            # Download (archive contents)
+            echo "Downloading artifact: $artifact_name"
+            artifact_dir="c__$artifact_name"
+            gh run download ${{github.run_id}} -n "$artifact_name" -D "$artifact_dir" --repo ${{github.repository}}
+
+            cd $artifact_dir
+
+            # Check archive type
+            if [[ "$artifact_name" == *.vsix ]]; then
+
+              # Upload a plain package file
+              upload_asset "$artifact_name"
+              # Save asset hash
+              sha256sum $artifact_name >> ../SHASUMS256.txt
+            else
+              # .tar.gz
+              artifact_targz="$artifact_name.tar.gz"
+              tar -czvf $artifact_targz *
+              upload_asset "$artifact_targz"
+              # Save asset hash
+              sha256sum $artifact_targz >> ../SHASUMS256.txt
+            fi
+
+            cd ..
+          done < artifacts.txt
+          # Upload SHA256 hashes
+          upload_asset "SHASUMS256.txt"
+        working-directory: ${{github.workspace}}
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
