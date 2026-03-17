@@ -51,14 +51,14 @@ jobs:
       if: inputs.bundle_binaries
       run: |
         set -e
-        VERSION=$(${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/frankie --version | head -n 1)
+        VERSION=$(${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/jug --version | head -n 1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries
       uses: actions/upload-artifact@v4
       with:
-        name: PolarFrankie-${{inputs.build_mode}}-v${{env.VERSION}}-macOS-${{inputs.build_platform_name}}
+        name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-macOS-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
 
     # Used to display all patch errors (I ain't got no money for a macOS, deal with it)
