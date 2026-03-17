@@ -9,6 +9,10 @@ if(NOT (CXX_20_FLAG OR CXX_20_FLAG_MSVC))
     message(FATAL_ERROR "[C++] C++20 is not supported by the compiler. Please use a compiler that supports C++20.")
 endif()
 
+# Make symbols hidden by default
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
 # Force PIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
