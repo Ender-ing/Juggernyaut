@@ -31,22 +31,20 @@ if(CMAKE_GENERATOR_PLATFORM)
 elseif(CMAKE_UNIX_GENERATOR_PLATFORM)
     if(${CMAKE_UNIX_GENERATOR_PLATFORM} STREQUAL "x86")
         if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-            add_c_cpp_global_flag("-m32")
-            add_c_cpp_global_flag("-march=i386")
+            #add_c_cpp_global_flag("-m32")
+            #add_c_cpp_global_flag("-march=i686")
 
             # Include/find directories
-            set(CMAKE_FIND_ROOT_PATH /usr/lib/i386-linux-gnu /usr/include)
-            set(CMAKE_FIND_LIBRARY_PATHS /usr/lib/i386-linux-gnu)
-            set(CMAKE_FIND_INCLUDE_PATH /usr/include)
+            #set(CMAKE_FIND_ROOT_PATH /usr/lib/i686-linux-gnu /usr/include)
+            #set(CMAKE_FIND_LIBRARY_PATHS /usr/lib/i686-linux-gnu)
+            #set(CMAKE_FIND_INCLUDE_PATH /usr/include)
 
             # Root path settings
-            set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-            set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-            set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+            #set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+            #set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+            #set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
         elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
             message(FATAL_ERROR "[BUILD] 32-bit builds are not supported on macOS!")
-            #add_c_cpp_global_flag("-arch i386")
-            #set(CMAKE_OSX_ARCHITECTURES "i386")
         endif()
         set(JUG_BINARY_PLATFORM "x86_32")
     elseif(${CMAKE_UNIX_GENERATOR_PLATFORM} STREQUAL "x64")
@@ -61,10 +59,11 @@ elseif(CMAKE_UNIX_GENERATOR_PLATFORM)
     elseif(${CMAKE_UNIX_GENERATOR_PLATFORM} STREQUAL "ARM")
         if(CMAKE_SYSTEM_NAME MATCHES "Linux")
             #add_c_cpp_global_flag("-marm")
-            add_c_cpp_global_flag("-march=armv7-a")
+            #add_c_cpp_global_flag("-march=armv7-a")
+            #set(CMAKE_C_COMPILER "arm-linux-gnueabihf-gcc")
+            #set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
         elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-            add_c_cpp_global_flag("-arch armv7")
-            set(CMAKE_OSX_ARCHITECTURES "armv7")
+            message(FATAL_ERROR "[BUILD] 32-bit builds are not supported on macOS!")
         endif()
         set(JUG_BINARY_PLATFORM "arm32")
     elseif(${CMAKE_UNIX_GENERATOR_PLATFORM} STREQUAL "ARM64")
@@ -194,7 +193,7 @@ function(manage_symbolic_links POST_TARGET JUG_COMMAND_NAME)
     if(WIN32)
         set(SYMBOLIC_LINKS_COMMAND_DELETE del /f /q /s ${JUG_COMMAND_NAME})
         set(SYMBOLIC_LINKS_COMMAND_REMAKE echo "Windows already has a valid .exe main file!")
-        set(SYMBOLIC_LINKS_COMMAND_EXTRA start /wait powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList \\\"-Command cd '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}' \; New-Item -Path ${JUG_COMMAND_NAME}.exe -ItemType SymbolicLink -Value ${POST_TARGET}.exe \\\" ")
+        set(SYMBOLIC_LINKS_COMMAND_EXTRA mklink ${JUG_COMMAND_NAME}.exe ${POST_TARGET}.exe)
     else()
         set(SYMBOLIC_LINKS_COMMAND_DELETE rm -f ${JUG_COMMAND_NAME} ${POST_TARGET})
         set(SYMBOLIC_LINKS_COMMAND_REMAKE ln -s ${POST_TARGET}* ${POST_TARGET})
@@ -206,6 +205,52 @@ function(manage_symbolic_links POST_TARGET JUG_COMMAND_NAME)
         COMMAND ${SYMBOLIC_LINKS_COMMAND_DELETE}
         COMMAND ${SYMBOLIC_LINKS_COMMAND_REMAKE}
         COMMAND ${SYMBOLIC_LINKS_COMMAND_EXTRA}
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+endfunction()
+function(create_symbolic_link TARGET SOURCE LINK IS_LIB)
+    if(WIN32)
+        if(IS_LIB)
+            set(SYMBOLIC_LINKS_COMMAND_LINK mklink ${LINK}.dll ${SOURCE}.dll)
+        else()
+            set(SYMBOLIC_LINKS_COMMAND_LINK mklink ${LINK}.exe ${SOURCE}.exe)
+        endif()
+    else()
+        set(SYMBOLIC_LINKS_COMMAND_LINK ln -s ${SOURCE} ${LINK})
+    endif()
+    add_custom_command(
+        TARGET ${TARGET}
+        POST_BUILD
+        #COMMAND ${SYMBOLIC_LINKS_COMMAND_DELETE}
+        COMMAND ${SYMBOLIC_LINKS_COMMAND_LINK}
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+endfunction()
+
+# Post-build files
+function(delete_file TARGET FILE)
+    if(WIN32)
+        set(DELETE_COMMAND del /f /q /s ${FILE})
+    else()
+        set(DELETE_COMMAND rm -f ${FILE})
+    endif()
+    add_custom_command(
+        TARGET ${TARGET}
+        POST_BUILD
+        COMMAND ${DELETE_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+endfunction()
+function(rename_file TARGET OLD_PATH NEW_PATH)
+    if(WIN32)
+        set(RENAME_COMMAND ren ${OLD_PATH} ${NEW_PATH})
+    else()
+        set(RENAME_COMMAND mv ${OLD_PATH} ${NEW_PATH})
+    endif()
+    add_custom_command(
+        TARGET ${TARGET}
+        POST_BUILD
+        COMMAND ${RENAME_COMMAND}
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 endfunction()

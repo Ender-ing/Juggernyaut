@@ -33,6 +33,18 @@ add_custom_command(TARGET JuggernyautParserLibrary
                     COMMAND ${CMAKE_COMMAND}
                            -E copy ${ANTLR4_RUNTIME_LIBRARIES} .
                     WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+# Fix antlr4-runtime library naming!
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    get_filename_component(ANTLR_FILENAME "${ANTLR4_RUNTIME_LIBRARIES}" NAME)
+    delete_file(JuggernyautParserLibrary "${ANTLR_FILENAME}.${ANTLR4_TAG}")
+    rename_file(JuggernyautParserLibrary ${ANTLR_FILENAME} "${ANTLR_FILENAME}.${ANTLR4_TAG}")
+    create_symbolic_link(JuggernyautParserLibrary "${ANTLR_FILENAME}.${ANTLR4_TAG}" ${ANTLR_FILENAME} FALSE)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    get_filename_component(ANTLR_FILENAME_NOEXT "${ANTLR4_RUNTIME_LIBRARIES}" NAME_WE)
+    delete_file(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib")
+    rename_file(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.dylib" "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib")
+    create_symbolic_link(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib" "${ANTLR_FILENAME_NOEXT}.dylib" FALSE)
+endif()
 
 # Expose the core libraries
 set(CORE_LIBRARIES

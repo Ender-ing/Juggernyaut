@@ -34,11 +34,39 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake valgrind
 
+    - name: Install dependencies (32-bits)
+      if: inputs.build_platform_name == 'x86_32'
+      run: |
+        sudo dpkg --add-architecture i686
+        sudo apt-get update
+        sudo apt-get install -y gcc-i686-linux-gnu g++-i686-linux-gnu
+
+    - name: Install dependencies (ARM 32-bit)
+      if: inputs.build_platform_name == 'arm32'
+      run: |
+        sudo dpkg --add-architecture armhf
+        sudo apt-get update
+        sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+        sudo apt-get install -y libc6:armhf libstdc++6:armhf
+
     - name: Make the ".build" directory
       run: mkdir ${{github.workspace}}/.build
 
     - name: Configure CMake
+      if: inputs.build_platform_name != 'x86_32' && inputs.build_platform_name != 'arm32'
       run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}}
+      working-directory: .build
+
+    - name: Configure CMake (32-bit)
+      if: inputs.build_platform_name == 'x86_32'
+      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
+        -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ -DCMAKE_SYSTEM_PROCESSOR=i686
+      working-directory: .build
+
+    - name: Configure CMake (ARM 32-bit)
+      if: inputs.build_platform_name == 'arm32'
+      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
+        -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++
       working-directory: .build
 
     - name: Build

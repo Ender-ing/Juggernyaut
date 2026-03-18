@@ -31,7 +31,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        brew update
         brew install --formula cmake --quiet
 
     - name: Make the ".build" directory

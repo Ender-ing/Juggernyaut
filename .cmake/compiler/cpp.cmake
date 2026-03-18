@@ -18,6 +18,13 @@ if (MSVC)
     add_compile_definitions(NOMINMAX)
 endif()
 
+# Enable $ORIGIN-based RPATH globally
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
 # Force PIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

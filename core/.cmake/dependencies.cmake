@@ -8,7 +8,7 @@ set(FMT_LIB_VERSION 10.2.1)
 #Currently, I can't figure out why v11.1.4 doesn't like c++20
 
 # ANTLR4
-## set(ANTLR4_TAG 4.13.2)
+set(ANTLR4_TAG 4.13.2)
 
 # Check for Java
 find_package(Java REQUIRED)
