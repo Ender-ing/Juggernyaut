@@ -41,6 +41,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install gcc-multilib g++-multilib libc6-dev-i386
 
+    - name: Install dependencies (ARM 32-bit)
+      if: inputs.build_platform_name == 'arm32'
+      run: |
+        sudo dpkg --add-architecture armhf
+        sudo apt-get update
+        sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+
     - name: Make the ".build" directory
       run: mkdir ${{github.workspace}}/.build
 
