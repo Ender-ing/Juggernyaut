@@ -118,22 +118,22 @@ else()
       # <CUSTOM MODIFICATIONS
       PATCH_COMMAND
         COMMAND ${GIT_PATCH_EXECUTABLE}
-          --forward --force --fuzz=0
+          -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/CMakeLists.txt
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
           || true
         COMMAND ${GIT_PATCH_EXECUTABLE}
-          --forward --force --fuzz=0
+          -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
           || true
         COMMAND ${GIT_PATCH_EXECUTABLE}
-          --forward --force --fuzz=0
+          -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
           || true
         COMMAND ${GIT_PATCH_EXECUTABLE}
-          --forward --force --fuzz=0
+          -N --forward --force --fuzz=0
             -p1 -d ${ANTLR4_ROOT}
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__WindowsMacroFix.diff
           || true
