@@ -27,7 +27,7 @@ target_link_directories(JuggernyautServer PRIVATE "$<TARGET_FILE_DIR:Juggernyaut
 attach_manifest_data(JuggernyautServer ${JUG_SERVER_MANIFEST_FILE} TRUE)
 
 # Re-do symbolic linking (POST BUILD)
-manage_symbolic_links(JuggernyautServer "jug_lsp")
+manage_symbolic_links(JuggernyautServer "jug-lsp")
 
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautServer FALSE)
