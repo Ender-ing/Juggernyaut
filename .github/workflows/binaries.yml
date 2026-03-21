@@ -23,6 +23,8 @@ jobs:
   build-binaries-release:
     name: Release
     uses: ./.github/workflows/_binaries_dynamic_build.yml
+    needs:
+      - build-binaries-debug
     with:
       build_mode: Release
       bundle_binaries: false

@@ -7,6 +7,7 @@
 // Imports
 import * as vscode from "vscode";
 import * as commands from "./commands";
+import * as server from "./server"
 
 // Lightweight extension activation! (for web browsers!)
 export function lightweightActivation (context: vscode.ExtensionContext){
@@ -15,10 +16,16 @@ export function lightweightActivation (context: vscode.ExtensionContext){
 }
 
 // Activate the extension!
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     // Do lightweight activation first
     lightweightActivation(context);
-    // Do more heavy stuff here
-    // (Like transpiler communication!)
-    // ...
+    // Start the language server
+    await server.start();
+}
+
+export function deactivate(): Thenable<void> | undefined {
+    if (!server.client) {
+        return undefined;
+    }
+    return server.client.stop();
 }

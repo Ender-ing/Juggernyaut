@@ -11,6 +11,30 @@
     },
     "publisher": "Endering",
     "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Juggernyaut",
+            "properties": {
+                "juggernyaut.sdkPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "The absolute path to the Juggernyaut SDK."
+                },
+                "juggernyaut.trace.server": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": ["off", "messages", "verbose"],
+                    "default": "off",
+                    "description": "Traces the communication between VS Code and the server."
+                },
+                "juggernyaut.maxNumberOfProblems": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 250,
+                    "description": "Controls the maximum number of problems produced by the server."
+                }
+            }
+        },
         "configurationDefaults": {
             "[juggernyaut]": {
                 "editor.maxTokenizationLineLength": 2500,
@@ -100,8 +124,12 @@
         "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run vsce-package && npm run lix-delete-license"
     },
     "devDependencies": {
+        "@types/node": "^25.5.0",
         "@types/vscode": "^1.94.0",
         "@vscode/vsce": "^3.2.1",
         "typescript": "^5.6.3"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
     }
 }

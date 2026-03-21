@@ -7,8 +7,8 @@
         "build-binary": "cd ../.build && cmake --build . --config Release --parallel 3",
         "debug-build-cmake": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Debug",
         "debug-build-binary": "cd ../.build && cmake --build . --config Debug",
-        "win-clean": "rd /s /q ../.build && rd /s /q .dist",
-        "lix-clean": "rm -f -r ../.build && rm -f -r .dist",
+        "win-clean": "rd /s /q ../.build && rd /s /q ../.dist",
+        "lix-clean": "rm -f -r ../.build && rm -f -r ../.dist",
         "win64": "cd .. && mkdir .build && cd core && npm run build-cmake-win-64 && npm run build-binary",
         "lix64": "cd .. && mkdir .build && cd core && npm run build-cmake-lix-64 && npm run build-binary"
     }

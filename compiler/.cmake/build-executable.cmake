@@ -12,9 +12,6 @@ foreach(LIB ${CORE_LIBRARIES})
     # Add the library
     target_link_libraries(JuggernyautCompiler PUBLIC ${LIB})
 endforeach()
-# Link external libraries
-add_dependencies(JuggernyautCompiler fmt::fmt)
-target_link_libraries(JuggernyautCompiler PUBLIC fmt::fmt)
 
 # Link compiler libraries
 include(${JUG_COMPILER_CMAKE_DIR}/libraries.cmake)

@@ -34,7 +34,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake valgrind
 
-    - name: Install dependencies (32-bits)
+    - name: Install dependencies (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
         sudo dpkg --add-architecture i686

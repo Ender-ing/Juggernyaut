@@ -20,8 +20,7 @@ options {
 //// Parser Rules
 
 program
-    : SYM_SEMICOLON*
-        (expr SYM_SEMICOLON+)*
+    : (expr SYM_SEMICOLON | SYM_SEMICOLON)*
         EOF
     ; /* This is the initial scope in a file! */
 
