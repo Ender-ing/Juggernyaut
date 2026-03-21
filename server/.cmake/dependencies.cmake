@@ -39,8 +39,10 @@ if(TARGET lsp)
     endif()
 endif()
 # Post-build cleanup
-add_custom_target(LSPCleanup ALL
-                    COMMAND ${CMAKE_COMMAND}
-                           -E rm -f ./lspgen ./lspgen.exe
-                    WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-add_dependencies(LSPCleanup lsp)
+if(DEFINED JUG_CLEANUP)
+    add_custom_target(LSPCleanup ALL
+                        COMMAND ${CMAKE_COMMAND}
+                               -E rm -f ./lspgen ./lspgen.exe
+                        WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    add_dependencies(LSPCleanup lsp)
+endif()
