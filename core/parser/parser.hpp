@@ -20,8 +20,8 @@ namespace Parser {
         typedef std::function<void(const std::string)> TreeReport;
 
         // Check for syntax errors
-        extern JUG_PARSER_API bool syntaxCheck (const std::string& file_contents, const TokenReport& onTokenCall,
-            const TreeReport& onTreeCall,
+        extern JUG_PARSER_API bool syntaxCheck (const std::string &file_contents, const TokenReport &onTokenCall,
+            const TreeReport &onTreeCall,
             Listeners::ErrorListener *lexerErrorListener, Listeners::ErrorListener *parserErrorListener) ;
     }
 }

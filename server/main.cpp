@@ -27,12 +27,12 @@
 class SyntaxErrorListener : public Parser::Listeners::ErrorListener {
     private:
         // (Storing a std::string value will result in a C4251 MSVC warning)
-        const char* stage; // "Lexer" or "Parser"
-        std::vector<lsp::Diagnostic>& diags;
+        const char *stage; // "Lexer" or "Parser"
+        std::vector<lsp::Diagnostic> &diags;
     public:
         // Constructors
-        SyntaxErrorListener(const char* stageName, std::vector<lsp::Diagnostic>& diagsVector) : stage(stageName), diags(diagsVector) { }
-        SyntaxErrorListener(const std::string& stageName, std::vector<lsp::Diagnostic>& diagsVector) : stage(stageName.c_str()), diags(diagsVector) {}
+        SyntaxErrorListener(const char *stageName, std::vector<lsp::Diagnostic> &diagsVector) : stage(stageName), diags(diagsVector) { }
+        SyntaxErrorListener(const std::string &stageName, std::vector<lsp::Diagnostic> &diagsVector) : stage(stageName.c_str()), diags(diagsVector) {}
 
         // ANTLR4 functions
         void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
@@ -87,7 +87,7 @@ class SyntaxErrorListener : public Parser::Listeners::ErrorListener {
         }
 };
 
-void validateDocumentSyntax(lsp::MessageHandler& messageHandler, const lsp::DocumentUri& documentUri, const std::string& latestSourceCode) {
+void validateDocumentSyntax(lsp::MessageHandler &messageHandler, const lsp::DocumentUri &documentUri, const std::string &latestSourceCode) {
     // TMP
     std::vector<lsp::Diagnostic> diagnostics;
 
@@ -135,7 +135,7 @@ void printMessage () {
     printMessageMethod<MessageType>();
 }
 
-void registerCallbacks (lsp::MessageHandler& messageHandler, bool& is_running) {
+void registerCallbacks (lsp::MessageHandler &messageHandler, bool &is_running) {
     messageHandler.add<lsp::requests::Initialize>(
         [](lsp::requests::Initialize::Params&& params) {
             printMessage<lsp::requests::Initialize>(params);
