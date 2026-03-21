@@ -16,7 +16,21 @@ info("[START] Configuring Juggernyaut...")
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
+include(${JUG_CMAKE_DIR}/shared.cmake)
+
 set(JUG_GLOBAL_BUILD ON)
 add_subdirectory(core)
 add_subdirectory(compiler)
 add_subdirectory(server)
+
+# Delete leftover files
+if(${JUG_BINARY_MODE} STREQUAL "Release")
+    add_custom_target(PostBuildTask ALL
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}"
+        COMMENT "Post-build cleanup..."
+    )
+    add_dependencies(PostBuildTask
+        JuggernyautCompiler # Target from compiler
+        JuggernyautServer # Target from server
+    )
+endif()
