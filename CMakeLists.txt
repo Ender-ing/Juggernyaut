@@ -24,7 +24,7 @@ add_subdirectory(compiler)
 add_subdirectory(server)
 
 # Delete leftover files
-if(${JUG_BINARY_MODE} STREQUAL "Release")
+if(DEFINED JUG_CLEANUP)
     add_custom_target(PostBuildTask ALL
         COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}"
         COMMENT "Post-build cleanup..."

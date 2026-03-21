@@ -121,22 +121,22 @@ else()
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/CMakeLists.txt
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
-          || true
+          || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
-          || true
+          || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
-          || true
+          || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             -p1 -d ${ANTLR4_ROOT}
             < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__WindowsMacroFix.diff
-          || true
+          || ${CMAKE_COMMAND} -E true
       # CUSTOM MODIFICATIONS>
       BUILD_COMMAND ""
       BUILD_IN_SOURCE 1

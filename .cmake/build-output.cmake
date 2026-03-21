@@ -191,7 +191,7 @@ endfunction()
 # Manage symbolic links post-build
 function(manage_symbolic_links POST_TARGET JUG_COMMAND_NAME)
     if(WIN32)
-        set(SYMBOLIC_LINKS_COMMAND_DELETE del /f /q /s ${JUG_COMMAND_NAME})
+        set(SYMBOLIC_LINKS_COMMAND_DELETE del /f /q /s ${JUG_COMMAND_NAME}.exe)
         set(SYMBOLIC_LINKS_COMMAND_REMAKE echo "Windows already has a valid .exe main file!")
         set(SYMBOLIC_LINKS_COMMAND_EXTRA mklink ${JUG_COMMAND_NAME}.exe ${POST_TARGET}.exe)
     else()

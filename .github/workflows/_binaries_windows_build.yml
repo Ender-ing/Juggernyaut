@@ -66,7 +66,7 @@ jobs:
       run: mkdir ${{github.workspace}}/.build
 
     - name: Configure CMake
-      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -A ${{inputs.build_platform}}
+      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -A ${{inputs.build_platform}} -DJUG_CLEANUP=ON
       working-directory: .build
 
     - name: Build
