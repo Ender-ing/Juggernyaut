@@ -41,15 +41,15 @@ class SyntaxErrorListener : public Parser::Listeners::ErrorListener {
             lsp::Diagnostic error;
 
             // Get the starting position
-            error.range.start.line = (uint) (line - 1);
-            error.range.start.character = (uint) charPositionInLine;
+            error.range.start.line = (uint32_t) (line - 1);
+            error.range.start.character = (uint32_t) charPositionInLine;
 
             // Determine the end position
             std::string tokenText;
             if (offendingSymbol) {
                 // TMP
                 tokenText = offendingSymbol->getText();
-                error.range.end.character = (uint) (charPositionInLine + tokenText.length());
+                error.range.end.character = (uint32_t) (charPositionInLine + tokenText.length());
             } else {
                 // TMP
                 tokenText = "<N/A>";
@@ -59,7 +59,8 @@ class SyntaxErrorListener : public Parser::Listeners::ErrorListener {
 
             error.severity = lsp::DiagnosticSeverity::Error;
 
-            error.message = (std::string) this->stage + " Error: " + msg + "(Token Text: '" + tokenText + "')";
+            //error.message = (std::string) this->stage + " Error: " + msg + "\n(Token Text: '" + tokenText + "')";
+            error.message = (std::string) this->stage + " Error: " + msg;
             error.source = "Juggernyaut";
             this->diags.push_back(error);
         }
