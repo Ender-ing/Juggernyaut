@@ -41,6 +41,6 @@ endif()
 # Post-build cleanup
 add_custom_target(LSPCleanup ALL
                     COMMAND ${CMAKE_COMMAND}
-                           -E rm -f ./lspgen*
+                           -E rm -f ./lspgen ./lspgen.exe
                     WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 add_dependencies(LSPCleanup lsp)

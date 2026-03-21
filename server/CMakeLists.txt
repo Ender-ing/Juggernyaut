@@ -1,5 +1,5 @@
 # Basic info
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 project(juggernyaut_server)
 #enable_testing()
 
