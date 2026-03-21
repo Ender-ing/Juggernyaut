@@ -28,7 +28,10 @@ endif()
 if(TARGET lsp)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_compile_options(lsp PRIVATE -Wno-unused-result -Wno-shadow
-        -Wno-sign-conversion -Wno-maybe-uninitialized)
+        -Wno-sign-conversion)
+        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+            target_compile_options(lsp PRIVATE -Wno-maybe-uninitialized)
+        endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(lsp PRIVATE
         /wd4834 /wd6031
