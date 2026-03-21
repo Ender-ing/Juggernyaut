@@ -31,7 +31,7 @@ if(TARGET lsp)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(lsp PRIVATE
         /wd4834 /wd6031
-        wd4456 /wd4457 /wd4458 /wd4459)
+        /wd4456 /wd4457 /wd4458 /wd4459)
     endif()
 endif()
 # Post-build cleanup
