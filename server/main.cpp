@@ -16,10 +16,7 @@
 #include "../core/common/debug.hpp"
 
 // lsp-framework
-#include <lsp/messages.h>
-#include <lsp/connection.h>
-#include <lsp/io/standardio.h>
-#include <lsp/messagehandler.h>
+#include "lspFramework.hpp"
 
 // Parser
 #include "../core/parser/parser.hpp"

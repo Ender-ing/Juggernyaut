@@ -26,7 +26,13 @@ else()
 endif()
 # Turn off the "unused-result" warning for the lsp target specifically
 if(TARGET lsp)
-    target_compile_options(lsp PRIVATE -Wno-unused-result -Wno-shadow)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(lsp PRIVATE -Wno-unused-result -Wno-shadow)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(lsp PRIVATE
+        /wd4834 /wd6031
+        wd4456 /wd4457 /wd4458 /wd4459)
+    endif()
 endif()
 # Post-build cleanup
 add_custom_target(LSPCleanup ALL
