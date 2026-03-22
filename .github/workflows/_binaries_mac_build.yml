@@ -54,7 +54,7 @@ jobs:
       working-directory: .build
 
     - name: Build
-      run: cmake --build . --config ${{inputs.build_mode}} --parallel 3
+      run: cmake --build . --config ${{inputs.build_mode}} --parallel 3 --verbose
       working-directory: .build
 
     # TO-DO: ADD TESTS!
