@@ -1,13 +1,7 @@
 # Check for C++20
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Recommended for modern C++
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++20" CXX_20_FLAG)
-CHECK_CXX_COMPILER_FLAG("-std:c++20" CXX_20_FLAG_MSVC)
-if(NOT (CXX_20_FLAG OR CXX_20_FLAG_MSVC))
-    message(FATAL_ERROR "[C++] C++20 is not supported by the compiler. Please use a compiler that supports C++20.")
-endif()
 
 # Make symbols hidden by default
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
