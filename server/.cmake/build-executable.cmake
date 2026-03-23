@@ -4,6 +4,8 @@ add_executable(
     JuggernyautServer ${JUG_SERVER_MAIN_CPP_PATH}
 )
 
+# Add internal files
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/base/*.cpp FALSE)
 # Link core libraries
 foreach(LIB ${CORE_LIBRARIES})
     message(STATUS "[BUILD] Adding linking target '${LIB}' to executable target 'JuggernyautServer'...")

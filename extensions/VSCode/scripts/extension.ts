@@ -6,26 +6,22 @@
 
 // Imports
 import * as vscode from "vscode";
+import * as lightCommands from "./commands.light";
 import * as commands from "./commands";
 import * as server from "./server"
 
-// Lightweight extension activation! (for web browsers!)
-export function lightweightActivation (context: vscode.ExtensionContext){
-    // Register light commands!
-    context.subscriptions.push(commands.docs);
-}
-
 // Activate the extension!
 export async function activate(context: vscode.ExtensionContext) {
-    // Do lightweight activation first
-    lightweightActivation(context);
+    // Register commands!
+    lightCommands.register(context);
+    commands.register(context)
     // Start the language server
-    await server.start();
+    server.activate(context);
 }
 
-export function deactivate(): Thenable<void> | undefined {
-    if (!server.client) {
+export async function deactivate(): Promise<Thenable<void>> {
+    if (server.client == undefined) {
         return undefined;
     }
-    return server.client.stop();
+    return await server.deactivate();
 }

@@ -18,6 +18,9 @@
 // lsp-framework
 #include "lspFramework.hpp"
 
+// Base
+#include "base/info.hpp"
+
 // Parser
 #include "../core/parser/parser.hpp"
 #include "../core/parser/listeners/errors.hpp"
@@ -135,7 +138,7 @@ void printMessage () {
     printMessageMethod<MessageType>();
 }
 
-void registerCallbacks (lsp::MessageHandler &messageHandler, bool &is_running) {
+void registerCallbacks (lsp::MessageHandler &messageHandler, bool &received_shutdown) {
     messageHandler.add<lsp::requests::Initialize>(
         [](lsp::requests::Initialize::Params&& params) {
             printMessage<lsp::requests::Initialize>(params);
@@ -156,19 +159,20 @@ void registerCallbacks (lsp::MessageHandler &messageHandler, bool &is_running) {
                 },
                 .serverInfo = lsp::InitializeResultServerInfo {
                     .name = "Juggernyaut Language Server",
-                    .version = MAIN_TARGET_BINARY_VERSION
+                    .version = Base::Info::version
                 },
             };
         }
     ).add<lsp::requests::Shutdown>(
-        []() {
+        [&received_shutdown]() {
             printMessage<lsp::requests::Shutdown>();
+            received_shutdown = true;
             return lsp::requests::Shutdown::Result();
         }
     ).add<lsp::notifications::Exit>(
-        [&is_running]() {
+        [&received_shutdown]() {
             printMessage<lsp::notifications::Exit>();
-            is_running = false;
+            exit(received_shutdown ? 0 : 1);
         }
     )
     // Listen for when a file is opened
@@ -207,22 +211,27 @@ int main (int argc, const char *argv[]) {
         auto connection = lsp::Connection(lsp::io::standardIO());
         auto messageHandler = lsp::MessageHandler(connection);
 
-        bool is_running = true;
-        registerCallbacks(messageHandler, is_running);
+        bool received_shutdown = false;
+        registerCallbacks(messageHandler, received_shutdown);
 
-        while(is_running)
+        while(true)
             messageHandler.processIncomingMessages();
     } catch(const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << std::endl;
     }
 
+    // exit() didn't work??
+    return 1;
+}
+
+void exit(const int &code) {
     // Handle memory check results
     if(Common::CrtDebug::processCrtMemoryReports()){
         // Exist with an error on memory leaks!
         // "Terminating program due to detected memory errors! Please contact the developers of Juggernyaut!"
-        return 1;
+        std::exit(1);
     }
 
-    // End the program
-    return 0;
+    // Terminate the process!
+    std::exit(code);
 }

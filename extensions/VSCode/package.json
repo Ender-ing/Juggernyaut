@@ -18,12 +18,16 @@
                 "juggernyaut.sdkPath": {
                     "type": "string",
                     "default": "",
-                    "description": "The absolute path to the Juggernyaut SDK."
+                    "description": "The absolute path to your preferred Juggernyaut SDK version."
                 },
                 "juggernyaut.trace.server": {
                     "scope": "window",
                     "type": "string",
-                    "enum": ["off", "messages", "verbose"],
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the server."
                 },
@@ -80,6 +84,21 @@
                 "command": "juggernyaut.docs",
                 "title": "Check the latest Juggernyaut documentation!",
                 "category": "Juggernyaut"
+            },
+            {
+                "command": "juggernyaut.server.stop",
+                "title": "Terminate the (running) Juggernyaut language server and its cycle!",
+                "category": "Juggernyaut"
+            },
+            {
+                "command": "juggernyaut.server.resume",
+                "title": "Resume the Juggernyaut language server cycle!",
+                "category": "Juggernyaut"
+            },
+            {
+                "command": "juggernyaut.internal",
+                "title": "Show the Juggernyaut (internal) output channel!",
+                "category": "Juggernyaut"
             }
         ],
         "files": [
@@ -112,24 +131,29 @@
         "general programming language"
     ],
     "scripts": {
-        "build": "tsc",
-        "vsce-package": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/supplements/VSCode-Extension",
+        "build": "esbuild ./scripts/extension.ts --bundle --outfile=./scripts/extension.js --external:vscode --format=cjs --platform=node && esbuild ./scripts/extension.light.ts --bundle --outfile=./scripts/extension.light.js --external:vscode --format=cjs --platform=browser --minify",
+        "package:desktop": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode",
+        "package:web": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode --target web",
+        "package:all": "npm run package:desktop && npm run package:web",
         "win-copy-license": "xcopy /y ..\\..\\LICENSE .",
         "lix-copy-license": "cp ../../LICENSE .",
         "win-delete-vsix": "del juggernyaut*.vsix",
         "lix-delete-vsix": "rm -f juggernyaut*.vsix",
         "win-delete-license": "del LICENSE",
         "lix-delete-license": "rm -f LICENSE",
-        "win-package": "npm run win-delete-vsix && npm run win-delete-license && npm run win-copy-license && npm run build && npm run vsce-package && npm run win-delete-license",
-        "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run vsce-package && npm run lix-delete-license"
+        "win-package": "npm run win-delete-vsix && npm run win-delete-license && npm run win-copy-license && npm run build && npm run package:all && npm run win-delete-license",
+        "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run package:all && npm run lix-delete-license"
     },
     "devDependencies": {
         "@types/node": "^25.5.0",
         "@types/vscode": "^1.94.0",
+        "@types/which": "^3.0.4",
         "@vscode/vsce": "^3.2.1",
+        "esbuild": "^0.27.4",
         "typescript": "^5.6.3"
     },
     "dependencies": {
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^9.0.1",
+        "which": "^6.0.1"
     }
 }
