@@ -42,31 +42,21 @@ jobs:
       id: get-file
       run: |
         $Files = Get-ChildItem -Path "./" -Filter "*.vsix"
-        $Count = 0
         if ($Files.Count -eq 2) {
           foreach ($File in $Files) {
             $FileName = $File.Name
             $VersionWithExt = $FileName.Replace("juggernyaut-", "")
             $NewFileName = "Juggernyaut-VSCode-v$VersionWithExt"
             Rename-Item -Path $File.FullName -NewName $NewFileName
-            $Count++
-            echo "VSCODE_EXT_FILE_NAME_$Count=$NewFileName" >> $env:GITHUB_ENV
           }
         } else {
           Write-Error "Found $Files.Count .vsix files in ${{github.workspace}}/extensions/VSCode/"
         }
       working-directory: ${{github.workspace}}/extensions/VSCode
 
-    - name: Upload Artifact \#1 (optional)
+    - name: Upload Artifacts (optional)
       if: inputs.upload_artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{env.VSCODE_EXT_FILE_NAME_1}}
-        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME_1}}
-
-    - name: Upload Artifact \#2 (optional)
-      if: inputs.upload_artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{env.VSCODE_EXT_FILE_NAME_2}}
-        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME_2}}
+        name: Juggernyaut-VSCode-Extensions
+        path: ${{github.workspace}}/extensions/VSCode/*.vsix
