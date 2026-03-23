@@ -1,4 +1,10 @@
-import { window, workspace, Uri, ExtensionContext, OutputChannel  } from 'vscode';
+/**
+ *
+ * Manage the Language Server!
+ *
+**/
+
+import { workspace, Uri, ExtensionContext  } from 'vscode';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -7,6 +13,7 @@ import {
     Executable} from 'vscode-languageclient/node';
 import * as sdk from "./sdk"
 import { getCommand } from './platform';
+import { info, Section } from './channel';
 
 export let client: LanguageClient | undefined = undefined;
 
@@ -63,14 +70,17 @@ async function manageServerLifecycle() {
         isChangingServerState = true;
         await start();
         isChangingServerState = false;
-        logInfo('Starting the Juggernyaut language server...');
+        info(Section.SERVER, 'Starting the Juggernyaut language server...');
     } else if (!hasActiveFiles && client != undefined) { // Stop
         isChangingServerState = true;
         await client.stop();
         client = undefined; // Clear the reference so it can be restarted
         isChangingServerState = false;
-        logInfo('Terminating the Juggernyaut language server...');
+        info(Section.SERVER, 'Terminating the Juggernyaut language server...');
     }
+}
+export function enableServerCycle(state: boolean) {
+    haultCycle = !state;
 }
 
 // Prevent excessive updates
@@ -100,9 +110,9 @@ export function activate(context: ExtensionContext) {
 }
 
 export async function deactivate() {
-    logInfo("Deactivation Request received!")
+    info(Section.SERVER, "Deactivation Request received!")
     if (client == undefined) {
-        logInfo("Server is already inactive!")
+        info(Section.SERVER, "Server is already inactive!")
         return undefined;
     }
     if (isChangingServerState == true) {
@@ -113,26 +123,5 @@ export async function deactivate() {
     await client.stop();
     client = undefined; // Clear the reference so it can be restarted
     isChangingServerState = false;
-    logInfo("Server has been successfully deactivated!")
-}
-
-// Debugging!
-
-export const outputChannel: OutputChannel  = window.createOutputChannel('Juggernyaut Language Server (Debug)');
-
-function logInfo(message: string) {
-    // 2. Generate the timestamp to match your screenshot exactly.
-    // toLocaleString() natively produces the "M/DD/YYYY, H:MM:SS AM/PM" format.
-    const timestamp = new Date().toLocaleString('en-US');
-    
-    // 3. Write the formatted string to the output panel
-    outputChannel.appendLine(`[${timestamp}] ${message}`);
-}
-
-function logError(message: string, error?: any) {
-    const timestamp = new Date().toLocaleString('en-US');
-    outputChannel.appendLine(`[${timestamp}] ERROR: ${message}`);
-    if (error) {
-        outputChannel.appendLine(String(error));
-    }
+    info(Section.SERVER, "Server has been successfully deactivated!")
 }
