@@ -18,12 +18,16 @@
                 "juggernyaut.sdkPath": {
                     "type": "string",
                     "default": "",
-                    "description": "The absolute path to the Juggernyaut SDK."
+                    "description": "The absolute path to your preferred Juggernyaut SDK version."
                 },
                 "juggernyaut.trace.server": {
                     "scope": "window",
                     "type": "string",
-                    "enum": ["off", "messages", "verbose"],
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the server."
                 },
@@ -83,12 +87,17 @@
             },
             {
                 "command": "juggernyaut.server.stop",
-                "title": "Terminate the (running) Juggernyaut language server!",
+                "title": "Terminate the (running) Juggernyaut language server and its cycle!",
                 "category": "Juggernyaut"
             },
             {
-                "command": "juggernyaut.server.debug",
-                "title": "Show the Juggernyaut language server debug output channel!",
+                "command": "juggernyaut.server.resume",
+                "title": "Resume the Juggernyaut language server cycle!",
+                "category": "Juggernyaut"
+            },
+            {
+                "command": "juggernyaut.internal",
+                "title": "Show the Juggernyaut (internal) output channel!",
                 "category": "Juggernyaut"
             }
         ],
@@ -136,10 +145,12 @@
     "devDependencies": {
         "@types/node": "^25.5.0",
         "@types/vscode": "^1.94.0",
+        "@types/which": "^3.0.4",
         "@vscode/vsce": "^3.2.1",
         "typescript": "^5.6.3"
     },
     "dependencies": {
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^9.0.1",
+        "which": "^6.0.1"
     }
 }

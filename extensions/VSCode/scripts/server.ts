@@ -16,6 +16,7 @@ import { getCommand } from './platform';
 import { info, Section } from './channel';
 
 export let client: LanguageClient | undefined = undefined;
+let haultCycle: boolean = false;
 
 async function start() {
     // Define the path to the executable!
@@ -57,8 +58,8 @@ async function start() {
 
 // Restrict language server runtime
 let isChangingServerState = false;
-async function manageServerLifecycle() {
-    if (isChangingServerState) {
+export async function manageServerLifecycle() {
+    if (isChangingServerState || haultCycle) {
         return;
     }
     const hasActiveFiles = workspace.textDocuments.some(
