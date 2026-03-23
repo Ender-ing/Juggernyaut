@@ -6,6 +6,11 @@
 **/
 
 // Imports
-import { lightweightActivation } from "./extension";
+import * as vscode from "vscode";
+import * as lightCommands from "./commands.light";
 
-export const activate = lightweightActivation;
+// Activate the extension!
+export async function activate(context: vscode.ExtensionContext) {
+    // Add basic commands
+    lightCommands.register(context)
+}

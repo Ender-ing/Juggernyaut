@@ -41,21 +41,32 @@ jobs:
     - name: Get VSCode Extension version
       id: get-file
       run: |
-        $FilePath = Get-ChildItem -Path "./" -Filter "*.vsix" | Select-Object -First 1 | Select-Object -ExpandProperty FullName
-        if ($FilePath) {
-          $FileName = Split-Path -Path $FilePath -Leaf
-          $VersionWithExt = $FileName.Replace("juggernyaut-", "")
-          $NewFileName = "Juggernyaut-VSCode-v$VersionWithExt";
-          mv $FileName $NewFileName # Rename the file
-          echo "VSCODE_EXT_FILE_NAME=$NewFileName" >> $env:GITHUB_ENV
+        $Files = Get-ChildItem -Path "./" -Filter "*.vsix"
+        $Count = 0
+        if ($Files.Count -eq 2) {
+          foreach ($File in $Files) {
+            $FileName = $File.Name
+            $VersionWithExt = $FileName.Replace("juggernyaut-", "")
+            $NewFileName = "Juggernyaut-VSCode-v$VersionWithExt"
+            Rename-Item -Path $File.FullName -NewName $NewFileName
+            $Count++
+            echo "VSCODE_EXT_FILE_NAME_$Count=$NewFileName" >> $env:GITHUB_ENV
+          }
         } else {
-          Write-Error "No .vsix files found in ${{github.workspace}}/extensions/VSCode/"
+          Write-Error "Found $Files.Count .vsix files in ${{github.workspace}}/extensions/VSCode/"
         }
       working-directory: ${{github.workspace}}/extensions/VSCode
 
-    - name: Upload Binaries Artifact (optional)
+    - name: Upload Artifact \#1 (optional)
       if: inputs.upload_artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{env.VSCODE_EXT_FILE_NAME}}
-        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME}}
+        name: ${{env.VSCODE_EXT_FILE_NAME_1}}
+        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME_1}}
+
+    - name: Upload Artifact \#2 (optional)
+      if: inputs.upload_artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.VSCODE_EXT_FILE_NAME_2}}
+        path: ${{github.workspace}}/extensions/VSCode/${{env.VSCODE_EXT_FILE_NAME_2}}

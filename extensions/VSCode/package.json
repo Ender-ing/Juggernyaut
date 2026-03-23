@@ -131,16 +131,18 @@
         "general programming language"
     ],
     "scripts": {
-        "build": "esbuild ./scripts/extension.ts --bundle --outfile=./scripts/extension.js --external:vscode --format=cjs --platform=node && esbuild ./scripts/extension.light.ts --bundle --outfile=./scripts/extension.light.js --external:vscode --format=cjs --platform=node",
-        "vsce-package": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/supplements/VSCode-Extension",
+        "build": "esbuild ./scripts/extension.ts --bundle --outfile=./scripts/extension.js --external:vscode --format=cjs --platform=node && esbuild ./scripts/extension.light.ts --bundle --outfile=./scripts/extension.light.js --external:vscode --format=cjs --platform=browser --minify",
+        "package:desktop": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode",
+        "package:web": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode --target web",
+        "package:all": "npm run package:desktop && npm run package:web",
         "win-copy-license": "xcopy /y ..\\..\\LICENSE .",
         "lix-copy-license": "cp ../../LICENSE .",
         "win-delete-vsix": "del juggernyaut*.vsix",
         "lix-delete-vsix": "rm -f juggernyaut*.vsix",
         "win-delete-license": "del LICENSE",
         "lix-delete-license": "rm -f LICENSE",
-        "win-package": "npm run win-delete-vsix && npm run win-delete-license && npm run win-copy-license && npm run build && npm run vsce-package && npm run win-delete-license",
-        "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run vsce-package && npm run lix-delete-license"
+        "win-package": "npm run win-delete-vsix && npm run win-delete-license && npm run win-copy-license && npm run build && npm run package:all && npm run win-delete-license",
+        "lix-package": "npm run lix-delete-vsix && npm run lix-delete-license && npm run lix-copy-license && npm run build && npm run package:all && npm run lix-delete-license"
     },
     "devDependencies": {
         "@types/node": "^25.5.0",
