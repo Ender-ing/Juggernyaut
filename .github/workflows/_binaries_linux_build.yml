@@ -102,7 +102,7 @@ jobs:
 
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-Linux-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
