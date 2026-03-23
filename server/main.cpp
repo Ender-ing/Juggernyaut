@@ -1,6 +1,6 @@
 /**
  * @brief
- * Juggernyaut Compiler
+ * Juggernyaut Language Server
 **/
 
 // Basic C++ headers
