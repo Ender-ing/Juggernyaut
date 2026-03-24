@@ -34,9 +34,9 @@ namespace Store {
             Document(const lsp::DocumentUri &docUri)
                 : uri(std::string(docUri.path())) {}
             Document(const std::string &docUri, const bool isOpened)
-                : uri(std::move(docUri)), isInEditor(isOpened) {}
+                : isInEditor(isOpened), uri(std::move(docUri)) {}
             Document(const lsp::DocumentUri &docUri, const bool isOpened)
-                : uri(std::string(docUri.path())), isInEditor(isOpened) {}
+                : isInEditor(isOpened), uri(std::string(docUri.path())) {}
 
             virtual void setIsInEditor(bool state) ;
             virtual const bool& getIsInEditor() ;
