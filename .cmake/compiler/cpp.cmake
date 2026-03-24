@@ -79,7 +79,7 @@ function(add_internal_target_cxx_flags TARGET IS_LESS_RESTRICTIVE)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         # MSVC
         target_compile_options(${TARGET} PRIVATE
-            /analyze:WX- # Extra code analysis (without warning errors)
+            /analyze # Extra code analysis (without warning errors)
 
             /W4 # Enable all warnings
 

@@ -29,4 +29,9 @@ else()
             SOURCE_DIR ${JUG_DEP_FMT_LIB_PATH})
     endif()
     FetchContent_MakeAvailable(fmt)
+
+    # FIX: Ignore known warnings in VS2026
+    if(MSVC)
+        target_compile_options(fmt INTERFACE /analyze-)
+    endif()
 endif()
