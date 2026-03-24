@@ -7,6 +7,10 @@ on:
       bundle_binaries:
         required: true
         type: boolean
+      release_version:
+        required: false
+        type: string
+        default: 0.0.0-github.000
 
 # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
 
@@ -21,6 +25,7 @@ jobs:
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
   build-binaries-on-linux-x86-64:
     name: Linux x64
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -30,6 +35,7 @@ jobs:
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
   build-binaries-on-mac-x86-64:
     name: MacOS x64
     uses: ./.github/workflows/_binaries_mac_build.yml
@@ -39,6 +45,7 @@ jobs:
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
 
   # x86_32
   build-binaries-on-windows-x86-32:
@@ -49,6 +56,7 @@ jobs:
       build_platform_name: x86_32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
   build-binaries-on-linux-x86-32:
     name: Linux x86
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -58,6 +66,7 @@ jobs:
       build_platform_name: x86_32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
 
   # ARM64
   build-binaries-on-windows-arm64:
@@ -69,6 +78,7 @@ jobs:
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
   build-binaries-on-linux-arm64:
     name: Linux ARM64
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -78,6 +88,7 @@ jobs:
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
   build-binaries-on-mac-arm64:
     name: MacOS ARM64
     uses: ./.github/workflows/_binaries_mac_build.yml
@@ -87,6 +98,7 @@ jobs:
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}
 
   #ARM32
   build-binaries-on-linux-arm32:
@@ -98,3 +110,4 @@ jobs:
       build_platform_name: arm32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
+      release_version: ${{inputs.release_version}}

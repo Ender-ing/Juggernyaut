@@ -15,6 +15,21 @@ on:
 
 jobs:
 
+  manage-release-version:
+    name: Manage release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Extract version
+        id: get_version
+        shell: bash
+        run: |
+          RAW_TAG="${{github.ref_name}}"
+          VERSION="${RAW_TAG#v}" 
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted Version: $VERSION"
+
   # VSCode
   build-vscode-extension:
     name: Build VSCode package
@@ -26,9 +41,12 @@ jobs:
   build-binaries-release:
     name: Generate 'Release' binaries
     uses: ./.github/workflows/_binaries_dynamic_build.yml
+    needs:
+      - manage-release-version
     with:
       build_mode: Release
       bundle_binaries: true
+      release_version: ${{needs.manage-release-version.outputs.version}}
 
   create-github-release:
     name: Create GitHub Release
@@ -36,8 +54,8 @@ jobs:
     permissions:
       contents: write # Allow this workflow job to create a release
     needs:
-    - build-vscode-extension
-    - build-binaries-release
+      - build-vscode-extension
+      - build-binaries-release
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

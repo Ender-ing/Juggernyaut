@@ -17,6 +17,10 @@ on:
       bundle_binaries:
         required: true
         type: boolean
+      release_version:
+        required: false
+        type: string
+        default: 0.0.0-github_windows.000
 
 jobs:
 
@@ -66,7 +70,9 @@ jobs:
       run: mkdir ${{github.workspace}}/.build
 
     - name: Configure CMake
-      run: cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -A ${{inputs.build_platform}} -DJUG_CLEANUP=ON
+      run: |
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -A ${{inputs.build_platform}} -DJUG_CLEANUP=ON `
+          -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
 
     - name: Build

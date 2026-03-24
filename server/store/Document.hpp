@@ -22,6 +22,7 @@ namespace Store {
         private:
             std::string rawContent = "ERROR: FILE NOT UPDATED!";
             bool isInEditor = false;
+            bool isImported = false;
 
         public:
             const std::string uri;
@@ -29,18 +30,21 @@ namespace Store {
 
             // Constructors
             Document() = default;
-            Document(const std::string &docUri)
-                : uri(std::move(docUri)) {}
+            Document(const std::string docUri)
+                : uri(docUri) {}
             Document(const lsp::DocumentUri &docUri)
                 : uri(std::string(docUri.path())) {}
-            Document(const std::string &docUri, const bool isOpened)
-                : isInEditor(isOpened), uri(std::move(docUri)) {}
-            Document(const lsp::DocumentUri &docUri, const bool isOpened)
+            Document(const std::string docUri, const bool isOpened)
+                : isInEditor(isOpened), uri(docUri) {}
+            Document(const lsp::DocumentUri docUri, const bool isOpened)
                 : isInEditor(isOpened), uri(std::string(docUri.path())) {}
 
-            virtual void setIsInEditor(bool state) ;
-            virtual const bool& getIsInEditor() ;
-            virtual void setRawContent(std::string rawText) ;
-            virtual const std::string& getRawContent() ;
+            void setIsInEditor(bool state) ;
+            const bool& getIsInEditor() ;
+            void setIsImported(bool state) ;
+            const bool& getIsImported() ;
+            // This will steal rawText from you! :)
+            void setRawContent(std::string &rawText) ;
+            const std::string& getRawContent() ;
     };
 }

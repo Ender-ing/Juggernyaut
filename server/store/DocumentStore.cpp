@@ -17,25 +17,34 @@
 #include "Document.hpp"
 
 namespace Store {
-    void DocumentStore::addDocument(const std::string &uri) {
+    void DocumentStore::addDocument(const std::string &uri, bool fetchContent) {
         Document doc = Document(uri);
 
         // Get file contents
-        std::string rawText;
-        bool success = Common::Files::getFileContent(uri, rawText);
-        if(!success) {
-            rawText = "TEMPORARY:ERROR: COULDN'T FETCH THE FILE!"; // TO-DO: THROW A PROPER ERROR...
+        if (fetchContent) {
+            std::string rawText;
+            bool success = Common::Files::getFileContent(uri, rawText);
+            if(!success) {
+                rawText = "TEMPORARY:ERROR: COULDN'T FETCH THE FILE!"; // TO-DO: THROW A PROPER ERROR...
+            }
+
+            doc.setRawContent(rawText);
         }
 
-        doc.setRawContent(rawText);
-        doc.setIsInEditor(false);
-
         // Events
-        doc.onRawContentChange = [](Document document){
+        doc.onRawContentChange = [](Document &document){
             Capabilities::Semantics::validateDocumentSyntax(*Capabilities::handler, document);
         };
 
-        this->documents.insert({uri, doc});
+        this->documents.insert({uri, std::move(doc)});
+    }
+    Document* DocumentStore::getDocument(const std::string &uri) {
+        auto doc = this->documents.find(uri);
+        if (doc != this->documents.end()) {
+            return &(doc->second);
+        } else {
+            return nullptr;
+        }
     }
     const Document* DocumentStore::getDocument(const std::string &uri) const {
         auto doc = this->documents.find(uri);
@@ -45,10 +54,13 @@ namespace Store {
             return nullptr;
         }
     }
+    void DocumentStore::deleteDocument(const std::string uri) {
+        this->documents.erase(uri);
+    }
     void DocumentStore::initDocument(const std::string &uri) {
         auto doc = this->documents.find(uri);
         if (doc == this->documents.end()) {
-            this->addDocument(uri);
+            this->addDocument(uri, false);
         }
     }
 }
