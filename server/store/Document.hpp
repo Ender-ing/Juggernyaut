@@ -22,6 +22,7 @@ namespace Store {
         private:
             std::string rawContent = "ERROR: FILE NOT UPDATED!";
             bool isInEditor = false;
+            bool isImported = false;
 
         public:
             const std::string uri;
@@ -38,9 +39,11 @@ namespace Store {
             Document(const lsp::DocumentUri &docUri, const bool isOpened)
                 : isInEditor(isOpened), uri(std::string(docUri.path())) {}
 
-            virtual void setIsInEditor(bool state) ;
-            virtual const bool& getIsInEditor() ;
-            virtual void setRawContent(std::string rawText) ;
-            virtual const std::string& getRawContent() ;
+            void setIsInEditor(bool state) ;
+            const bool& getIsInEditor() ;
+            void setIsImported(bool state) ;
+            const bool& getIsImported() ;
+            void setRawContent(std::string rawText) ;
+            const std::string& getRawContent() ;
     };
 }

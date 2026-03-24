@@ -12,6 +12,12 @@ namespace Store {
     const bool& Document::getIsInEditor() {
         return this->isInEditor;
     }
+    void Document::setIsImported(bool state) {
+        this->isImported = state;
+    }
+    const bool& Document::getIsImported() {
+        return this->isImported;
+    }
     void Document::setRawContent(std::string rawText) {
         this->rawContent= rawText;
         if (this->onRawContentChange != nullptr) {
