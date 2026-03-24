@@ -16,7 +16,7 @@ namespace Parser {
         
         // Check for syntax errors
         // [true -> success, false -> failure]
-        bool syntaxCheck (const std::string &file_contents, const TokenReport &onTokenCall, const TreeReport &onTreeCall,
+        bool syntaxCheck(const std::string &file_contents, const TokenReport &onTokenCall, const TreeReport &onTreeCall,
             Listeners::ErrorListener *lexerErrorListener, Listeners::ErrorListener *parserErrorListener) {
             // Use the file's input
             antlr4::ANTLRInputStream input(file_contents);
