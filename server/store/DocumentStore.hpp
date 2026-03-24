@@ -17,7 +17,7 @@ namespace Store {
     class DocumentStore {
         private:
             std::unordered_map<std::string, Document> documents;
-            void addDocument(const std::string &uri) ;
+            void addDocument(const std::string &uri, bool fetchContent) ;
 
         public:
             const Document* getDocument(const std::string &uri) const ;

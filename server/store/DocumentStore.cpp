@@ -17,18 +17,19 @@
 #include "Document.hpp"
 
 namespace Store {
-    void DocumentStore::addDocument(const std::string &uri) {
+    void DocumentStore::addDocument(const std::string &uri, bool fetchContent) {
         Document doc = Document(uri);
 
         // Get file contents
-        std::string rawText;
-        bool success = Common::Files::getFileContent(uri, rawText);
-        if(!success) {
-            rawText = "TEMPORARY:ERROR: COULDN'T FETCH THE FILE!"; // TO-DO: THROW A PROPER ERROR...
-        }
+        if (fetchContent) {
+            std::string rawText;
+            bool success = Common::Files::getFileContent(uri, rawText);
+            if(!success) {
+                rawText = "TEMPORARY:ERROR: COULDN'T FETCH THE FILE!"; // TO-DO: THROW A PROPER ERROR...
+            }
 
-        doc.setRawContent(rawText);
-        doc.setIsInEditor(false);
+            doc.setRawContent(std::move(rawText));
+        }
 
         // Events
         doc.onRawContentChange = [](Document document){
@@ -54,7 +55,7 @@ namespace Store {
     void DocumentStore::initDocument(const std::string &uri) {
         auto doc = this->documents.find(uri);
         if (doc == this->documents.end()) {
-            this->addDocument(uri);
+            this->addDocument(uri, false);
         }
     }
 }
