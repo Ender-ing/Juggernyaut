@@ -20,6 +20,7 @@ namespace Store {
             void addDocument(const std::string &uri, bool fetchContent) ;
 
         public:
+            Document* getDocument(const std::string &uri) ;
             const Document* getDocument(const std::string &uri) const ;
             void deleteDocument(const std::string &uri) ;
             void deleteDocument(Document &doc) ;

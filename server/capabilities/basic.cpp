@@ -49,17 +49,17 @@ namespace Capabilities {
             }
         ).add<lsp::notifications::TextDocument_DidOpen>(
             [&store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
-                const std::string rawUri = std::move(std::string(params.textDocument.uri.path()));
-                const std::string sourceCode = std::move(params.textDocument.text);
+                const std::string rawUri = std::string(params.textDocument.uri.path());
+                std::string sourceCode = std::move(params.textDocument.text);
 
                 // Load doc
                 store.initDocument(rawUri);
-                const Store::Document *docPtr = store.getDocument(rawUri);
-                Store::Document doc = *docPtr;
+                Store::Document *docPtr = store.getDocument(rawUri);
                 if (docPtr == nullptr) {
                     // THROW AN ERROR!
                     return;
                 }
+                Store::Document &doc = *docPtr;
 
                 doc.setIsInEditor(true);
                 doc.setRawContent(sourceCode);
@@ -69,20 +69,22 @@ namespace Capabilities {
                 // Note: If you requested Full sync in your InitializeResult, 
                 // params.contentChanges[0].text will contain the entire updated file.
                 if (!params.contentChanges.empty()) {
-                    const std::string rawUri = std::move(std::string(params.textDocument.uri.path()));
-                    const std::string updatedSourceCode = std::move(std::visit(
-                        [](const auto& changeEvent) { return changeEvent.text; }, 
+                    const std::string rawUri = std::string(params.textDocument.uri.path());
+                    std::string updatedSourceCode = std::visit(
+                        [](auto& changeEvent) {
+                            return std::move(changeEvent.text);
+                        },
                         params.contentChanges[0]
-                    ));
+                    );
 
                     // Load doc
                     store.initDocument(rawUri);
-                    const Store::Document *docPtr = store.getDocument(rawUri);
-                    Store::Document doc = *docPtr;
+                    Store::Document *docPtr = store.getDocument(rawUri);
                     if (docPtr == nullptr) {
                         // THROW AN ERROR!
                         return;
                     }
+                    Store::Document &doc = *docPtr;
 
                     doc.setIsInEditor(true);
                     doc.setRawContent(updatedSourceCode);
@@ -90,16 +92,16 @@ namespace Capabilities {
             }
         ).add<lsp::notifications::TextDocument_DidClose>(
             [&store](lsp::notifications::TextDocument_DidClose::Params&& params) {
-                const std::string rawUri = std::move(std::string(params.textDocument.uri.path()));
+                const std::string rawUri = std::string(params.textDocument.uri.path());
 
                 // Load doc
                 store.initDocument(rawUri);
-                const Store::Document *docPtr = store.getDocument(rawUri);
-                Store::Document doc = *docPtr;
+                Store::Document *docPtr = store.getDocument(rawUri);
                 if (docPtr == nullptr) {
                     // THROW AN ERROR!
                     return;
                 }
+                Store::Document &doc = *docPtr;
 
                 // Delete if not in use!
                 if (!doc.getIsImported()) {

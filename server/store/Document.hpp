@@ -25,17 +25,17 @@ namespace Store {
             bool isImported = false;
 
         public:
-            const std::string uri;
+            const std::string &uri;
             Event onRawContentChange;
 
             // Constructors
             Document() = default;
             Document(const std::string &docUri)
-                : uri(std::move(docUri)) {}
+                : uri(docUri) {}
             Document(const lsp::DocumentUri &docUri)
                 : uri(std::string(docUri.path())) {}
             Document(const std::string &docUri, const bool isOpened)
-                : isInEditor(isOpened), uri(std::move(docUri)) {}
+                : isInEditor(isOpened), uri(docUri) {}
             Document(const lsp::DocumentUri &docUri, const bool isOpened)
                 : isInEditor(isOpened), uri(std::string(docUri.path())) {}
 
@@ -43,7 +43,8 @@ namespace Store {
             const bool& getIsInEditor() ;
             void setIsImported(bool state) ;
             const bool& getIsImported() ;
-            void setRawContent(std::string rawText) ;
+            // This will steal rawText from you! :)
+            void setRawContent(std::string &rawText) ;
             const std::string& getRawContent() ;
     };
 }

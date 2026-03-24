@@ -28,15 +28,23 @@ namespace Store {
                 rawText = "TEMPORARY:ERROR: COULDN'T FETCH THE FILE!"; // TO-DO: THROW A PROPER ERROR...
             }
 
-            doc.setRawContent(std::move(rawText));
+            doc.setRawContent(rawText);
         }
 
         // Events
-        doc.onRawContentChange = [](Document document){
+        doc.onRawContentChange = [](Document &document){
             Capabilities::Semantics::validateDocumentSyntax(*Capabilities::handler, document);
         };
 
-        this->documents.insert({uri, doc});
+        this->documents.insert({uri, std::move(doc)});
+    }
+    Document* DocumentStore::getDocument(const std::string &uri) {
+        auto doc = this->documents.find(uri);
+        if (doc != this->documents.end()) {
+            return &(doc->second);
+        } else {
+            return nullptr;
+        }
     }
     const Document* DocumentStore::getDocument(const std::string &uri) const {
         auto doc = this->documents.find(uri);

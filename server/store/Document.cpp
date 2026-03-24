@@ -18,10 +18,10 @@ namespace Store {
     const bool& Document::getIsImported() {
         return this->isImported;
     }
-    void Document::setRawContent(std::string rawText) {
-        this->rawContent= rawText;
+    void Document::setRawContent(std::string &rawText) {
+        this->rawContent= std::move(rawText);
         if (this->onRawContentChange != nullptr) {
-            Document::Event callback = this->onRawContentChange;
+            Document::Event &callback = this->onRawContentChange;
             callback(*this);
         }
     }
