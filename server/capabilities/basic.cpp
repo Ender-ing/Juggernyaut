@@ -48,7 +48,7 @@ namespace Capabilities {
                 exit(received_shutdown ? 0 : 1);
             }
         ).add<lsp::notifications::TextDocument_DidOpen>(
-            [&messageHandler, &store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
+            [&store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
                 const std::string sourceCode = params.textDocument.text;
 
@@ -67,7 +67,7 @@ namespace Capabilities {
         )
         // Listen for when a file is modified
         .add<lsp::notifications::TextDocument_DidChange>(
-            [&messageHandler, &store](lsp::notifications::TextDocument_DidChange::Params&& params) {
+            [&store](lsp::notifications::TextDocument_DidChange::Params&& params) {
                 // Note: If you requested Full sync in your InitializeResult, 
                 // params.contentChanges[0].text will contain the entire updated file.
                 if (!params.contentChanges.empty()) {
