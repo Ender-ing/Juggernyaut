@@ -9,9 +9,7 @@
 #include "../../core/common/files.hpp"
 
 // Basic C++ headers
-#include <unordered_map>
 #include <functional>
-#include <optional>
 
 namespace Base {
     namespace Actions {

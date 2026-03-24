@@ -16,6 +16,7 @@
 #include <vector>
 #include <array>
 #include <limits.h>
+#include <optional>
 
 // Include platform headers
 #ifdef _WIN32

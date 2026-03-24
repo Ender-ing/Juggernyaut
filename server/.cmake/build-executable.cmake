@@ -6,6 +6,9 @@ add_executable(
 
 # Add internal files
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/base/*.cpp FALSE)
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/store/*.cpp TRUE)
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
+
 # Link core libraries
 foreach(LIB ${CORE_LIBRARIES})
     message(STATUS "[BUILD] Adding linking target '${LIB}' to executable target 'JuggernyautServer'...")
@@ -19,7 +22,6 @@ endforeach()
 # lsp-framework
 add_dependencies(JuggernyautServer lsp)
 target_link_libraries(JuggernyautServer PUBLIC lsp)
-
 
 # Handle dynamic libraries
 target_link_directories(JuggernyautServer PRIVATE "$<TARGET_FILE_DIR:JuggernyautServer>")

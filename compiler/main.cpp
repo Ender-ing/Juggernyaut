@@ -19,7 +19,7 @@
 #include "base/config.hpp"
 #include "base/info.hpp"
 
-int main (int argc, const char *argv[]) {
+int main(int argc, const char *argv[]) {
     // Test for memory leaks
     Common::CrtDebug::initiateCrtMemoryChecks();
 
