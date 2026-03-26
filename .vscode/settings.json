@@ -1,0 +1,10 @@
+{
+    "C_Cpp.codeAnalysis.runAutomatically": true,
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true,
+    "C_Cpp.codeAnalysis.clangTidy.args": [
+        "--config-file=.clang-tidy",
+        "--",
+        "-std=c++23"
+    ]
+}
