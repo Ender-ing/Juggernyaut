@@ -7,8 +7,6 @@ on:
     branches:
     - "main"
 
-# -win32-arm64 -win32-ia32 -win32-x64 -darwin-arm64 -darwin-x64 -linux-arm64 -linux-armv7l -linux-x64 -mas-arm64 -mas-x64
-
 jobs:
 
   # Debug
@@ -23,6 +21,9 @@ jobs:
   build-binaries-release:
     name: Release
     uses: ./.github/workflows/_binaries_dynamic_build.yml
+    if: >
+      (github.event_name == 'pull_request' && endsWith(github.event.pull_request.title, ' -FULL')) ||
+      github.event_name == 'push'
     needs:
       - build-binaries-debug
     with:
