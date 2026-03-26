@@ -37,35 +37,25 @@ int main(int argc, const char *argv[]) {
     // Test for memory leaks
     Common::CrtDebug::initiateCrtMemoryChecks();
 
+    int exit_code = false;
+
     // Initalise communications protocol
     try {
         auto connection = lsp::Connection(lsp::io::standardIO());
         auto messageHandler = lsp::MessageHandler(connection);
 
-        bool received_shutdown = false;
         Store::DocumentStore store;
 
-        Capabilities::configureProtocol(messageHandler, received_shutdown, store);
+        Capabilities::configureProtocol(messageHandler, store, exit_code);
 
         while(true) {
             messageHandler.processIncomingMessages();
         }
     } catch(const std::exception& e) {
+        exit_code = 1;
         std::cerr << "ERROR: " << e.what() << std::endl;
     }
 
     // exit() didn't work??
-    return 1;
-}
-
-void exit(const int &code) {
-    // Handle memory check results
-    if(Common::CrtDebug::processCrtMemoryReports()){
-        // Exist with an error on memory leaks!
-        // "Terminating program due to detected memory errors! Please contact the developers of Juggernyaut!"
-        std::exit(1);
-    }
-
-    // Terminate the process!
-    std::exit(code);
+    return exit_code;
 }

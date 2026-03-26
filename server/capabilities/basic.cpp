@@ -10,7 +10,8 @@
 
 namespace Capabilities {
     lsp::MessageHandler *handler = nullptr;
-    void configureProtocol(lsp::MessageHandler &messageHandler, bool &received_shutdown, Store::DocumentStore &store) {
+    void configureProtocol(lsp::MessageHandler &messageHandler, Store::DocumentStore &store, int &exit_code) {
+        bool received_shutdown = false;
         handler = &messageHandler;
         messageHandler.add<lsp::requests::Initialize>(
             [](lsp::requests::Initialize::Params&& params) {
@@ -43,9 +44,9 @@ namespace Capabilities {
                 return lsp::requests::Shutdown::Result();
             }
         ).add<lsp::notifications::Exit>(
-            [&received_shutdown]() {
+            [&received_shutdown, &exit_code]() {
                 printMessage<lsp::notifications::Exit>();
-                exit(received_shutdown ? 0 : 1);
+                exit_code = received_shutdown ? 0 : 1;
             }
         ).add<lsp::notifications::TextDocument_DidOpen>(
             [&store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
