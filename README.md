@@ -18,3 +18,14 @@ Includes extensions for well-known code editors.
 
 - `/server`:
 Includes the server language. (Follows the LSP)
+
+## Memory debugging
+
+```bash
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./NAME
+```
+
+## Releases
+
+The comment of the last commit made before a release must follow the pattern the `* -FULL`.
+This is done as to ensure all architectures are built and tested successfully!

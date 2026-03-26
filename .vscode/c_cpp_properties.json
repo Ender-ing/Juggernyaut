@@ -3,12 +3,15 @@
         {
             "includePath": [
                 "${workspaceFolder}/.deps/**",
-                "${workspaceFolder}/.build/**"
+                "${workspaceFolder}/.build/core/**",
+                "${workspaceFolder}/.build/*_core/**",
+                "${workspaceFolder}/.build/_deps/lsp-build/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c23",
-            "cppStandard": "c++23"
+            "cppStandard": "c++23",
+            "compileCommands": "${workspaceFolder}/.build/compile_commands.json"
         }
     ],
     "version": 4

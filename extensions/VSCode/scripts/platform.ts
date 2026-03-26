@@ -5,7 +5,7 @@
 **/
 
 // Imports
-import { window, env, Uri, UIKind } from 'vscode';
+import { window, workspace, env, Uri, UIKind } from 'vscode';
 
 export enum Platform {
     Web = 0,
@@ -29,15 +29,40 @@ export function getPlatform(): Platform {
     }
 }
 
-export async function getCommand(base:string, name:string): Promise<string> {
+export async function getCommand(base:string, name:string): Promise<{cmd: string, args: string[]}> {
     const platform = await getPlatform();
-        if (platform == Platform.Windows) {
-            return Uri.joinPath(Uri.file(base), `${name}.exe`).fsPath;
-        } else if (platform == Platform.Linux || platform == Platform.Mac) {
-            return Uri.joinPath(Uri.file(base), name).fsPath;
+    if (platform == Platform.Windows) {
+        return {
+            cmd: Uri.joinPath(Uri.file(base), `${name}.exe`).fsPath,
+            args: []
+        };
+    } else if (platform == Platform.Linux || platform == Platform.Mac) {
+        const config = workspace.getConfiguration('juggernyaut');
+        const shouldUseValgrind = config.get<boolean>('debug.valgrind');
+
+        const cmd: string = Uri.joinPath(Uri.file(base), name).fsPath;
+        if (shouldUseValgrind) {
+            return {
+                cmd: "valgrind",
+                args: [
+                    "--leak-check=full",
+                    "--show-leak-kinds=all",
+                    "--track-origins=yes",
+                    `--log-file=${base}/${name}.valgrind.log`,
+                    cmd
+                ]
+            };
         } else {
-            window.showInformationMessage("Your platform isn't supported by Juggernyaut's language server!");
-            return "";
+            return {
+                cmd: cmd,
+                args: []
+            };
         }
-    
+    } else {
+        window.showInformationMessage("Your platform isn't supported by Juggernyaut's language server!");
+        return {
+            cmd: "",
+            args: []
+        };
+    }
 }

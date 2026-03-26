@@ -4,6 +4,9 @@ on:
       build_mode:
         required: true
         type: string
+      full_build:
+        required: true
+        type: boolean
       bundle_binaries:
         required: true
         type: boolean
@@ -29,6 +32,7 @@ jobs:
   build-binaries-on-windows-x86-32:
     name: Windows x86
     uses: ./.github/workflows/_binaries_windows_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-windows-x86-64
     with:
@@ -40,6 +44,7 @@ jobs:
   build-binaries-on-windows-arm64:
     name: Windows ARM64
     uses: ./.github/workflows/_binaries_windows_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-windows-x86-64
     with:
@@ -64,6 +69,7 @@ jobs:
   build-binaries-on-linux-x86-32:
     name: Linux x86
     uses: ./.github/workflows/_binaries_linux_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-linux-x86-64
     with:
@@ -76,6 +82,7 @@ jobs:
   build-binaries-on-linux-arm64:
     name: Linux ARM64
     uses: ./.github/workflows/_binaries_linux_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-linux-x86-64
     with:
@@ -88,6 +95,7 @@ jobs:
   build-binaries-on-linux-arm32:
     name: Linux ARM
     uses: ./.github/workflows/_binaries_linux_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-linux-x86-64
     with:
@@ -112,6 +120,7 @@ jobs:
   build-binaries-on-mac-x86-64:
     name: MacOS x64
     uses: ./.github/workflows/_binaries_mac_build.yml
+    if: ${{inputs.full_build}}
     needs:
       - build-binaries-on-mac-arm64
     with:

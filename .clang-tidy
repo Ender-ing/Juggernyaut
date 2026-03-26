@@ -1,0 +1,20 @@
+Checks: >
+  -*,
+  performance-*,
+  bugprone-*,
+  modernize-*,
+  misc-*,
+  readability-redundant-*,
+  readability-const-return-type,
+  -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard
+
+WarningsAsErrors: >
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  performance-inefficient-vector-operation,
+  performance-for-range-copy
+
+HeaderFilterRegex: '^(?!.*(/.build|/.deps)).*'
+
+FormatStyle: none

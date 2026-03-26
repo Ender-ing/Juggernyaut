@@ -30,9 +30,9 @@ async function start() {
 
     // 2. Define how the server is launched
     const executable: Executable = {
-        command: command,
+        command: command.cmd,
         transport: TransportKind.stdio,
-        args: [] // Add any command-line arguments your C++ server expects here
+        args: command.args
     };
 
     const serverOptions: ServerOptions = {

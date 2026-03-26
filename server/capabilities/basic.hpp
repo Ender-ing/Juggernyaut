@@ -18,5 +18,5 @@
 
 namespace Capabilities {
     extern lsp::MessageHandler *handler;
-    extern void configureProtocol(lsp::MessageHandler &messageHandler, bool &received_shutdown, Store::DocumentStore &store) ;
+    extern void configureProtocol(lsp::MessageHandler &messageHandler, Store::DocumentStore &store, int &exit_code) ;
 }

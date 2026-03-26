@@ -20,6 +20,11 @@
                     "default": "",
                     "description": "The absolute path to your preferred Juggernyaut SDK version."
                 },
+                "juggernyaut.debug.valgrind": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run binaries within a valgrind wrapper. (Linux & macOS)"
+                },
                 "juggernyaut.trace.server": {
                     "scope": "window",
                     "type": "string",
