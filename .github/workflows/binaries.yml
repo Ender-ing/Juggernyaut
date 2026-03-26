@@ -16,16 +16,19 @@ jobs:
     with:
       build_mode: Debug
       bundle_binaries: false
+      full_build:
+        ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -FULL')) ||
+        github.event_name == 'pull_request'}}
 
   # Release
   build-binaries-release:
     name: Release
     uses: ./.github/workflows/_binaries_dynamic_build.yml
-    if: >
-      (github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -FULL')) ||
-      github.event_name == 'pull_request'
     needs:
       - build-binaries-debug
     with:
       build_mode: Release
       bundle_binaries: false
+      full_build:
+        ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -FULL')) ||
+        github.event_name == 'pull_request'}}

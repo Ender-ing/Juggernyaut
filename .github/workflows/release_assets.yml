@@ -45,6 +45,7 @@ jobs:
       - manage-release-version
     with:
       build_mode: Release
+      full_build: true
       bundle_binaries: true
       release_version: ${{needs.manage-release-version.outputs.version}}
 
