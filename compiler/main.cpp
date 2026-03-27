@@ -15,6 +15,10 @@
 // Parser
 #include "../core/parser/parser.hpp"
 
+// Diagnostics
+#include "../core/diagnostics/Diagnostic.hpp"
+#include "../core/diagnostics/antlr.hpp"
+
 // Base
 #include "base/config.hpp"
 #include "base/info.hpp"
@@ -94,29 +98,45 @@ int main(int argc, const char *argv[]) {
                     size_t charPositionInLine, const std::string &msg, std::exception_ptr e) override {
                     REPORT(Console::END_REPORT);
 
-                    // Get the starting position
-                    Console::IndividualReport::startLine = line;
-                    Console::IndividualReport::startColumn = charPositionInLine;
 
-                    // Determine the end position
-                    std::string tokenText;
-                    if (offendingSymbol) {
-                        // TMP
-                        tokenText = offendingSymbol->getText();
-                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + tokenText.length();
-                    } else {
-                        // TMP
-                        tokenText = "<N/A>";
-                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + 1;
-                    }
-                    Console::IndividualReport::endLine = line; // TMP
+                    Diagnostics::Diagnostic diag = Diagnostics::antlrToDiagnostic(recognizer, offendingSymbol, line,
+                        charPositionInLine, msg, e);
+
+                    // Get the position
+                    Console::IndividualReport::startLine = diag.range.start.line;
+                    Console::IndividualReport::startColumn = diag.range.start.character;
+                    Console::IndividualReport::endLine = diag.range.end.line;
+                    Console::IndividualReport::endColumn = diag.range.end.character;
+
+                    // Get the token
+                    std::string tokenText = (offendingSymbol) ? offendingSymbol->getText() : "<N/A>";
 
                     // Update stage data
                     Console::IndividualReport::stage = this->stage;
 
+                    // Get report type
+                    Console::ReportType reportType;
+                    switch (diag.severity) {
+                    case Diagnostics::Severity::Error:
+                        reportType = Console::CRITICAL_REPORT;
+                        break;
+                    case Diagnostics::Severity::Warning:
+                        reportType = Console::WARNING_REPORT;
+                        break;
+                    case Diagnostics::Severity::Info:
+                        reportType = Console::NORMAL_REPORT;
+                        break;
+                    case Diagnostics::Severity::Hint:
+                        reportType = Console::NORMAL_REPORT;
+                        break;
+                    default:
+                        reportType = Console::UNKNOWN_REPORT;
+                        break;
+                    }
+
                     // Report the error
-                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                        msg, "(Token Text: '", tokenText, "')",
+                    REPORT(Console::START_REPORT, reportType,
+                        diag.message, " (Token Text: '", tokenText, "')",
                         Console::END_REPORT);
 
                     REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "\n");
