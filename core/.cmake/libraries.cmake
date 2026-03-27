@@ -22,8 +22,8 @@ attach_manifest_data(JuggernyautDiagnosticsLibrary ${JUG_CORE_MANIFEST_FILE} TRU
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
 # ANTLR4
-add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared)
-target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared)
+add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JuggernyautCommonLibrary)
+target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JuggernyautCommonLibrary)
 
 # Create a library from /parser
 add_library(JuggernyautParserLibrary SHARED

@@ -14,6 +14,14 @@ namespace Parser {
             std::string msg;
 
             switch (tokenType) {
+            case JuggernyautLexer::INVALID_1_LIT_STRING:
+                msg = "9"; // LEXER ERROR CODE!
+                shouldDispatch = true;
+                break;
+            case JuggernyautLexer::INVALID_2_LIT_STRING:
+                msg = "10"; // LEXER ERROR CODE!
+                shouldDispatch = true;
+                break;
             default:
                 break;
             }

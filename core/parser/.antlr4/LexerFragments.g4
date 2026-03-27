@@ -19,11 +19,14 @@ fragment WHITESPACE_
     ;
 
 // Strings & Chars
-fragment ESCAPE_SEQUENCE_
-    : '\\' [\r\n"\\]
+fragment ESCAPES_
+    : [\r\n"\\]
+    ; /* Escape characters */
+fragment NEG_ESCAPES_
+    : ~[\r\n"\\]
     ; /* Escape characters */
 fragment IMP_CHAR_
-    : ESCAPE_SEQUENCE_
+    : '\\' ESCAPES_
     | '\\\n' // newline escape
     | '\\\r\n' // newline escape
     ; /* Char member of a string */

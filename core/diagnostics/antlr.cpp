@@ -97,6 +97,16 @@ namespace Diagnostics {
         bool shouldFetchMessage = false;
         error.code = getAntlrErrorCode(msg, e, shouldFetchMessage);
         if (shouldFetchMessage) {
+            std::string customMsg;
+            // TMP
+            if (error.code == 9) {
+                customMsg = "unclosed string literal";
+            } else if (error.code == 10) {
+                customMsg = "invalid escape sequence(s) used (within a string)";
+            } else {
+                customMsg = "Well, heck if I know... :/";
+            }
+            error.message = customMsg;
         } else {
             error.message = msg;
         }
