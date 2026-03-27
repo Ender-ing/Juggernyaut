@@ -102,6 +102,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Attach manifest.ini info to targets!
 # (Only supports executables and dynamic libraries!)
+set(NEEDS_WIN_RC ON)
 function(attach_manifest_data TARGET MANIFEST LINK_INFO)
 
     message(STATUS "[BUILD] Attaching manifest data to target: ${TARGET}")

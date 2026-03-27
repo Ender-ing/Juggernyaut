@@ -39,11 +39,11 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
 )
 
-# CMake functions & macros
-include(${JUG_CMAKE_DIR}/shared.cmake)
-
 # Manage dependencies
 include(${JUG_COMPILER_CMAKE_DIR}/dependencies.cmake)
+
+# CMake functions & macros
+include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Build the compiler executable!
 include(${JUG_COMPILER_CMAKE_DIR}/build-executable.cmake)

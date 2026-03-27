@@ -1,6 +1,6 @@
 # Basic info
 cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
-project(juggernyaut_compiler)
+project(juggernyaut_core)
 #enable_testing()
 
 # Stop build when errors occur
@@ -27,7 +27,7 @@ info("[START] Configuring Juggernyaut Core...")
 set(CMAKE_MODULE_PATH
     # CMake files folder
     ${JUG_CMAKE_DIR}
-    ${JUG_CORE_CMAKE_DIR}/ANTLR4
+    ${JUG_CMAKE_DIR}/ANTLR4
     ${JUG_CORE_CMAKE_DIR}
     # Build folder
     ${CMAKE_BINARY_DIR}
@@ -39,11 +39,11 @@ set(CMAKE_MODULE_PATH
 set(JUG_ANTLR4_LEXER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautLexer.g4)
 set(JUG_ANTLR4_PARSER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautParser.g4)
 
-# CMake functions & macros
-include(${JUG_CMAKE_DIR}/shared.cmake)
-
 # Manage dependencies
 include(${JUG_CORE_CMAKE_DIR}/dependencies.cmake)
+
+# CMake functions & macros
+include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Generate ANTLR4
 include(${JUG_CORE_CMAKE_DIR}/ANTLR4-gen.cmake)
