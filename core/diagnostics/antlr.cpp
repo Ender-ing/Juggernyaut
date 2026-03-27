@@ -9,7 +9,7 @@
 #include "../common/utility.hpp"
 
 namespace Diagnostics {
-    int getAntlrErrorCode(const std::string &msg, std::exception_ptr e) {
+    int getAntlrErrorCode(const std::string &msg, std::exception_ptr e, bool &isMsgNum) {
 
         if (e) {
             try {
@@ -17,19 +17,19 @@ namespace Diagnostics {
             } catch (const antlr4::LexerNoViableAltException &ex) {
                 // Lexer: Unrecognized character
                 ex;
-                return 1;
+                return 3;
             } catch (const antlr4::InputMismatchException &ex) {
                 // Parser: Input mismatch
                 ex;
-                return 2;
+                return 4;
             } catch (const antlr4::NoViableAltException &ex) {
                 // Parser: No viable alternative
                 ex;
-                return 3;
+                return 5;
             } catch (const antlr4::FailedPredicateException &ex) {
                 // Semantics: Failed predicate
                 ex;
-                return 1; // MIGHT NEED TO REMOVE THIS LATER ON!
+                return 6; // MIGHT NEED TO REMOVE THIS LATER ON!
             } catch (const antlr4::RecognitionException &ex) {
                 // Parser: Generic/Custom fallback
                 ex;
@@ -38,13 +38,18 @@ namespace Diagnostics {
         } else {
             if (msg.find("missing") != std::string::npos) {
                 // Parser: Missing token
-                return 4;
+                return 7;
             } else if (msg.find("extraneous") != std::string::npos) {
                 // Parser: Extraneous token
-                return 5;
+                return 8;
             } else {
-                // Parser: General auto-recovery
-                return 6;
+                if (Common::Utility::isNumber(msg)) {
+                    isMsgNum = true;
+                    return std::stoi(msg);
+                } else {
+                    // Parser: General auto-recovery
+                    return 2;
+                }
             }
         }
     }
@@ -89,8 +94,12 @@ namespace Diagnostics {
 
         error.severity = Severity::Error;
 
-        error.message = msg;
-        error.code = getAntlrErrorCode(msg, e);
+        bool shouldFetchMessage = false;
+        error.code = getAntlrErrorCode(msg, e, shouldFetchMessage);
+        if (shouldFetchMessage) {
+        } else {
+            error.message = msg;
+        }
 
         return error;
     }

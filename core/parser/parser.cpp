@@ -11,6 +11,8 @@
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
+#include "internal/JugLexer.hpp"
+
 namespace Parser {
     namespace Debug {
         
@@ -22,7 +24,7 @@ namespace Parser {
             antlr4::ANTLRInputStream input(file_contents);
 
             // Tokens
-            GeneratedLexer::JuggernyautLexer lexer(&input);
+            Internal::JugLexer lexer(&input);
             antlr4::CommonTokenStream tokens(&lexer);
   
             // Parse tree

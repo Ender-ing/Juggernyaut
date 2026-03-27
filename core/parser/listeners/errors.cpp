@@ -20,27 +20,6 @@ namespace Parser {
         void ErrorListener::syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
             size_t charPositionInLine, const std::string &msg, std::exception_ptr e) {
 
-            /*if (e) {
-                if (is_type<const antlr4::LexerNoViableAltException *>(&e)) {
-                    // Lexer: Unrecognized character
-                } else if (is_type<const antlr4::InputMismatchException *>(&e)) {
-                    // Parser: Input mismatch
-                } else if (is_type<const antlr4::NoViableAltException *>(&e)) {
-                    // Parser: No viable alternative
-                } else if (is_type<const antlr4::FailedPredicateException *>(&e)) {
-                    // Semantics: Failed predicate
-                } else if (is_type<const antlr4::RecognitionException *>(&e)) {
-                    // Parser: Generic/Custom fallback
-                }
-            } else {
-                if (msg.find("missing") != std::string::npos) {
-                    // Parser: Missing token
-                } else if (msg.find("extraneous") != std::string::npos) {
-                    // Parser: Extraneous token
-                } else {
-                    // Parser: General auto-recovery
-                }
-            }*/
             errorsDetected = true;
         }
 
