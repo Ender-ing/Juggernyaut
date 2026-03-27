@@ -6,39 +6,53 @@
 
 #include "diagnostics.hpp"
 
+// Diagnostics
+#include "../../../core/diagnostics/Diagnostic.hpp"
+
 // lsp-framework
 #include "../../lspFramework.hpp"
 
 namespace Capabilities {
     namespace Semantics {
         // ANTLR4 functions
-        void SyntaxErrorListener::syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
-        size_t charPositionInLine, const std::string &msg, std::exception_ptr e) {
+        void SyntaxErrorListener::syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol,
+            size_t line, size_t charPositionInLine, const std::string &msg, std::exception_ptr e) {
+
+            Diagnostics::Diagnostic diag = Diagnostics::antlrToDiagnostic(recognizer, offendingSymbol, line,
+                charPositionInLine, msg, e);
 
             lsp::Diagnostic error;
 
             // Get the starting position
-            error.range.start.line = (uint32_t) (line - 1);
-            error.range.start.character = (uint32_t) charPositionInLine;
+            error.range.start.line = std::move(diag.range.start.line);
+            error.range.start.character = std::move(diag.range.start.character);
 
             // Determine the end position
-            std::string tokenText;
-            if (offendingSymbol) {
-                // TMP
-                tokenText = offendingSymbol->getText();
-                error.range.end.character = (uint32_t) (charPositionInLine + tokenText.length());
-            } else {
-                // TMP
-                tokenText = "<N/A>";
-                error.range.end.character = error.range.start.character + 1;
-            }
-            error.range.end.line = error.range.start.line; // No token is allowed to contain newlines!
+            error.range.end.line = std::move(diag.range.end.line);
+            error.range.end.character = std::move(diag.range.end.character);
 
-            error.severity = lsp::DiagnosticSeverity::Error;
+            switch (diag.severity) {
+            case Diagnostics::Severity::Error:
+                error.severity = lsp::DiagnosticSeverity::Error;
+                break;
+            case Diagnostics::Severity::Warning:
+                error.severity = lsp::DiagnosticSeverity::Warning;
+                break;
+            case Diagnostics::Severity::Info:
+                error.severity = lsp::DiagnosticSeverity::Information;
+                break;
+            case Diagnostics::Severity::Hint:
+                error.severity = lsp::DiagnosticSeverity::Hint;
+                break;
+            default:
+                error.severity = lsp::DiagnosticSeverity::MAX_VALUE;
+                break;
+            }
 
             //error.message = (std::string) this->stage + " Error: " + msg + "\n(Token Text: '" + tokenText + "')";
-            error.message = (std::string) this->stage + " Error: " + msg;
-            error.source = "Juggernyaut";
+            error.message = std::move(diag.message);
+            error.code = std::move(diag.code);
+            error.source = "Jug";
             this->diags.push_back(error);
         }
         void SyntaxErrorListener::reportAmbiguity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa, size_t startIndex,
