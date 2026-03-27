@@ -68,7 +68,8 @@ namespace Diagnostics {
         if (offendingSymbol != nullptr) {
             tokenText = offendingSymbol->getText();
 
-            size_t newlineCount = std::count(tokenText.begin(), tokenText.end(), '\n');
+            // The distance is expected to be positive
+            size_t newlineCount = static_cast<size_t>(std::count(tokenText.begin(), tokenText.end(), '\n'));
             size_t endLine = error.range.start.line;
             size_t endCol = (uint32_t) charPositionInLine;
 
