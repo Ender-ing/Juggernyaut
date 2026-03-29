@@ -46,7 +46,7 @@ std::string escapeChar(const std::string &text, char target) {
         escapedText.push_back(c);
     }
     
-    return std::move(escapedText);
+    return escapedText;
 }
 
 // Note: You can specify a return type, e.g., <std::any> or <int>
