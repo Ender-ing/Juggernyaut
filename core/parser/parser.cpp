@@ -26,7 +26,7 @@ namespace Parser {
             // Tokens
             Internal::JugLexer lexer(&input);
             antlr4::CommonTokenStream tokens(&lexer);
-  
+
             // Parse tree
             GeneratedParser::JuggernyautParser parser(&tokens);
 
