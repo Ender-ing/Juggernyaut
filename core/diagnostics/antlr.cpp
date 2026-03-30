@@ -115,7 +115,7 @@ namespace Diagnostics {
             error.message = msg;
         }
 
-        return std::move(error);
+        return error;
     }
 
     Diagnostic antlrAmbiguityToDiagnostic(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa, size_t startIndex,
@@ -146,6 +146,6 @@ namespace Diagnostics {
         warning.code = 11;
         warning.message = CODE_11;
 
-        return std::move(warning);
+        return warning;
     }
 }
