@@ -31,7 +31,7 @@
 
 // Parser
 #include "../core/parser/parser.hpp"
-#include "../core/parser/listeners/errors.hpp"
+#include "../core/parser/listeners/DiagnosticListener.hpp"
 
 int main(int argc, const char *argv[]) {
     // Test for memory leaks

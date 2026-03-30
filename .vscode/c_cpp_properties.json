@@ -3,9 +3,7 @@
         {
             "includePath": [
                 "${workspaceFolder}/.deps/**",
-                "${workspaceFolder}/.build/core/**",
-                "${workspaceFolder}/.build/*_core/**",
-                "${workspaceFolder}/.build/_deps/lsp-build/**"
+                "${workspaceFolder}/.build/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

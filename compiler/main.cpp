@@ -15,6 +15,10 @@
 // Parser
 #include "../core/parser/parser.hpp"
 
+// Diagnostics
+#include "../core/diagnostics/Diagnostic.hpp"
+#include "../core/diagnostics/antlr.hpp"
+
 // Base
 #include "base/config.hpp"
 #include "base/info.hpp"
@@ -80,67 +84,57 @@ int main(int argc, const char *argv[]) {
 
         // Debug (TMP)
         // Listen for syntax-related errors
-        class DebugErrorListener : public Parser::Listeners::ErrorListener {
+        class DebugErrorListener : public Parser::Listeners::DiagnosticListener {
             private:
-                // (Storing a std::string value will result in a C4251 MSVC warning)
                 const char* stage; // "Lexer" or "Parser"
+                static const Console::ReportType getReportType(Diagnostics::Severity severity) {
+                    switch (severity) {
+                    case Diagnostics::Severity::Error:
+                        return Console::CRITICAL_REPORT;
+                    case Diagnostics::Severity::Warning:
+                        return Console::WARNING_REPORT;
+                    case Diagnostics::Severity::Info:
+                        return Console::NORMAL_REPORT;
+                    case Diagnostics::Severity::Hint:
+                        return Console::NORMAL_REPORT;
+                    default:
+                        return Console::UNKNOWN_REPORT;
+                    }
+                }
             public:
                 // Constructors
                 DebugErrorListener(const char* stageName) : stage(stageName) { }
                 DebugErrorListener(const std::string& stageName) : stage(stageName.c_str()) {}
 
                 // ANTLR4 functions
-                void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
-                    size_t charPositionInLine, const std::string &msg, std::exception_ptr e) override {
+                void onSyntaxError(Diagnostics::Diagnostic diag) override {
                     REPORT(Console::END_REPORT);
 
-                    // Get the starting position
-                    Console::IndividualReport::startLine = line;
-                    Console::IndividualReport::startColumn = charPositionInLine;
+                    // Get the position
+                    Console::IndividualReport::startLine = diag.range.start.line;
+                    Console::IndividualReport::startColumn = diag.range.start.character;
+                    Console::IndividualReport::endLine = diag.range.end.line;
+                    Console::IndividualReport::endColumn = diag.range.end.character;
 
-                    // Determine the end position
-                    std::string tokenText;
-                    if (offendingSymbol) {
-                        // TMP
-                        tokenText = offendingSymbol->getText();
-                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + tokenText.length();
-                    } else {
-                        // TMP
-                        tokenText = "<N/A>";
-                        Console::IndividualReport::endColumn = Console::IndividualReport::startColumn + 1;
-                    }
-                    Console::IndividualReport::endLine = line; // TMP
+                    // Get the token
+                    std::string tokenText = "?<N/A>?";
+
+                    Console::ReportType reportType = getReportType(diag.severity);
 
                     // Update stage data
-                    Console::IndividualReport::stage = this->stage;
+                    Console::IndividualReport::stage = stage;
 
                     // Report the error
-                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                        msg, "(Token Text: '", tokenText, "')",
+                    REPORT(Console::START_REPORT, reportType,
+                        diag.message, " (Token Text: '", tokenText, "')",
                         Console::END_REPORT);
 
                     REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "\n");
                 }
-                void reportAmbiguity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa, size_t startIndex,
-                    size_t stopIndex, bool exact, const antlrcpp::BitSet &ambigAlts, antlr4::atn::ATNConfigSet *configs)
-                    override {
-
-                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Ambiguity reported from index ",
-                        startIndex ," to index " , stopIndex, Console::END_REPORT);
-                }
-                void reportAttemptingFullContext(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
-                    size_t startIndex, size_t stopIndex, const antlrcpp::BitSet &conflictingAlts,
-                    antlr4::atn::ATNConfigSet *configs) override {
-
-                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Attempting full context reported from index ",
-                        startIndex ," to index " , stopIndex, Console::END_REPORT);
-                }
-                void reportContextSensitivity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
-                    size_t startIndex, size_t stopIndex, size_t prediction,
-                    antlr4::atn::ATNConfigSet *configs) override {
-
-                    REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Context sensitivity reported from index ",
-                        startIndex ," to index " , stopIndex, Console::END_REPORT);
+                void onAmbiguity(Diagnostics::Diagnostic diag) override {
+                    REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, " (source: ",
+                        diag.range.start.line, ":", diag.range.start.character ," to  " ,
+                        diag.range.end.line, ":", diag.range.end.character, ")", Console::END_REPORT);
                 }
         };
 

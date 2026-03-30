@@ -13,7 +13,7 @@ options {
     language=Cpp;
 }
 
-import LexerIgnores, LexerSymbols;
+import LexerIgnores, LexerSymbols, LexerLiterals, LexerKeywords;
 
 TMP
     : 'TMP'

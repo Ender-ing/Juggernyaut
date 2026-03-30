@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "build-cmake": "cd ../../.build && cmake ../utility/diag_codes",
+        "build-binary": "cd ../../.build && cmake --build . --config Debug --parallel 3 --verbose",
+        "win-clean": "rd /s /q \"../../.build\" && rd /s /q \"../../.dist\"",
+        "lix-clean": "rm -f -r ../../.build && rm -f -r ../../.dist",
+        "win": "mkdir \"../../.build\" && npm run build-cmake && npm run build-binary"
+    }
+}

@@ -19,13 +19,19 @@ options {
 
 //// Parser Rules
 
-program
+prog
     : (expr SYM_SEMICOLON | SYM_SEMICOLON)*
         EOF
     ; /* This is the initial scope in a file! */
 
 // Expressions
 expr
-    : TMP
+    : stat_import
+    | TMP
     | TMP2
+    ;
+
+// Statements
+stat_import
+    : KWD_IMPORT LIT_STRING
     ;

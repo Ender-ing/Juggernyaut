@@ -12,7 +12,7 @@
 #include <functional>
 
 // Parser
-#include "listeners/errors.hpp"
+#include "listeners/DiagnosticListener.hpp"
 
 namespace Parser {
     namespace Debug {
@@ -22,6 +22,6 @@ namespace Parser {
         // Check for syntax errors
         extern JUG_PARSER_API bool syntaxCheck(const std::string &file_contents, const TokenReport &onTokenCall,
             const TreeReport &onTreeCall,
-            Listeners::ErrorListener *lexerErrorListener, Listeners::ErrorListener *parserErrorListener) ;
+            Listeners::DiagnosticListener *lexerErrorListener, Listeners::DiagnosticListener *parserErrorListener) ;
     }
 }

@@ -26,14 +26,14 @@ include_directories(${ANTLR4_INCLUDE_DIRS})
 find_package(ANTLR REQUIRED)
 
 # Call macro to add lexer and grammar to your build dependencies.
-antlr_target(JuggernyautGrammarLexer ${JUG_ANTLR4_LEXER_PATH} LEXER
+antlr_target(DiagnosticsCodeLexer ${JUG_UTILITY_DIAGCODES_ANTLR4_LEXER_PATH} LEXER
             PACKAGE GeneratedLexer)
-antlr_target(JuggernyautGrammarParser ${JUG_ANTLR4_PARSER_PATH} PARSER
+antlr_target(DiagnosticsCodeParser ${JUG_UTILITY_DIAGCODES_ANTLR4_PARSER_PATH} PARSER
             VISITOR
             PACKAGE GeneratedParser
-            DEPENDS_ANTLR JuggernyautGrammarLexer
-            COMPILE_FLAGS -lib ${ANTLR_JuggernyautGrammarLexer_OUTPUT_DIR})
+            DEPENDS_ANTLR DiagnosticsCodeLexer
+            COMPILE_FLAGS -lib ${ANTLR_DiagnosticsCodeLexer_OUTPUT_DIR})
 
 # include generated files in project environment
-include_directories(${ANTLR_JuggernyautGrammarLexer_OUTPUT_DIR})
-include_directories(${ANTLR_JuggernyautGrammarParser_OUTPUT_DIR})
+include_directories(${ANTLR_DiagnosticsCodeLexer_OUTPUT_DIR})
+include_directories(${ANTLR_DiagnosticsCodeParser_OUTPUT_DIR})

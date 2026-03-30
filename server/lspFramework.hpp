@@ -3,6 +3,7 @@
  * lsp-framework wrapper
 **/
 
+#pragma once
 
 // lsp-framework
 // --- Turn off warnings for the LSP framework headers ---

@@ -1,0 +1,4 @@
+2:
+-unclosed string literal
+3:
+-invalid escape sequence(s) used (within a string)

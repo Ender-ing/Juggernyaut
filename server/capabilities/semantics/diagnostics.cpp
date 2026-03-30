@@ -6,68 +6,77 @@
 
 #include "diagnostics.hpp"
 
+// Diagnostics
+#include "../../../core/diagnostics/Diagnostic.hpp"
+#include "../../../core/diagnostics/antlr.hpp"
+
 // lsp-framework
 #include "../../lspFramework.hpp"
 
 namespace Capabilities {
     namespace Semantics {
-        // ANTLR4 functions
-        void SyntaxErrorListener::syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line,
-        size_t charPositionInLine, const std::string &msg, std::exception_ptr e) {
+        // Internal
+        lsp::DiagnosticSeverity internal_getSeverity(Diagnostics::Severity &severity) {
+            switch (severity) {
+            case Diagnostics::Severity::Error:
+                return lsp::DiagnosticSeverity::Error;
+            case Diagnostics::Severity::Warning:
+                return lsp::DiagnosticSeverity::Warning;
+            case Diagnostics::Severity::Info:
+                return lsp::DiagnosticSeverity::Information;
+            case Diagnostics::Severity::Hint:
+                return lsp::DiagnosticSeverity::Hint;
+            default:
+                return lsp::DiagnosticSeverity::MAX_VALUE;
+            }
+        }
 
-            lsp::Diagnostic error;
+        // ANTLR4 functions
+        void SyntaxListener::onSyntaxError(Diagnostics::Diagnostic diag) {
+
+            lsp::Diagnostic diagnostic;
 
             // Get the starting position
-            error.range.start.line = (uint32_t) (line - 1);
-            error.range.start.character = (uint32_t) charPositionInLine;
+            diagnostic.range.start.line = std::move(diag.range.start.line);
+            diagnostic.range.start.character = std::move(diag.range.start.character);
 
             // Determine the end position
-            std::string tokenText;
-            if (offendingSymbol) {
-                // TMP
-                tokenText = offendingSymbol->getText();
-                error.range.end.character = (uint32_t) (charPositionInLine + tokenText.length());
-            } else {
-                // TMP
-                tokenText = "<N/A>";
-                error.range.end.character = error.range.start.character + 1;
-            }
-            error.range.end.line = error.range.start.line; // No token is allowed to contain newlines!
+            diagnostic.range.end.line = std::move(diag.range.end.line);
+            diagnostic.range.end.character = std::move(diag.range.end.character);
 
-            error.severity = lsp::DiagnosticSeverity::Error;
+            diagnostic.severity = internal_getSeverity(diag.severity);
 
-            //error.message = (std::string) this->stage + " Error: " + msg + "\n(Token Text: '" + tokenText + "')";
-            error.message = (std::string) this->stage + " Error: " + msg;
-            error.source = "Juggernyaut";
-            this->diags.push_back(error);
+            diagnostic.message = std::move(diag.message);
+            diagnostic.code = std::move(diag.code);
+            diagnostic.source = "Jug";
+            this->diags.push_back(diagnostic);
         }
-        void SyntaxErrorListener::reportAmbiguity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa, size_t startIndex,
-            size_t stopIndex, bool exact, const antlrcpp::BitSet &ambigAlts, antlr4::atn::ATNConfigSet *configs) {
+        void SyntaxListener::onAmbiguity(Diagnostics::Diagnostic diag) {
 
-            // REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Ambiguity reported from index ",
-            //     startIndex ," to index " , stopIndex, Console::END_REPORT);
-        }
-        void SyntaxErrorListener::reportAttemptingFullContext(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
-            size_t startIndex, size_t stopIndex, const antlrcpp::BitSet &conflictingAlts,
-            antlr4::atn::ATNConfigSet *configs) {
+            lsp::Diagnostic diagnostic;
 
-            // REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Attempting full context reported from index ",
-            //     startIndex ," to index " , stopIndex, Console::END_REPORT);
-        }
-        void SyntaxErrorListener::reportContextSensitivity(antlr4::Parser *recognizer, const antlr4::dfa::DFA &dfa,
-            size_t startIndex, size_t stopIndex, size_t prediction,
-            antlr4::atn::ATNConfigSet *configs) {
+            // Get the starting position
+            diagnostic.range.start.line = std::move(diag.range.start.line);
+            diagnostic.range.start.character = std::move(diag.range.start.character);
 
-            // REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Context sensitivity reported from index ",
-            //         startIndex ," to index " , stopIndex, Console::END_REPORT);
+            // Determine the end position
+            diagnostic.range.end.line = std::move(diag.range.end.line);
+            diagnostic.range.end.character = std::move(diag.range.end.character);
+
+            diagnostic.severity = internal_getSeverity(diag.severity);
+
+            diagnostic.message = std::move(diag.message);
+            diagnostic.code = std::move(diag.code);
+            diagnostic.source = "Jug";
+            this->diags.push_back(diagnostic);
         }
 
         void validateDocumentSyntax(lsp::MessageHandler &messageHandler, Store::Document &doc) {
             // TMP
             std::vector<lsp::Diagnostic> diagnostics;
 
-            SyntaxErrorListener lexerDebugErrorListener("Lexer", diagnostics);
-            SyntaxErrorListener parserDebugErrorListener("Parser", diagnostics);
+            SyntaxListener lexerDebugErrorListener(diagnostics);
+            SyntaxListener parserDebugErrorListener(diagnostics);
 
             // REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens: \n");
             Parser::Debug::syntaxCheck(doc.getRawContent(),

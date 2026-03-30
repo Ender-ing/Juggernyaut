@@ -14,6 +14,9 @@
           "include": "#comments"
         },
         {
+          "include": "#literals"
+        },
+        {
           "include": "#keywords"
         }
       ]
@@ -83,11 +86,44 @@
         }
       ]
     },
+    "literals": {
+      "patterns": [
+        {
+          "include": "#strings"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.juggernyaut",
+          "begin": "\"",
+          "end": "(((?<!\\\\)\")|((?<!\\\\)\\r?\\n))",
+          "patterns": [
+            {
+              "include": "#escapeSequences"
+            }
+          ]
+        }
+      ]
+    },
+    "escapeSequences": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.juggernyaut",
+          "match": "\\\\([\"\\\\\n])"
+        },
+        {
+          "name": "invalid.illegal.juggernyaut",
+          "match": "\\\\([^\"\\\\\n])"
+        }
+      ]
+    },
     "keywords": {
       "patterns": [
         {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(TMP|TMP2)\\b"
+          "match": "\\b(import|TMP|TMP2)\\b"
         }
       ]
     },

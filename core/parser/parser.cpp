@@ -11,20 +11,22 @@
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
+#include "internal/JugLexer.hpp"
+
 namespace Parser {
     namespace Debug {
         
         // Check for syntax errors
         // [true -> success, false -> failure]
         bool syntaxCheck(const std::string &file_contents, const TokenReport &onTokenCall, const TreeReport &onTreeCall,
-            Listeners::ErrorListener *lexerErrorListener, Listeners::ErrorListener *parserErrorListener) {
+            Listeners::DiagnosticListener *lexerErrorListener, Listeners::DiagnosticListener *parserErrorListener) {
             // Use the file's input
             antlr4::ANTLRInputStream input(file_contents);
 
             // Tokens
-            GeneratedLexer::JuggernyautLexer lexer(&input);
+            Internal::JugLexer lexer(&input);
             antlr4::CommonTokenStream tokens(&lexer);
-  
+
             // Parse tree
             GeneratedParser::JuggernyautParser parser(&tokens);
 
@@ -41,7 +43,7 @@ namespace Parser {
             }
 
             // Get the start tree!
-            antlr4::tree::ParseTree *tree = parser.program();
+            antlr4::tree::ParseTree *tree = parser.prog();
 
             // Pass the parse tree!
             onTreeCall((const std::string) tree->toStringTree(&parser));

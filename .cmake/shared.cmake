@@ -1,3 +1,6 @@
+# Diagnostic codes
+include(${JUG_CMAKE_DIR}/diagnostics.cmake)
+
 # CMake functions & macros
 include(${JUG_CMAKE_DIR}/utility.cmake)
 

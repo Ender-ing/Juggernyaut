@@ -12,6 +12,19 @@ attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
 
+# Create a library from /diagnostics
+add_library(JuggernyautDiagnosticsLibrary SHARED)
+target_sources_search(JuggernyautDiagnosticsLibrary ${JUG_CORE_SOURCE_DIR}/diagnostics/*.cpp TRUE)
+# Expose library exports
+target_compile_definitions(JuggernyautDiagnosticsLibrary PRIVATE JUG_DIAGNOSTICS_LIBRARY_EXPORTS)
+# Attach manifest data
+attach_manifest_data(JuggernyautDiagnosticsLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
+# Add compiler flags
+add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
+# Dependencies
+add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
+target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
+
 # Create a library from /parser
 add_library(JuggernyautParserLibrary SHARED
     ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS} # ANTLR4
@@ -24,9 +37,9 @@ target_compile_definitions(JuggernyautParserLibrary PRIVATE JUG_PARSER_LIBRARY_E
 attach_manifest_data(JuggernyautParserLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautParserLibrary TRUE)
-# ANTLR4
-add_dependencies(JuggernyautParserLibrary antlr4_shared)
-target_link_libraries(JuggernyautParserLibrary PUBLIC antlr4_shared)
+# Dependencies
+add_dependencies(JuggernyautParserLibrary antlr4_shared JuggernyautDiagnosticsLibrary)
+target_link_libraries(JuggernyautParserLibrary PUBLIC antlr4_shared JuggernyautDiagnosticsLibrary)
 # Libraries
 add_custom_command(TARGET JuggernyautParserLibrary
                     POST_BUILD
@@ -49,6 +62,7 @@ endif()
 # Expose the core libraries
 set(CORE_LIBRARIES
     JuggernyautCommonLibrary
+    JuggernyautDiagnosticsLibrary
     JuggernyautParserLibrary
     PARENT_SCOPE
 )

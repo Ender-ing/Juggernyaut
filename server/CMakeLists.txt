@@ -16,7 +16,7 @@ set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.deps)
 set(JUG_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.dist)
 
 if(NOT DEFINED JUG_GLOBAL_BUILD)
-    add_subdirectory(../core ${JUG_BUILD_DIR}/server_core)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../core ${JUG_BUILD_DIR}/server_core)
 endif()
 
 # Directories
@@ -39,11 +39,11 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
 )
 
-# CMake functions & macros
-include(${JUG_CMAKE_DIR}/shared.cmake)
-
 # Manage dependencies
 include(${JUG_SERVER_CMAKE_DIR}/dependencies.cmake)
+
+# CMake functions & macros
+include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Build the server executable!
 include(${JUG_SERVER_CMAKE_DIR}/build-executable.cmake)

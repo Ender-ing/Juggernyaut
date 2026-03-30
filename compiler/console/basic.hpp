@@ -7,9 +7,6 @@
 
 #include "../../core/common/headers.hpp"
 
-// Basic C++ headers
-#include <cstdint>
-
 namespace Console {
     namespace Internal {
         namespace Color {

@@ -27,5 +27,10 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./NAME
 
 ## Releases
 
-The comment of the last commit made before a release must follow the pattern the `* -FULL`.
+The comment of the last commit made before a release must follow the pattern `* -FULL`.
 This is done as to ensure all architectures are built and tested successfully!
+
+## Diagnostic codes
+
+- Lexer: 1xxxxx
+- Parser: 2xxxxx

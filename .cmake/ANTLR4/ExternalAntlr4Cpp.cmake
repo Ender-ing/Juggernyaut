@@ -120,22 +120,22 @@ else()
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/CMakeLists.txt
-            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
+            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__CMakeLists.txt.diff
           || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
-            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
+            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__ProfilingATNSimulator.cpp.diff
           || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             ${ANTLR4_ROOT}/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
-            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
+            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__project.pbxproj.diff
           || ${CMAKE_COMMAND} -E true
         COMMAND ${GIT_PATCH_EXECUTABLE}
           -N --forward --force --fuzz=0
             -p1 -d ${ANTLR4_ROOT}
-            < ${JUG_CORE_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__WindowsMacroFix.diff
+            < ${JUG_CMAKE_DIR}/ANTLR4/patches/antlr4_runtime_patch__WindowsMacroFix.diff
           || ${CMAKE_COMMAND} -E true
       # CUSTOM MODIFICATIONS>
       BUILD_COMMAND ""
@@ -177,7 +177,7 @@ ExternalProject_Add_Step(
     WORKING_DIRECTORY ${ANTLR4_BUILD_DIR})
 ExternalProject_Add_StepTargets(antlr4_runtime build_static)
 
-add_library(antlr4_static STATIC IMPORTED)
+add_library(antlr4_static STATIC IMPORTED GLOBAL) # FIX: LINKING ISSUES
 add_dependencies(antlr4_static antlr4_runtime-build_static)
 set_target_properties(antlr4_static PROPERTIES
                       IMPORTED_LOCATION ${ANTLR4_STATIC_LIBRARIES})
@@ -198,7 +198,7 @@ ExternalProject_Add_Step(
     WORKING_DIRECTORY ${ANTLR4_BUILD_DIR})
 ExternalProject_Add_StepTargets(antlr4_runtime build_shared)
 
-add_library(antlr4_shared SHARED IMPORTED)
+add_library(antlr4_shared SHARED IMPORTED GLOBAL) # FIX: LINKING ISSUES
 add_dependencies(antlr4_shared antlr4_runtime-build_shared)
 set_target_properties(antlr4_shared PROPERTIES
                       IMPORTED_LOCATION ${ANTLR4_RUNTIME_LIBRARIES})

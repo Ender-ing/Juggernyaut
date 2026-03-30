@@ -17,6 +17,7 @@
 #include <array>
 #include <limits.h>
 #include <optional>
+#include <cstdint>
 
 // Include platform headers
 #ifdef _WIN32
