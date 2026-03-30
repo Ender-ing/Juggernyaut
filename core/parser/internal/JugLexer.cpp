@@ -7,6 +7,7 @@
 
 namespace Parser {
     namespace Internal {
+        // Handle "error tokens" (those that start with "INVALID")
         void JugLexer::emit(std::unique_ptr<antlr4::Token> curToken) {
             // Intercept the token before it's finalized
             size_t tokenType = curToken->getType();
