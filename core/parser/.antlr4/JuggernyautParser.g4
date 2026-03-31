@@ -26,11 +26,11 @@ prog
 
 // Statements
 statement
-    : stat_import
+    : stat_empty
+    | stat_expr
+    | stat_import
     | TMP SYM_SEMICOLON
     | TMP2 SYM_SEMICOLON
-    | stat_expr
-    | stat_empty
     ;
 
 // Import statement
