@@ -47,7 +47,7 @@ import_encapsulate
     : KWD_IMPORT import_source KWD_AS IDENTIFIER
     ;
 import_list
-    : identifier+
+    : identifier (SYM_COMMA identifier)*
     ;
 import_source
     : import_library
