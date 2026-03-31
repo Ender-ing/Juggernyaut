@@ -13,6 +13,23 @@ options {
     language=Cpp;
 }
 
+// TMP
+TMP
+    : 'TMP'
+    ;
+TMP2
+    : 'TMP2'
+    ;
+
+// Import
 KWD_IMPORT
     : 'import'
+    ;
+
+// flow
+KWD_FROM
+    : 'from'
+    ;
+KWD_AS
+    : 'as'
     ;

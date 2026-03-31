@@ -38,3 +38,7 @@ fragment LONE_CHAR_
     : ~['\\\r\n]
     | IMP_CHAR_
     ; /* Char member of a character */
+
+fragment STANDARD_IDENTIFIER_CHARS
+    : [a-zA-Z0-9_]
+    ; /* All supported identifier name characters */

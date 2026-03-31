@@ -13,11 +13,4 @@ options {
     language=Cpp;
 }
 
-import LexerIgnores, LexerSymbols, LexerLiterals, LexerKeywords;
-
-TMP
-    : 'TMP'
-    ;
-TMP2
-    : 'TMP2'
-    ;
+import LexerIgnores, LexerSymbols, LexerLiterals, LexerKeywords, LexerIdentifiers;
