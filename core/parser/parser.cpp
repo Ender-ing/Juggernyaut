@@ -50,4 +50,14 @@ namespace Parser {
             return Listeners::errorsDetected;
         }
     }
+    void sessionWorkflow(const Configs &configs, const Hooks &hooks) {
+        // [STAGE] Lexer
+        // ...
+        if (configs.terminateAfterLexer) {
+            return;
+        }
+
+        // [STAGE] Parser
+        // ...
+    }
 }
