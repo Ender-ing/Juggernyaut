@@ -25,6 +25,20 @@ add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
 add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
 target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
 
+
+# Create a library from /store
+add_library(JuggernyautStoreLibrary SHARED)
+target_sources_search(JuggernyautStoreLibrary ${JUG_CORE_SOURCE_DIR}/store/*.cpp TRUE)
+# Expose library exports
+target_compile_definitions(JuggernyautStoreLibrary PRIVATE JUG_STORE_LIBRARY_EXPORTS)
+# Attach manifest data
+attach_manifest_data(JuggernyautStoreLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
+# Add compiler flags
+add_internal_target_cxx_flags(JuggernyautStoreLibrary FALSE)
+# Dependencies
+add_dependencies(JuggernyautStoreLibrary JuggernyautCommonLibrary JugGlobalDiagnostics)
+target_link_libraries(JuggernyautStoreLibrary PUBLIC JuggernyautCommonLibrary JugGlobalDiagnostics)
+
 # Create a library from /parser
 add_library(JuggernyautParserLibrary SHARED
     ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS} # ANTLR4
@@ -59,7 +73,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     create_symbolic_link(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib" "${ANTLR_FILENAME_NOEXT}.dylib" FALSE)
 endif()
 
-# Create a library from /diagnostics
+# Create a library from /session
 add_library(JuggernyautSessionLibrary SHARED)
 target_sources_search(JuggernyautSessionLibrary ${JUG_CORE_SOURCE_DIR}/session/*.cpp TRUE)
 # Expose library exports
@@ -76,6 +90,7 @@ target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautCommonLibrary 
 set(CORE_LIBRARIES
     JuggernyautCommonLibrary
     JuggernyautDiagnosticsLibrary
+    JuggernyautStoreLibrary
     JuggernyautParserLibrary
     JuggernyautSessionLibrary
     PARENT_SCOPE
