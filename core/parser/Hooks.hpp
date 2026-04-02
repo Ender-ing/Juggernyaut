@@ -25,10 +25,10 @@ namespace Parser {
     struct Hooks {
         // [TokenReport]
         // Args: <token_text> (const std::string)
-        TokenReport onTokenDetected = nullptr;
+        TokenReport onANTLRTokenDetected = nullptr;
         // [TreeReport]
         // Args: <AST_text> (const std::string)
-        TreeReport onTreeGenerated = nullptr;
+        TreeReport onANTLRTreeGenerated = nullptr;
 
         //// [SourceRequest]
         //// Args: <file_uri> (const std::string)

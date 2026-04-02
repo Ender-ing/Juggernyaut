@@ -51,26 +51,69 @@ namespace Parser {
         }
     }
 
-    // 
-    void contextWorkflow(const Configs &configs, Data::Store::Source &source) {
+    // Workflow for individual sources
+    void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::Source &source) {
+        Listeners::DiagnosticListener *listener = configs.diagListener;
+        const std::string &rawContent = source.getRawContent();
+
         // [STAGE] Lexer
+        // Use the file's input
+        antlr4::ANTLRInputStream input(rawContent);
+
+        // Lexer & Tokens
+        Internal::JugLexer lexer(&input);
+        antlr4::CommonTokenStream tokens(&lexer);
+
+        // Check for syntax errors
+        lexer.removeErrorListeners(); // Remove default error listeners
+        lexer.addErrorListener(listener);
+
+        // Process tokens
+        std::unique_ptr<antlr4::Token> token;
+        do {
+            token = lexer.nextToken();
+
+            // Trigger events
+            if (hooks.onANTLRTokenDetected != nullptr) {
+                hooks.onANTLRTokenDetected((const std::string) token->toString());
+            }
+        } while (token->getType() != antlr4::Token::EOF);
+
         if (configs.terminateAfterLexer) {
             return;
         }
 
         // [STAGE] Parser
+        // Parser
+        GeneratedParser::JuggernyautParser parser(&tokens);
+
+        // Check for syntax errors
+        parser.removeErrorListeners(); // Remove default error listeners
+        parser.addErrorListener(listener);
+
+        // Get the start tree!
+        antlr4::tree::ParseTree *tree = parser.prog();
+
+        // Trigger Events
+        if (hooks.onANTLRTreeGenerated != nullptr) {
+            hooks.onANTLRTreeGenerated((const std::string) tree->toStringTree(&parser));
+        }
+
+        // Generate an AST
+        // Note that within this step, import statements will trigger a "parsing request" for new files!
+        // ...
+
+        // Attach AST data to <Source>
         // ...
     }
 
     // Triggered by Session::initiate
     void sessionWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore &store) {
-        Listeners::DiagnosticListener *listener = configs.diagListener;
-
-        store.visitEntries([&configs, &store](const Data::Store::SourceID entryID){
+        store.visitEntries([&configs, &hooks, &store](const Data::Store::SourceID entryID) {
             // Get source object
             Data::Store::Source &src = store.getSourceById(entryID);
 
-            contextWorkflow(configs, src);
+            contextWorkflow(configs, hooks, src);
         });
     }
 }
