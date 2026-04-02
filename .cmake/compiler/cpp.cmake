@@ -114,6 +114,8 @@ function(add_internal_target_cxx_flags TARGET IS_LESS_RESTRICTIVE)
             /we4505 # Unreferenced local function has been removed
 
             /wd4100 # unreferenced formal parameter (Disable)
+
+            /we5038 # initialisation out of declaration order
         )
         if(NOT IS_LESS_RESTRICTIVE)
             target_compile_options(${TARGET} PRIVATE
