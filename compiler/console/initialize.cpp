@@ -26,7 +26,7 @@ namespace Console {
              *  /  )    .-'       `./ /   \
              * (  (   ,'            `/    /|  Juggernyaut v???
              *  \  `-"             \'\   / |
-             *   `.              ,  \ \ /  |  Copyright (C) 2026 Ender-ing GitHub Organisation
+             *   `.              ,  \ \ /  |  (C) 2026 Ender-ing GitHub Organisation
              *    /`.          ,'-`----Y   |
              *   (            ;        |   '
              *   |  ,-.    ,-'         |  /
@@ -41,11 +41,11 @@ namespace Console {
                 << color(" /   \\", Color::light_sea_green) << std::endl;
             std::cout << color("(  (   ,'            `", Color::golden_rod)
                 << color("/    /|  Juggernyaut ", Color::light_sea_green) << color("v", Color::blue_violet)
-                << color(MAIN_TARGET_BINARY_VERSION, Color::blue_violet) << std::endl;
+                << color(Base::Info::version, Color::blue_violet) << std::endl;
             std::cout << color(" \\  `-\"             \\'", Color::golden_rod)
                 << color("\\   / |", Color::light_sea_green) << std::endl;
             std::cout << color("  `.              ,  \\", Color::golden_rod)
-                << color(" \\ /  |  Copyright (C) 2026 Ender-ing GitHub Organisation", Color::light_sea_green)
+                << color(" \\ /  |  (C) 2026 Ender-ing GitHub Organisation", Color::light_sea_green)
                 << std::endl;
             std::cout << color("   /`.          ,'", Color::golden_rod) << color("-", Color::light_sea_green)
                 << color("`", Color::golden_rod) << color("----Y   |", Color::light_sea_green) << std::endl;
