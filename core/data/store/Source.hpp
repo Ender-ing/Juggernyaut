@@ -15,18 +15,19 @@
 
 namespace Data {
     namespace Store {
+        class SourceStore;
         class JUG_DATA_API Source {
             private:
                 std::string rawContent;
                 std::string uri;
-                SourceStore &store;
+                SourceStore *store;
                 void fetchRawContent() ;
 
                 // Tracking
                 bool shouldUpdateRawContent = true;
             public:
                 Source() = default;
-                Source(SourceStore &srcStore, std::string srcUri)
+                Source(SourceStore *srcStore, std::string srcUri)
                 : store(srcStore), uri(srcUri) {}
             
                 // Tracking

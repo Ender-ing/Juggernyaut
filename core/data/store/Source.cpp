@@ -14,8 +14,8 @@ namespace Data {
 
         // Raw content
         void Source::fetchRawContent() {
-            SourceStore &srcStore = this->store;
-            this->rawContent = std::move(srcStore.onFileRawRequest(this->uri));
+            SourceStore *srcStore = this->store;
+            this->rawContent = std::move(srcStore->onFileRawRequest(this->uri));
         }
         const std::string& Source::getRawContent() {
             if (this->shouldUpdateRawContent) {

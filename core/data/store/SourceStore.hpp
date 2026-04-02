@@ -18,6 +18,7 @@
 
 namespace Data {
     namespace Store {
+        class Source;
         class JUG_DATA_API SourceStore {
             private:
                 std::unordered_map<std::string, Source> sources;
@@ -25,7 +26,7 @@ namespace Data {
                 SourceStore() = default;
 
                 // Unique implementations
-                virtual std::string onFileRawRequest(const std::string &uri) ;
+                virtual std::string onFileRawRequest(const std::string &uri) = 0;
         };
     }
 }
