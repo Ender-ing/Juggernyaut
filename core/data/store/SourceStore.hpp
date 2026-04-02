@@ -15,8 +15,10 @@
 #include <functional>
 #include <unordered_map>
 
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types
+#endif
 
 namespace Data {
     namespace Store {
@@ -48,4 +50,6 @@ namespace Data {
     }
 }
 
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
