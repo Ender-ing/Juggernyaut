@@ -34,7 +34,7 @@ namespace Data {
                 std::vector<SourceID> neededSources;
             public:
                 Source() = default;
-                Source(SourceStore *srcStore, std::string srcUri) ;
+                Source(std::string srcUri, SourceStore *srcStore) ;
 
                 // Tracking
                 SourceID getID();
