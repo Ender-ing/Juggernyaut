@@ -9,7 +9,7 @@
 #include "dynamic.hpp" // JUG_SESSION_API
 
 // Store
-#include "../store/SourceStore.hpp"
+#include "../data/store/SourceStore.hpp"
 
 // Parser
 #include "../parser/Hooks.hpp"
@@ -25,9 +25,7 @@ namespace Session {
     };
     struct Configs {
         Stage terminateAfter = Stage::IRGen;
-        Store::SourceStore store;
     };
-
 
     // Core libs
     using ParserHooks = Parser::Hooks; // Note that Lexer hooks are parser hooks!
@@ -37,6 +35,11 @@ namespace Session {
         ParserHooks &parser;
     };
 
-    // Main pipeline trigger funciton
-    extern JUG_SESSION_API void initiate(const Configs &configs, const Hooks &hooks) ;
+    struct Session {
+        Configs &configs;
+        Hooks &hooks;
+        Data::Store::SourceStore &store;
+    };
+   // Main pipeline trigger funciton
+    extern JUG_SESSION_API void initiate(const Session &session) ;
 }

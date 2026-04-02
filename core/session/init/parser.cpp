@@ -10,7 +10,10 @@
 
 namespace Session {
     namespace Init {
-        void parser(const Configs &configs, const Hooks &hooks) {
+        void parser(const Session &session) {
+            Configs &configs = session.configs;
+            Hooks &hooks = session.hooks;
+
             // Generate configs
             Parser::Configs parserConfigs;
             parserConfigs.terminateAfterLexer = (configs.terminateAfter == Stage::Lexer);

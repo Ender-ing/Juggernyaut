@@ -12,6 +12,6 @@
 
 namespace Session {
     namespace Init {
-        extern JUG_SESSION_API void parser(const Configs &configs, const Hooks &hooks) ;
+        extern JUG_SESSION_API void parser(const Session &session) ;
     }
 }

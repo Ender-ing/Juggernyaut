@@ -10,9 +10,11 @@
 
 namespace Session {
     // Main pipeline trigger funciton
-    void initiate(const Configs &configs, const Hooks &hooks) {
+    void initiate(const Session &session) {
+        Configs &configs = session.configs;
+
         // [STAGE] Lexer & Parser
-        Init::parser(configs, hooks);
+        Init::parser(session);
         if (configs.terminateAfter == Stage::Lexer || configs.terminateAfter == Stage::Parser) {
             return;
         }
