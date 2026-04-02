@@ -5,6 +5,8 @@
 
 #include "SourceStore.hpp"
 
-namespace Store {
-    // ...
+namespace Data {
+    namespace Store {
+        // ...
+    }
 }
