@@ -94,15 +94,23 @@ namespace Parser {
         lexer.addErrorListener(listener);
 
         // Process tokens
-        std::unique_ptr<antlr4::Token> token;
+        antlr4::Token *token = nullptr;
         do {
-            token = lexer.nextToken();
+            // Look ahead and store
+            token = tokens.LT(1);
 
             // Trigger events
             if (hooks.onANTLRTokenDetected != nullptr) {
                 hooks.onANTLRTokenDetected((const std::string) token->toString());
             }
+
+            // Advance
+            if (token->getType() != antlr4::Token::EOF) {
+                tokens.consume();
+            }
         } while (token->getType() != antlr4::Token::EOF);
+        // Rewind
+        tokens.seek(0);
 
         // Trigger context-level event
         if (hooks.onLexerContextEnd != nullptr) {
