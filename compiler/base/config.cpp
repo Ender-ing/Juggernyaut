@@ -94,7 +94,7 @@ namespace Base {
                 };
 
                 // Check current flag
-                Actions::ActionFunction action;
+                Actions::ActionFunction action = nullptr;
                 if (arg[0] != '-') {
                     // Unexpected input!
                     REPORT(Console::START_REPORT,
@@ -106,7 +106,7 @@ namespace Base {
                     }
                 } else if (Actions::getActionFunctionByFlag(arg, action)) {
                     // Execute action, and check for failure
-                    if (!action(getNextArg)) {
+                    if (action != nullptr && !action(getNextArg)) {
                         // Action-related fatal error!
                         // Error message is handled by the action!
                         return false;
