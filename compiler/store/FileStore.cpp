@@ -30,7 +30,7 @@ namespace Store {
         // Get file content
         std::string content;
         if (Files::getFileContent(uri, content)) {
-            return std::move(content);
+            return content;
         } else {
             REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't open file: ", uri, Console::END_REPORT);
             return std::string("");
