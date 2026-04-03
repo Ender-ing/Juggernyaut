@@ -10,6 +10,9 @@
 
 #include "types.hpp"
 
+// Basic C++ headers
+#include <functional>
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types
@@ -17,6 +20,7 @@
 
 namespace Data {
     namespace Store {
+        typedef std::function<void(const SourceID&)> DependencyCall;
         class JUG_DATA_API Source {
             public:
             private:
@@ -29,6 +33,7 @@ namespace Data {
                 // Tracking
                 bool isEntryPoint = false;
                 bool shouldUpdateRawContent = true;
+                bool shouldUpdateAST = true;
 
                 // Dependency tracking
                 std::vector<SourceID> neededSources;
@@ -43,6 +48,7 @@ namespace Data {
                 void addSourceDependency(SourceID dep) ;
                 void removeSourceDependency(SourceID dep) ;
                 void resetSourceDependencies() ;
+                void visitDependencies(DependencyCall depCall) ;
 
                 // Content Tracking
                 void requestRawUpdate() ;
@@ -50,6 +56,10 @@ namespace Data {
                 // You know nothing about the source's raw content!
                 // This is handled by the store object!
                 const std::string& getRawContent() ;
+
+                //  Parser: AST
+                void setUpdateAST(const bool state) ;
+                const bool getUpdateAST() ;
 
                 // If a file is imported by the user (not through an internal core process),
                 // a source should be treated as an entry point!

@@ -27,6 +27,7 @@ namespace Data {
         // Tracking
         void Source::requestRawUpdate() {
             this->shouldUpdateRawContent = true;
+            this->shouldUpdateAST = true;
         }
 
         // Dependency tracking
@@ -45,6 +46,14 @@ namespace Data {
             srcs.clear();
             srcs.shrink_to_fit();
         }
+        void Source::visitDependencies(DependencyCall depCall) {
+            std::vector<SourceID> deps = this->neededSources;
+            for (auto dep : deps) {
+                if (depCall != nullptr) {
+                    depCall(dep);
+                }
+            }
+        }
 
         // Raw content
         void Source::fetchRawContent() {
@@ -54,8 +63,17 @@ namespace Data {
         const std::string& Source::getRawContent() {
             if (this->shouldUpdateRawContent) {
                 this->fetchRawContent();
+                this->shouldUpdateRawContent = false;
             }
             return this->rawContent;
+        }
+
+        // AST data
+        void Source::setUpdateAST(const bool state) {
+            this->shouldUpdateAST = state;
+        }
+        const bool Source::getUpdateAST() {
+            return this->shouldUpdateAST;
         }
 
         void Source::setIsEntryPoint(const bool state) {

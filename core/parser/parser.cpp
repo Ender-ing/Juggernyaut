@@ -51,8 +51,23 @@ namespace Parser {
         }
     }
 
+    void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore &store, Data::Store::Source &source) ;
+
+    // Visit sources
+    void investegateContexts(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore &store, Data::Store::Source &source) {
+        source.visitDependencies([&configs, &hooks, &store](Data::Store::SourceID depId){
+            Data::Store::Source &dep = store.getSourceById(depId);
+            contextWorkflow(configs, hooks, store, dep);
+        });
+    }
+
     // Workflow for individual sources
-    void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::Source &source) {
+    void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore &store, Data::Store::Source &source) {
+        // Check the need for updates
+        if (!source.getUpdateAST()) {
+            return;
+        }
+
         Listeners::DiagnosticListener *listener = configs.diagListener;
         const std::string &rawContent = source.getRawContent();
 
@@ -100,11 +115,14 @@ namespace Parser {
         }
 
         // Generate an AST
-        // Note that within this step, import statements will trigger a "parsing request" for new files!
+        // Note that within this step, import statements will trigger a "context investigation"!
         // ...
 
         // Attach AST data to <Source>
         // ...
+
+        // Visit dependencies
+        investegateContexts(configs, hooks, store, source);
     }
 
     // Triggered by Session::initiate
@@ -113,7 +131,7 @@ namespace Parser {
             // Get source object
             Data::Store::Source &src = store.getSourceById(entryID);
 
-            contextWorkflow(configs, hooks, src);
+            contextWorkflow(configs, hooks, store, src);
         });
     }
 }
