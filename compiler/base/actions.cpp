@@ -123,8 +123,8 @@ namespace Base {
                 }
             ),
             DEFINE_ACTION(
-                "dbg-syntax", "debug-parser-antlr-syntax-test",
-                "Print the parser's tokens list and initial parser output.",
+                "dbg-antlr", "debug-antlr-syntax",
+                "Print the parser's ANTLR4 tokens list and initial ANTLR4 tree.",
                 {},
                 {
                     // Enable the test
