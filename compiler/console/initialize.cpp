@@ -7,8 +7,8 @@
 
 #include "../base/info.hpp"
 
-// Comms headers
 #include "basic.hpp"
+#include "optimization.hpp"
 
 namespace Console {
     namespace Internal {
@@ -23,17 +23,7 @@ namespace Console {
             }
 
             // Optimise console output
-            std::cout.flush();
-            std::clog.flush();
-            std::fflush(stdout);
-            std::fflush(stderr);
-            std::cout << std::nounitbuf;
-            std::clog << std::nounitbuf;
-            std::cin.tie(nullptr);
-            static std::vector<char> outBuffer(512);
-            static std::vector<char> errBuffer(512);
-            std::setvbuf(stdout, outBuffer.data(), _IOFBF, outBuffer.size());
-            std::setvbuf(stderr, errBuffer.data(), _IOFBF, errBuffer.size());
+            Optimization::optimize();
 
             start = std::chrono::high_resolution_clock::now();
 

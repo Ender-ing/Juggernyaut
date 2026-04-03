@@ -217,6 +217,8 @@ namespace Console {
 
     // Finalise protocol
     void finalize() {
+        Console::Optimization::safetyCheck();
+
         // Check for unwanted called
         if (isFinalized) {
             throwError("Detecting multiple protocol finalisation attempts!");

@@ -10,9 +10,9 @@
 // Basic C++ headers
 #include <iomanip>
 
-// Comms headers
 #include "console.hpp"
 #include "basic.hpp"
+#include "optimization.hpp"
 
 namespace Console {
     namespace Internal {
@@ -142,14 +142,8 @@ namespace Console {
             }
             std::cout << '\n' << timeString.str() << std::endl;
 
-            // Revert optimisation
-            std::cout.flush();
-            std::clog.flush();
-            std::fflush(stdout);
-            std::fflush(stderr);
-            std::cin.tie(&std::cout);
-            std::setvbuf(stderr, nullptr, _IONBF, 0);
-            std::setvbuf(stdout, nullptr, _IONBF, 0);
+            // Revert
+            Optimization::reverse();
         }
     }
 }
