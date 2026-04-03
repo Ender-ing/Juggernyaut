@@ -43,6 +43,29 @@ namespace Data {
 
             return srcs.at(id);
         }
+        void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
+            std::unordered_map<std::string, SourceID> &sourceStore = this->store;
+            if (!sourceStore.contains(uri)) {
+                std::unordered_map<SourceID, std::unique_ptr<Source>> &srcs = this->sources;
+
+                // Create a <Source> object
+                std::unique_ptr<Source> src = std::make_unique<Source>(uri, this);
+                const SourceID &srcId = src->getID();
+
+                if (isEntry) {
+                    // Update <Source> data
+                    src->setIsEntryPoint(true);
+                    this->entryPoints.push_back(srcId);
+
+                    // Keep track of the entry point
+                    this->addEntry(srcId);
+                }
+
+                // Insert data
+                srcs.insert({srcId, std::move(src)});
+                sourceStore.insert({uri, srcId});
+            }
+        }
 
     }
 }

@@ -104,6 +104,10 @@ namespace Parser {
             }
         } while (token->getType() != antlr4::Token::EOF);
 
+        // Trigger context-level event
+        if (hooks.onLexerContextEnd != nullptr) {
+            hooks.onLexerContextEnd();
+        }
         if (configs.terminateAfterLexer) {
             // Trigger context-level event
             if (hooks.onContextEnd != nullptr) {

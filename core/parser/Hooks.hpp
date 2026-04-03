@@ -29,6 +29,7 @@ namespace Parser {
     struct Hooks {
         // [StageCall]
         StageCall onContextStart = nullptr;
+        StageCall onLexerContextEnd = nullptr;
         StageCall onContextEnd = nullptr;
         // [TokenReport]
         // Args: <token_text> (const std::string&)

@@ -37,6 +37,7 @@ namespace Data {
 
                 // Unique implementations
                 virtual std::string onFileRawRequest(const std::string &uri) = 0;
+                // virtual std::string onFileAbsoluteUriRequest(const std::string &uri) = 0;
 
                 // Entry
                 void addEntry(SourceID entry) ;
@@ -46,6 +47,7 @@ namespace Data {
 
                 // Sources
                 std::unique_ptr<Source>& getSourceById(const SourceID &id) ;
+                void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
                 // ...

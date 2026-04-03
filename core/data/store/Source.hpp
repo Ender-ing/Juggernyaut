@@ -38,7 +38,6 @@ namespace Data {
                 // Dependency tracking
                 std::vector<SourceID> neededSources;
             public:
-                Source() = default;
                 Source(std::string srcUri, SourceStore *srcStore) ;
 
                 // Tracking
