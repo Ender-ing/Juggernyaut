@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-namespace Files {
+namespace Store {
     extern fs::path normalizePath(fs::path &path) ;
     // Check if a file is accessible
     extern bool isFileAccessible(const std::string &filePath) ;
