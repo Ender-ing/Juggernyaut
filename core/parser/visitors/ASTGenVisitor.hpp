@@ -16,15 +16,21 @@
 // Listeners
 #include "../listeners/ASTGenListener.hpp"
 
+// Store
+#include "./../../data/store/SourceStore.hpp"
+
 namespace Parser {
     namespace Visitors {
         using ANTLRParser = GeneratedParser::JuggernyautParser;
         class JUG_PARSER_API ASTGenVisitor : public GeneratedParser::JuggernyautParserVisitor {
             private:
                 Listeners::ASTGenListener *listener;
+                Data::Store::SourceStore *store;
+                std::unique_ptr<Data::Store::Source> &source;
             public:
-                ASTGenVisitor(Listeners::ASTGenListener *astListener)
-                    : listener(astListener) { }
+                ASTGenVisitor(Listeners::ASTGenListener *astListener, Data::Store::SourceStore *srcStore,
+                    std::unique_ptr<Data::Store::Source> &src)
+                    : listener(astListener), store(srcStore), source(src) { }
 
                 std::any visitProg(ANTLRParser::ProgContext *context) override ;
                 std::any visitStatement(ANTLRParser::StatementContext *context) override ;

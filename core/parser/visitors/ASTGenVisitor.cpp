@@ -20,7 +20,34 @@ namespace Parser {
         std::any ASTGenVisitor::visitImport_path(ANTLRParser::Import_pathContext *context) {
             auto token = context->LIT_STRING();
             if (token != nullptr) {
-                // ...
+                std::string path = token->getText();
+                path = path.erase(0, 1);
+                path = path.erase(path.length() - 1, path.length() - 1);
+
+                std::string output;
+                if (this->store->resolvePath(path, output)) {
+                    this->store->addSource(output, false);
+
+                    Data::Store::SourceId srcId = this->store->getSourceIdByUri(output);
+                    if (srcId != 0) {
+                        this->source->addSourceDependency(srcId);
+                    }
+                } else {
+                    Diagnostics::Diagnostic diag = Listeners::Internal::getGenRuleDiagnostic(context);
+
+                    std::string msg = "failed to resolve import path \"";
+                    msg.append(path);
+                    msg.append("\" :");
+                    msg.append(output);
+
+                    // Update diagnostic data
+                    diag.code = 200009;
+                    diag.message = std::move(msg);
+                    diag.severity = Diagnostics::Severity::Error;
+
+                    // Attach diagnostic to source
+                    this->listener->pushDiagnostic(diag);
+                }
             }
             return nullptr;
         }

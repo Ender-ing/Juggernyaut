@@ -113,7 +113,7 @@ namespace Parser {
         // Generate an AST
         // Note that within this step, import statements will trigger a "context investigation"!
         Listeners::ASTGenListener astListener = Listeners::ASTGenListener(source);
-        Visitors::ASTGenVisitor visitor = Visitors::ASTGenVisitor(&astListener);
+        Visitors::ASTGenVisitor visitor = Visitors::ASTGenVisitor(&astListener, store, source);
         visitor.visit(tree);
 
         // Attach AST data to <Source>
