@@ -7,9 +7,6 @@
 
 #include "../../core/common/headers.hpp"
 
-// Basic C++ headers
-#include <functional>
-
 namespace Base {
     namespace Actions {
         // Action-related function types

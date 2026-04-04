@@ -8,12 +8,6 @@
 #include "../common/headers.hpp"
 #include "dynamic.hpp" // JUG_PARSER_API
 
-// Basic C++ headers
-#include <functional>
-
-//// Data
-//#include "../data/store/Source.hpp"
-
 // Diagnostics
 #include "../diagnostics/Diagnostic.hpp"
 

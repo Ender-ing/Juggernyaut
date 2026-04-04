@@ -11,11 +11,6 @@
 #include "types.hpp"
 #include "Source.hpp"
 
-// Basic C++ headers
-#include <functional>
-#include <unordered_map>
-#include <memory>
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types

@@ -11,9 +11,6 @@
 #include "JuggernyautLexer.h"
 #include "JuggernyautParser.h"
 
-// Basic C++ headers
-#include <memory>
-
 #include "internal/JugLexer.hpp"
 
 #include "listeners/WorkflowDiagListener.hpp"

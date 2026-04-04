@@ -8,9 +8,6 @@
 // Common headers
 #include "../../core/common/headers.hpp"
 
-// Basic C++ headers
-#include <unordered_map>
-
 #include "Document.hpp"
 
 namespace Store {
