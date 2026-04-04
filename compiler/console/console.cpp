@@ -8,11 +8,19 @@
 namespace Console {
     // Handle error throw statement
     static void throwError(std::string msg) {
-        std::cerr << Internal::color("[Internal Error] ", Console::Internal::Color::red)
+
+        // Flush channels
+        std::cout.flush();
+        std::clog.flush();
+        std::fflush(stdout);
+        std::fflush(stderr);
+
+        std::cerr << "\n" << Internal::color("[Internal Error] ", Console::Internal::Color::red)
             << Internal::color(msg, Console::Internal::Color::red)
             << Internal::color(BAD_CODE_OR_MEMORY_LEAKS,
                 Console::Internal::Color::red)
-            << std::endl;
+            << "\n" << std::endl;
+
         throw std::runtime_error(msg);
     }
 
@@ -33,6 +41,8 @@ namespace Console {
         std::string stage = "";
         std::stringstream messageStream; // report message data!
 
+        bool isContinuation = false;
+
         // Code-related report data
         std::string path = "";
         size_t startLine = 0;
@@ -48,6 +58,8 @@ namespace Console {
             stage = "";
             messageStream.str(""); // Clear the internal buffer
             messageStream.clear(); // Clear the state flags (eofbit, failbit, badbit)
+
+            isContinuation = false;
 
             // Code-related data
             path = "";
@@ -104,7 +116,8 @@ namespace Console {
                 ReportType value = std::get<ReportType>(arg);
 
                 // Track report type
-                switch (value) {
+                if (!IndividualReport::isContinuation) {
+                    switch (value) {
                     case NORMAL_REPORT:
                         Statistics::normalReports++;
                         break;
@@ -130,6 +143,7 @@ namespace Console {
                 
                     default:
                         throwError("Unknown Comms::ReportType value!");
+                    }
                 }
 
                 // Value is valid!
@@ -190,6 +204,10 @@ namespace Console {
         }
     }
 
+    void runtimeTracking() {
+        Internal::startClock();
+    };
+
     // Initalise protocol
     void initalize() {
         // Initialise Internal mode
@@ -203,6 +221,8 @@ namespace Console {
 
     // Finalise protocol
     void finalize() {
+        Console::Optimization::safetyCheck();
+
         // Check for unwanted called
         if (isFinalized) {
             throwError("Detecting multiple protocol finalisation attempts!");

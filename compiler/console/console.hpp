@@ -10,11 +10,11 @@
 // Basic C++ headers
 #include <variant>
 
-// Include comms headers
 #include "basic.hpp"
 #include "report.hpp"
 #include "initialize.hpp"
 #include "finalize.hpp"
+#include "optimization.hpp"
 
 // Pack the report function into a macro
 #define REPORT(...)                                                 \
@@ -60,6 +60,8 @@ namespace Console {
         extern std::string stage;
         extern std::stringstream messageStream;
 
+        extern bool isContinuation;
+
         // Code-related report data
         extern std::string path;
         extern size_t startLine;
@@ -80,6 +82,8 @@ namespace Console {
 
     // Reporting
     extern void report(const ReportInputs& args) ;
+
+    extern void runtimeTracking() ;
 
     // Initalise protocol
     extern void initalize() ;

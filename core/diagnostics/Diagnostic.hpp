@@ -8,6 +8,8 @@
 #include "../common/headers.hpp"
 #include "dynamic.hpp" // JUG_DIAGNOSTICS_API
 
+#include "../data/store/types.hpp"
+
 namespace Diagnostics {
     // Line/column data
     struct Position {
@@ -41,6 +43,7 @@ namespace Diagnostics {
     };*/
     // A report
     struct Diagnostic {
+        Data::Store::SourceId sourceId;
         Range range;
         std::string message;
         int code;
@@ -49,8 +52,8 @@ namespace Diagnostics {
         // std::vector<RelatedInformation> related;
     };
 
-    struct FileDiagnostics {
+    /*struct FileDiagnostics {
         std::string uri;
         std::vector<Diagnostic> diagnostics;
-    };
+    };*/
 }

@@ -8,8 +8,7 @@
 
 #include "../console/console.hpp"
 
-// Common
-#include "../../core/common/files.hpp"
+#include "../store/files.hpp"
 
 namespace Base {
     // All state-related members should be contained under one namepsace
@@ -19,6 +18,7 @@ namespace Base {
 
         // Main source file
         std::string mainPath = "";
+        std::vector<std::string> entryPaths;
 
         // Debug-related
         namespace Debug {
@@ -65,13 +65,13 @@ namespace Base {
         // [true - sucess, false - failure]
         bool updateUsingArgs(int argc, const char *argv[]) {
             // Get the compiler's path
-            if (!Common::Files::getExecutableDir(compilerBinPath)) { // Same as /path/to/bin
+            if (!Store::getExecutableDir(compilerBinPath)) { // Same as /path/to/bin
                 REPORT(Console::START_REPORT, Console::FATAL_REPORT,
                     "Couldn't get the compiler's path!",
                     BAD_CODE_OR_MEMORY_LEAKS,
                     Console::END_REPORT);
             }
-            compilerBinPath = Common::Files::getParentPath(compilerBinPath);// Same as  /path/to/bin/..
+            compilerBinPath = Store::getParentPath(compilerBinPath);// Same as  /path/to/bin/..
 
             // Loop through all arguments (skipping the first one)
             for (int i = 1; i < argc; i++) {
@@ -82,11 +82,16 @@ namespace Base {
 
                 // Use this function to get the next argument
                 // [true - success, false = failure]
-                const Actions::ActionNextFunction getNextArg = [&i, &argc, &argv](std::string &store, bool skip) {
+                const Actions::ActionNextFunction getNextArg = [&i, &argc, &argv](std::string *store, bool skip) {
                     // Check for the next argument
                     if (i + 1 < argc) {
-                        // Get the next argument (and skip it when necessary!)
-                        store = std::string(argv[(skip) ? ++i : i + 1]);
+                        if (store != nullptr) {
+                            // Get the next argument (and skip it when necessary!)
+                            *store = std::string(argv[i + 1]);
+                        }
+                        if (skip) {
+                            i++;
+                        }
                         return true;
                     } else {
                         return false;
@@ -94,7 +99,7 @@ namespace Base {
                 };
 
                 // Check current flag
-                Actions::ActionFunction action;
+                Actions::ActionFunction action = nullptr;
                 if (arg[0] != '-') {
                     // Unexpected input!
                     REPORT(Console::START_REPORT,
@@ -106,7 +111,7 @@ namespace Base {
                     }
                 } else if (Actions::getActionFunctionByFlag(arg, action)) {
                     // Execute action, and check for failure
-                    if (!action(getNextArg)) {
+                    if (action != nullptr && !action(getNextArg)) {
                         // Action-related fatal error!
                         // Error message is handled by the action!
                         return false;

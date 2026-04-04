@@ -18,6 +18,10 @@
 #include <limits.h>
 #include <optional>
 #include <cstdint>
+#include <cmath>
+#include <functional>
+#include <unordered_map>
+#include <memory>
 
 // Include platform headers
 #ifdef _WIN32

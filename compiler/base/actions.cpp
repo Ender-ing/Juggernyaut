@@ -11,6 +11,8 @@
 
 #include "../console/console.hpp"
 
+#include "../store/files.hpp"
+
 // Shorten the syntax for defining an action
 #define DEFINE_ACTION(FLAG1, FLAG2, DESCRIPTION, ARGS, FUNCTION){   \
     {                                                               \
@@ -62,33 +64,25 @@ namespace Base {
                 "Set a path for the main user input file.",
                 { "<path>" },
                 {
+                    // Store
+                    std::string filePath;
+
                     // Get the next argument and save it!
-                    bool success = getNextArg(Base::InitialConfigs::mainPath, true);
+                    bool success = getNextArg(&filePath, false);
 
                     // Check if the action was successful!
-                    if (!success) {
+                    if (!success || filePath.at(0) == '-') {
                         // Missing input argument!
                         REPORT(Console::START_REPORT, Console::FATAL_REPORT,
                             "Missing the <path> input argument! (-i, --input)", Console::END_REPORT);
                         ACTION_FATAL_FAILURE;
                     }
 
-                    // Check if the file can be opened!
-                    if (!Common::Files::isFileAccessible(Base::InitialConfigs::mainPath)) {
-                        // File isn't accessible!
-                        REPORT(Console::START_REPORT, Console::FATAL_REPORT, "Input file is non-existent or inaccessible!",
-                            Console::END_REPORT);
-                        ACTION_FATAL_FAILURE;
-                    }
-
-                    // Check if the file can be opened!
-                    if (!Common::Files::isFileValid(Base::InitialConfigs::mainPath)) {
-                        // File isn't accessible!
-                        REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Input file is corrupted or of an invalid type! (Must use a valid .jug file)",
-                            Console::END_REPORT);
-                        ACTION_FATAL_FAILURE;
-                    }
+                    do {
+                        // Keep the value!
+                        getNextArg(nullptr, true); // Skip the item
+                        Base::InitialConfigs::entryPaths.push_back(filePath);
+                    } while(getNextArg(&filePath, false) && filePath.at(0) != '-');
 
                     ACTION_PROGRESS;
                 }
@@ -105,7 +99,7 @@ namespace Base {
                     // Get the license text
                     std::string content;
                     std::string licensePath = InitialConfigs::compilerBinPath + "/LICENSE";
-                    if (!Common::Files::getFileContent(licensePath, content)) {
+                    if (!Store::getFileContent(licensePath, content)) {
                         // File isn't accessible!
                         REPORT(Console::START_REPORT, Console::FATAL_REPORT,
                             "Couldn't access the LICENSE file: ",
@@ -123,8 +117,8 @@ namespace Base {
                 }
             ),
             DEFINE_ACTION(
-                "dbg-syntax", "debug-parser-antlr-syntax-test",
-                "Print the parser's tokens list and initial parser output.",
+                "dbg-antlr", "debug-antlr-syntax",
+                "Print the parser's ANTLR4 tokens list and initial ANTLR4 tree.",
                 {},
                 {
                     // Enable the test

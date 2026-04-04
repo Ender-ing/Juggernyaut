@@ -6,7 +6,8 @@ add_executable(
 
 # Add internal files
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/base/*.cpp FALSE)
-target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/store/*.cpp TRUE)
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/store/*.cpp FALSE)
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/session/*.cpp FALSE)
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
 
 # Link core libraries

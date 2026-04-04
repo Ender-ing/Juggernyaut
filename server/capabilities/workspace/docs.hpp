@@ -10,6 +10,6 @@
 
 namespace Capabilities {
     namespace Workspace {
-        //
+        // ...
     }
 }

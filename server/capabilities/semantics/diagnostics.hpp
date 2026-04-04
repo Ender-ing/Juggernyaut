@@ -13,25 +13,14 @@
 #include "../../../core/parser/parser.hpp"
 #include "../../../core/parser/listeners/DiagnosticListener.hpp"
 
-// Store
-#include "../../store/DocumentStore.hpp"
+// Session
+#include "../../../core/session/session.hpp"
+
+// lsp-framework
+#include "../../lspFramework.hpp"
 
 namespace Capabilities {
     namespace Semantics {
-        // TMP
-        // Listen for syntax-related errors
-        class SyntaxListener : public Parser::Listeners::DiagnosticListener {
-            private:
-                std::vector<lsp::Diagnostic> &diags;
-            public:
-                // Constructors
-                SyntaxListener(std::vector<lsp::Diagnostic> &diagsVector) : diags(diagsVector) { }
-
-                // ANTLR4 functions
-                void onSyntaxError(Diagnostics::Diagnostic) override ;
-                void onAmbiguity(Diagnostics::Diagnostic) override ;
-        };
-
-        extern void validateDocumentSyntax(lsp::MessageHandler &messageHandler, Store::Document &doc) ;
+        extern void setupParserDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) ;
     }
 }

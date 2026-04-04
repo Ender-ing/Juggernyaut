@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Jug Parser Grammar Quick Debug",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "${file}",
+            "grammar": "core/parser/.antlr4/JuggernyautParser.g4",
+            "actionFile": "core/parser/.antlr4/vscode.parser.debug.js",
+            "startRule": "prog",
+            "printParseTree": true,
+            "visualParseTree": true
+        }
+    ]
+}

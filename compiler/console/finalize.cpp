@@ -5,12 +5,47 @@
 
 #include "finalize.hpp"
 
-// Comms headers
+#include "initialize.hpp"
+
+// Basic C++ headers
+#include <iomanip>
+
 #include "console.hpp"
 #include "basic.hpp"
+#include "optimization.hpp"
 
 namespace Console {
     namespace Internal {
+        std::string getDuration() {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+            // Hours
+            auto h = std::chrono::duration_cast<std::chrono::hours>(duration);
+            duration -= h;
+
+            // Minutes
+            auto m = std::chrono::duration_cast<std::chrono::minutes>(duration);
+            duration -= m;
+
+            // Seconds
+            auto s = std::chrono::duration_cast<std::chrono::seconds>(duration);
+            duration -= s;
+
+            // Milliseconds
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+
+            // 5. Format the output with leading zeros (e.g., 05:02:09.045)
+            std::stringstream ss;
+            ss << std::setfill('0') 
+               << std::setw(2) << h.count() << ":"
+               << std::setw(2) << m.count() << ":"
+               << std::setw(2) << s.count() << "."
+               << std::setw(3) << ms.count();
+
+            return ss.str();
+        }
+
         // Handle CLI finalisation
         void finalize() {
             if (minimalProtocolFinalization) { //TMP
@@ -46,7 +81,8 @@ namespace Console {
             std::stringstream actionsString,
                 warningsString,
                 criticalsString,
-                fatalsString;
+                fatalsString,
+                timeString;
             if (Statistics::actionReports > 0) {
                 actionsString << color(std::to_string(Statistics::actionReports), Color::sea_green)
                     << color(" action(s)", Color::light_sea_green);
@@ -74,6 +110,10 @@ namespace Console {
                     << color(" fatal error(s)", Color::light_sea_green);
             }
 
+            if (isTrackingTime) {
+                timeString << color("Duration: ", Color::light_sea_green) << color(getDuration(), Color::light_sea_green);
+            }
+
 
             /**
              * Failure!
@@ -91,17 +131,23 @@ namespace Console {
              * 0 action(s), 0 warning(s), 0 error(s), 0 fatal error(s)
             **/
             // Print summary
-            std::cout << std::endl << std::endl << color(status, Color::light_sea_green) << std::endl;
+            std::cout << '\n' << '\n' << color(status, Color::light_sea_green) << std::endl;
             if (reports > 0) {
-                std::cout << std::endl;
-                std::cout << color("                |\\__/,|   (`\\", Color::golden_rod) << std::endl;
-                std::cout << color("              _.|o o  |_   ) )", Color::golden_rod) << std::endl;
+                std::cout << '\n';
+                std::cout << color("                |\\__/,|   (`\\", Color::golden_rod) << '\n';
+                std::cout << color("              _.|o o  |_   ) )", Color::golden_rod) << '\n';
                 std::cout << color("-------------", Color::light_sea_green) << color("(((", Color::golden_rod)
                     << color("---", Color::light_sea_green) << color("(((", Color::golden_rod)
-                    << color("---------------------------------", Color::light_sea_green) << std::endl << std::endl;
-                std::cout << actionsString.str() << warningsString.str() << criticalsString.str()
-                    << fatalsString.str() << std::endl;    
+                    << color("---------------------------------", Color::light_sea_green) << '\n' << '\n';
+                std::cout << actionsString.str() << warningsString.str() << criticalsString.str() << fatalsString.str()
+                    << std::endl;
             }
+            if (isTrackingTime) {
+                std::cout << '\n' << timeString.str() << std::endl;
+            }
+
+            // Revert
+            Optimization::revert();
         }
     }
 }

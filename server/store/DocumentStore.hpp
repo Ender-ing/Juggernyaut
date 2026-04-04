@@ -8,22 +8,18 @@
 // Common headers
 #include "../../core/common/headers.hpp"
 
-// Basic C++ headers
-#include <unordered_map>
-
-#include "Document.hpp"
+#include "./../../core/data/store/SourceStore.hpp"
 
 namespace Store {
-    class DocumentStore {
+    class DocumentStore : public Data::Store::SourceStore {
         private:
-            std::unordered_map<std::string, Document> documents;
-            void addDocument(const std::string &uri, bool fetchContent) ;
-
+            std::unordered_map<std::string, std::string> syncedRaws;
         public:
-            Document* getDocument(const std::string &uri) ;
-            const Document* getDocument(const std::string &uri) const ;
-            void deleteDocument(const std::string uri) ;
-            // Triggers addDocument when needed!
-            void initDocument(const std::string &uri) ;
+            // LSP synchronisation
+            void syncRaw(const std::string &uri, const std::string &rawContent) ;
+            void syncStatus(const std::string &uri, bool isInEditor) ;
+
+            std::string onFileRawRequest(const std::string &uri) override;
+            bool resolvePath(const std::string &uri, std::string &output) override;
     };
 }

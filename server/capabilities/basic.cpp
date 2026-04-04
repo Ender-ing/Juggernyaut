@@ -8,11 +8,23 @@
 
 #include "../base/info.hpp"
 
+// Session
+#include "../session/SessionDebouncer.hpp"
+
+// Store
+#include "../store/DocumentStore.hpp"
+
 namespace Capabilities {
-    lsp::MessageHandler *handler = nullptr;
-    void configureProtocol(lsp::MessageHandler &messageHandler, Store::DocumentStore &store, int &exit_code) {
+    static std::unique_ptr<Session::SessionDebouncer> debouncer = nullptr;
+
+    void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
         bool received_shutdown = false;
-        handler = &messageHandler;
+        Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
+
+        if (debouncer == nullptr) {
+            debouncer = std::make_unique<Session::SessionDebouncer>(session);
+        }
+
         messageHandler.add<lsp::requests::Initialize>(
             [](lsp::requests::Initialize::Params&& params) {
                 printMessage<lsp::requests::Initialize>(params);
@@ -49,24 +61,21 @@ namespace Capabilities {
                 exit_code = received_shutdown ? 0 : 1;
             }
         ).add<lsp::notifications::TextDocument_DidOpen>(
-            [&store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
+            [store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
                 std::string sourceCode = std::move(params.textDocument.text);
 
-                // Load doc
-                store.initDocument(rawUri);
-                Store::Document *docPtr = store.getDocument(rawUri);
-                if (docPtr == nullptr) {
-                    // THROW AN ERROR!
-                    return;
-                }
-                Store::Document &doc = *docPtr;
+                // Create doc
+                store->addSource(rawUri, true);
 
-                doc.setIsInEditor(true);
-                doc.setRawContent(sourceCode);
+                // Load doc
+                store->syncRaw(rawUri, sourceCode);
+
+                // Refresh the session
+                debouncer->trigger();
             }
         ).add<lsp::notifications::TextDocument_DidChange>(
-            [&store](lsp::notifications::TextDocument_DidChange::Params&& params) {
+            [store](lsp::notifications::TextDocument_DidChange::Params&& params) {
                 // Note: If you requested Full sync in your InitializeResult, 
                 // params.contentChanges[0].text will contain the entire updated file.
                 if (!params.contentChanges.empty()) {
@@ -79,35 +88,22 @@ namespace Capabilities {
                     );
 
                     // Load doc
-                    store.initDocument(rawUri);
-                    Store::Document *docPtr = store.getDocument(rawUri);
-                    if (docPtr == nullptr) {
-                        // THROW AN ERROR!
-                        return;
-                    }
-                    Store::Document &doc = *docPtr;
+                    store->syncRaw(rawUri, updatedSourceCode);
+                    store->syncStatus(rawUri, true);
 
-                    doc.setIsInEditor(true);
-                    doc.setRawContent(updatedSourceCode);
+                    // Refresh the session
+                    debouncer->trigger();
                 }
             }
         ).add<lsp::notifications::TextDocument_DidClose>(
-            [&store](lsp::notifications::TextDocument_DidClose::Params&& params) {
+            [store](lsp::notifications::TextDocument_DidClose::Params&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
-
                 // Load doc
-                store.initDocument(rawUri);
-                Store::Document *docPtr = store.getDocument(rawUri);
-                if (docPtr == nullptr) {
-                    // THROW AN ERROR!
-                    return;
-                }
-                Store::Document &doc = *docPtr;
+                // TO-DO: Update content too??
+                store->syncStatus(rawUri, false);
 
-                // Delete if not in use!
-                if (!doc.getIsImported()) {
-                    store.deleteDocument(doc.uri);
-                }
+                // Refresh the session
+                debouncer->trigger();
             }
         );
     }

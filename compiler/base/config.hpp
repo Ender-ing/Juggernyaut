@@ -22,10 +22,11 @@ namespace Base {
 
         // Main source file
         extern std::string mainPath;
+        extern std::vector<std::string> entryPaths;
 
         // Debug-related
         namespace Debug {
-            // --debug-parser-antlr-syntax-test <path>
+            // --debug-antlr-syntax
             namespace Parser {
                 extern bool activateAntlrSyntaxTest;
             }

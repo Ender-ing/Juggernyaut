@@ -123,7 +123,7 @@
       "patterns": [
         {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(import|TMP|TMP2)\\b"
+          "match": "\\b(import|from|as|TMP|TMP2)\\b"
         }
       ]
     },
@@ -131,7 +131,7 @@
       "patterns": [
         {
           "name": "keyword.operator.juggernyaut",
-          "match": ";"
+          "match": ";|,|."
         }
       ]
     }
