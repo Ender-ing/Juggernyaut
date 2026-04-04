@@ -11,6 +11,13 @@
 // Session
 #include "../../core/session/session.hpp"
 
+// Basic C++ headers
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <atomic>
+
 namespace Session {
     class SessionDebouncer {
         private:

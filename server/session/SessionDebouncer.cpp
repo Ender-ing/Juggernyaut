@@ -5,13 +5,6 @@
 
 #include "SessionDebouncer.hpp"
 
-// Basic C++ headers
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <chrono>
-#include <atomic>
-
 // Full disclosure: I barely have any idea how this works...
 
 namespace Session {

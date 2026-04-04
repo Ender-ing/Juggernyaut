@@ -35,7 +35,7 @@ namespace Parser {
 
                 // Get token
                 antlr4::Token* token = node->getSymbol();
-                diag = std::move(getGenTokenDiagnostic(token));
+                diag = getGenTokenDiagnostic(token);
 
                 return diag;
             }
