@@ -15,10 +15,8 @@
 #include "../store/DocumentStore.hpp"
 
 namespace Capabilities {
-    lsp::MessageHandler *handler = nullptr; // REMOVE THIS??
     void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
         bool received_shutdown = false;
-        handler = &messageHandler;
         Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
         messageHandler.add<lsp::requests::Initialize>(
             [](lsp::requests::Initialize::Params&& params) {

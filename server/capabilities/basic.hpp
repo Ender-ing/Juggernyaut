@@ -17,6 +17,5 @@
 #include "../../core/session/session.hpp"
 
 namespace Capabilities {
-    extern lsp::MessageHandler *handler; // REMOVE THIS??
     extern void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) ;
 }
