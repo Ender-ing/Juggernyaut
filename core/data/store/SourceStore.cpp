@@ -43,9 +43,21 @@ namespace Data {
 
             return srcs.at(id);
         }
+        std::unique_ptr<Source>* SourceStore::getSourceByUri(const std::string &uri) {
+            std::unordered_map<std::string, SourceId> &uriIndex = this->index;
+
+            if (uriIndex.contains(uri)) {
+                std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
+
+                const SourceId &id = uriIndex.contains(uri);
+                return &(srcs.at(id));
+            } else {
+                return nullptr;
+            }
+        }
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
-            std::unordered_map<std::string, SourceId> &sourceStore = this->store;
-            if (!sourceStore.contains(uri)) {
+            std::unordered_map<std::string, SourceId> &uriIndex = this->index;
+            if (!uriIndex.contains(uri)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
                 // Create a <Source> object
@@ -63,7 +75,7 @@ namespace Data {
 
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
-                sourceStore.insert({uri, srcId});
+                uriIndex.insert({uri, srcId});
             }
         }
 

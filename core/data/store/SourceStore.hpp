@@ -20,8 +20,9 @@ namespace Data {
     namespace Store {
         typedef std::function<void(const SourceId)> EntryCall;
         class JUG_DATA_API SourceStore {
+            protected:
+                std::unordered_map<std::string, SourceId> index; // Uri-based tracking
             private:
-                std::unordered_map<std::string, SourceId> store; // Uri-based tracking
                 std::unordered_map<SourceId, std::unique_ptr<Source>> sources; // ID-based tracking
                 std::vector<SourceId> entryPoints;
             public:
@@ -43,6 +44,7 @@ namespace Data {
 
                 // Sources
                 std::unique_ptr<Source>& getSourceById(const SourceId &id) ;
+                std::unique_ptr<Source>* getSourceByUri(const std::string &uri) ;
                 void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
