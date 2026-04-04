@@ -110,7 +110,9 @@ namespace Console {
                     << color(" fatal error(s)", Color::light_sea_green);
             }
 
-            timeString << color("Duration: ", Color::light_sea_green) << color(getDuration(), Color::light_sea_green);
+            if (isTrackingTime) {
+                timeString << color("Duration: ", Color::light_sea_green) << color(getDuration(), Color::light_sea_green);
+            }
 
 
             /**
@@ -140,7 +142,9 @@ namespace Console {
                 std::cout << actionsString.str() << warningsString.str() << criticalsString.str() << fatalsString.str()
                     << std::endl;
             }
-            std::cout << '\n' << timeString.str() << std::endl;
+            if (isTrackingTime) {
+                std::cout << '\n' << timeString.str() << std::endl;
+            }
 
             // Revert
             Optimization::revert();

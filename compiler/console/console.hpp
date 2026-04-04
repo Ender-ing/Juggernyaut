@@ -83,6 +83,8 @@ namespace Console {
     // Reporting
     extern void report(const ReportInputs& args) ;
 
+    extern void runtimeTracking() ;
+
     // Initalise protocol
     extern void initalize() ;
 

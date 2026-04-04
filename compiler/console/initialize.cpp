@@ -14,7 +14,13 @@ namespace Console {
     namespace Internal {
         // Track status
         static bool isInitialized = false;
+        bool isTrackingTime = false;
         std::chrono::high_resolution_clock::time_point start;
+
+        void startClock() {
+            start = std::chrono::high_resolution_clock::now();
+            isTrackingTime = true;
+        }
 
         // Handle CLI initialisation
         void initialize() {
@@ -24,8 +30,6 @@ namespace Console {
 
             // Optimise console output
             Optimization::optimize();
-
-            start = std::chrono::high_resolution_clock::now();
 
             /**
              *   ,-.       _,---._ __  / \

@@ -41,6 +41,8 @@ const Console::ReportType getReportType(Diagnostics::Severity severity) {
 }
 
 int main(int argc, const char *argv[]) {
+    Console::runtimeTracking();
+
     // Test for memory leaks
     Common::CrtDebug::initiateCrtMemoryChecks();
 

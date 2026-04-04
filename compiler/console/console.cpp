@@ -204,6 +204,10 @@ namespace Console {
         }
     }
 
+    void runtimeTracking() {
+        Internal::startClock();
+    };
+
     // Initalise protocol
     void initalize() {
         // Initialise Internal mode
