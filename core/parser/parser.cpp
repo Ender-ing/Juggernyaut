@@ -10,7 +10,12 @@
 #include "internal/JugLexer.hpp"
 #include "internal/JugParser.hpp"
 
+// Listeners
 #include "listeners/WorkflowDiagListener.hpp"
+#include "listeners/ASTGenListener.hpp"
+
+// Visitors
+#include "visitors/ASTGenVisitor.hpp"
 
 namespace Parser {
     void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store,
@@ -107,7 +112,9 @@ namespace Parser {
 
         // Generate an AST
         // Note that within this step, import statements will trigger a "context investigation"!
-        // ...
+        Listeners::ASTGenListener astListener = Listeners::ASTGenListener(source);
+        Visitors::ASTGenVisitor visitor = Visitors::ASTGenVisitor(&astListener);
+        visitor.visit(tree);
 
         // Attach AST data to <Source>
         // ...
