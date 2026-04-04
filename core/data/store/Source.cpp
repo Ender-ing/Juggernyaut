@@ -16,7 +16,7 @@ namespace Data {
     namespace Store {
         // Init
         Source::Source(std::string srcUri, SourceStore *srcStore)
-            : uri(srcUri), store(srcStore) {
+            : store(srcStore), uri(srcUri) {
             this->id = ++(this->store->lastID);
         }
         SourceId Source::getId() {

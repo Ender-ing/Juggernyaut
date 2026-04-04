@@ -25,7 +25,6 @@ namespace Data {
             public:
             private:
                 SourceId id;
-                std::string uri;
                 SourceStore *store;
                 std::string rawContent;
                 void fetchRawContent() ;
@@ -41,6 +40,8 @@ namespace Data {
                 // Diagnostics
                 std::vector<Diagnostics::Diagnostic> parserDiagnostics;
             public:
+                const std::string uri;
+
                 Source(std::string srcUri, SourceStore *srcStore) ;
 
                 // Tracking
