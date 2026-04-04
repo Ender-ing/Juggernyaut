@@ -23,8 +23,6 @@ namespace Store {
         }
     }
     void DocumentStore::syncStatus(const std::string &uri, bool isInEditor) {
-        std::unordered_map<std::string, Data::Store::SourceId> &index = this->index;
-
         const Data::Store::SourceId &srcId = this->getSourceIdByUri(uri);
 
         if (srcId != 0) {
