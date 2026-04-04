@@ -92,5 +92,12 @@ namespace Data {
             diags.clear();
             diags.shrink_to_fit();
         }
+        void Source::visitParserDiagnostics(DiagnosticCall call) {
+            std::vector<Diagnostics::Diagnostic> &diags = this->parserDiagnostics;
+
+            for (auto &diag : diags) {
+                call(diag);
+            }
+        }
     }
 }

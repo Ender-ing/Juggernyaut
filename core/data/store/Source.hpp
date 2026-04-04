@@ -20,6 +20,7 @@
 namespace Data {
     namespace Store {
         typedef std::function<void(const SourceId&)> DependencyCall;
+        typedef std::function<void(const Diagnostics::Diagnostic&)> DiagnosticCall;
         class JUG_DATA_API Source {
             public:
             private:
@@ -69,6 +70,7 @@ namespace Data {
                 // Diagnostics
                 void addParserDiagnostic(Diagnostics::Diagnostic diag) ;
                 void resetParserDiagnostics() ;
+                void visitParserDiagnostics(DiagnosticCall) ;
         };
     }
 }
