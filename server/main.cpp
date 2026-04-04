@@ -43,7 +43,7 @@ int main(int argc, const char *argv[]) {
     Store::DocumentStore store;
     session.store = &store;
 
-    // Initalise communications protocol
+    // Initalise protocol
     try {
         auto connection = lsp::Connection(lsp::io::standardIO());
         auto messageHandler = lsp::MessageHandler(connection);

@@ -51,7 +51,7 @@ namespace Capabilities {
         void setupParserDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) {
             Data::Store::SourceStore *store = session.store;
 
-            session.hooks.parser.onContextEnd = [&messageHandler, &store](const Data::Store::SourceId srcId) {
+            session.hooks.parser.onContextEnd = [store, &messageHandler](const Data::Store::SourceId srcId) {
                 std::unique_ptr<Data::Store::Source> &source = store->getSourceById(srcId);
 
                 std::vector<lsp::Diagnostic> diagnostics;
