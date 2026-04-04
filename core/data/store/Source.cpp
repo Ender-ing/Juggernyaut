@@ -25,9 +25,15 @@ namespace Data {
 
 
         // Tracking
-        void Source::requestRawUpdate() {
+        void Source::invalidateRawContent() {
             this->shouldUpdateRawContent = true;
             this->shouldUpdateAST = true;
+        }
+        void Source::invalidateAST() {
+            this->shouldUpdateAST = true;
+        }
+        const bool Source::getUpdateAST() {
+            return this->shouldUpdateAST;
         }
 
         // Dependency tracking
@@ -66,14 +72,6 @@ namespace Data {
                 this->shouldUpdateRawContent = false;
             }
             return this->rawContent;
-        }
-
-        // AST data
-        void Source::setUpdateAST(const bool state) {
-            this->shouldUpdateAST = state;
-        }
-        const bool Source::getUpdateAST() {
-            return this->shouldUpdateAST;
         }
 
         void Source::setIsEntryPoint(const bool state) {

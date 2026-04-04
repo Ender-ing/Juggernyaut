@@ -37,9 +37,9 @@ namespace Data {
             entries.shrink_to_fit();
         }
         void SourceStore::visitEntries(const EntryCall entryCall) {
-            std::vector<SourceId> &entries = this->entryPoints;
-            for (auto entry : entries) {
-                if (entryCall != nullptr) {
+            if (entryCall != nullptr) {
+                std::vector<SourceId> &entries = this->entryPoints;
+                for (auto &entry : entries) {
                     entryCall(entry);
                 }
             }
@@ -68,7 +68,7 @@ namespace Data {
             if (uriIndex.contains(uri)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
-                const SourceId &id = uriIndex.contains(uri);
+                const SourceId &id = uriIndex.at(uri);
                 return &(srcs.at(id));
             } else {
                 return nullptr;

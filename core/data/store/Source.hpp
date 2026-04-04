@@ -54,15 +54,13 @@ namespace Data {
                 void visitDependencies(DependencyCall depCall) ;
 
                 // Content Tracking
-                void requestRawUpdate() ;
+                void invalidateRawContent() ;
+                void invalidateAST() ;
+                const bool getUpdateAST() ;
 
                 // You know nothing about the source's raw content!
                 // This is handled by the store object!
                 const std::string& getRawContent() ;
-
-                //  Parser: AST
-                void setUpdateAST(const bool state) ;
-                const bool getUpdateAST() ;
 
                 // If a file is imported by the user (not through an internal core process),
                 // a source should be treated as an entry point!
