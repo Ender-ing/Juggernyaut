@@ -85,14 +85,14 @@ int main(int argc, const char *argv[]) {
 
     // Debug action
     if (Base::InitialConfigs::Debug::Parser::activateAntlrSyntaxTest) {
-        session.hooks.parser.onContextStart = [](){
+        session.hooks.parser.onContextStart = [](const Data::Store::SourceId srcId) {
             REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens:", Console::END_REPORT);
         };
-        session.hooks.parser.onANTLRTokenDetected = [](const std::string &tokenText){
+        session.hooks.parser.onANTLRTokenDetected = [](const std::string &tokenText) {
             Console::IndividualReport::isContinuation = true;
             REPORT(Console::START_REPORT, Console::DEBUG_REPORT, tokenText, Console::END_REPORT);
         };
-        session.hooks.parser.onANTLRTreeGenerated = [](const std::string &treeText){
+        session.hooks.parser.onANTLRTreeGenerated = [](const std::string &treeText) {
             REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Parse Tree: \n", treeText, Console::END_REPORT);
         };
     }

@@ -75,7 +75,7 @@ namespace Parser {
 
         // Trigger context-level event
         if (hooks.onContextStart != nullptr) {
-            hooks.onContextStart();
+            hooks.onContextStart(source->getId());
         }
 
         Listeners::WorkflowDiagListener listener = Listeners::WorkflowDiagListener(hooks, source->getId());
@@ -116,12 +116,12 @@ namespace Parser {
 
         // Trigger context-level event
         if (hooks.onLexerContextEnd != nullptr) {
-            hooks.onLexerContextEnd();
+            hooks.onLexerContextEnd(source->getId());
         }
         if (configs.terminateAfterLexer) {
             // Trigger context-level event
             if (hooks.onContextEnd != nullptr) {
-                hooks.onContextEnd();
+                hooks.onContextEnd(source->getId());
             }
             return;
         }
@@ -151,7 +151,7 @@ namespace Parser {
 
         // Trigger context-level event
         if (hooks.onContextEnd != nullptr) {
-            hooks.onContextEnd();
+            hooks.onContextEnd(source->getId());
         }
 
         // Visit dependencies
