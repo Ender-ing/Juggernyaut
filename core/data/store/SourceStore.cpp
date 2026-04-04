@@ -17,11 +17,19 @@ namespace Data {
             std::vector<SourceId> &entries = this->entryPoints;
             if (std::ranges::find(entries, entry) == entries.end()) {
                 entries.push_back(entry);
+
+                const std::unique_ptr<Source> &src = this->getSourceById(entry);
+                src->setIsEntryPoint(true);
             }
         }
         void SourceStore::removeEntry(SourceId entry) {
             std::vector<SourceId> &entries = this->entryPoints;
-            Common::Utility::fastVectorRemove(entries, entry);
+            if (std::ranges::find(entries, entry) != entries.end()) {
+                Common::Utility::fastVectorRemove(entries, entry);
+
+                const std::unique_ptr<Source> &src = this->getSourceById(entry);
+                src->setIsEntryPoint(false);
+            }
         }
         void SourceStore::resetEntries() {
             std::vector<SourceId> &entries = this->entryPoints;
@@ -34,6 +42,19 @@ namespace Data {
                 if (entryCall != nullptr) {
                     entryCall(entry);
                 }
+            }
+        }
+
+        // IDs
+        SourceId SourceStore::getSourceIdByUri(const std::string &uri) {
+            std::unordered_map<std::string, SourceId> &uriIndex = this->index;
+
+            if (uriIndex.contains(uri)) {
+                std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
+
+                return uriIndex.contains(uri);
+            } else {
+                return 0;
             }
         }
 

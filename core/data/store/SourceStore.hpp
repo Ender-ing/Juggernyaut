@@ -26,7 +26,7 @@ namespace Data {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> sources; // ID-based tracking
                 std::vector<SourceId> entryPoints;
             public:
-                SourceId lastID = 0;
+                SourceId lastID = 10; // 0-10 are used for internal purposes
                 SourceStore() = default;
                 // Fix std::unique_ptr bug
                 SourceStore(const SourceStore&) = delete;
@@ -41,6 +41,9 @@ namespace Data {
                 void removeEntry(SourceId entry) ;
                 void resetEntries() ;
                 void visitEntries(const EntryCall entryCall) ;
+
+                // IDs
+                SourceId getSourceIdByUri(const std::string &uri) ;
 
                 // Sources
                 std::unique_ptr<Source>& getSourceById(const SourceId &id) ;
