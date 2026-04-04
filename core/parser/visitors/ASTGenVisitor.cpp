@@ -21,8 +21,7 @@ namespace Parser {
             auto token = context->LIT_STRING();
             if (token != nullptr) {
                 std::string path = token->getText();
-                path = path.erase(0, 1);
-                path = path.erase(path.length() - 1, path.length() - 1);
+                path = path.substr(1, path.length() - 2);
 
                 std::string output;
                 if (this->store->resolvePath(path, output)) {
@@ -37,7 +36,7 @@ namespace Parser {
 
                     std::string msg = "failed to resolve import path \"";
                     msg.append(path);
-                    msg.append("\" :");
+                    msg.append("\" : ");
                     msg.append(output);
 
                     // Update diagnostic data
