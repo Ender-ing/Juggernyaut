@@ -9,7 +9,7 @@
 #include "../base/info.hpp"
 
 // Session
-#include "../core/session/session.hpp"
+#include "../../core/session/session.hpp"
 
 // Store
 #include "../store/DocumentStore.hpp"
