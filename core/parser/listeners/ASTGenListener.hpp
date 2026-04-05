@@ -26,6 +26,8 @@ namespace Parser {
             public:
                 ASTGenListener(std::unique_ptr<Data::Store::Source> &source)
                     : src(source) { }
+                ASTGenListener(const ASTGenListener&) = delete;
+                ASTGenListener& operator=(const ASTGenListener&) = delete;
 
                 // (will attach a <SourceId>)
                 void pushDiagnostic(Diagnostics::Diagnostic &diag) ;

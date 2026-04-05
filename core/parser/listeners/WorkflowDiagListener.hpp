@@ -23,6 +23,8 @@ namespace Parser {
                 // Constructors
                 WorkflowDiagListener(const Hooks &parserHooks, std::unique_ptr<Data::Store::Source> &source)
                     : hooks(parserHooks), src(source) {};
+                WorkflowDiagListener(const WorkflowDiagListener&) = delete;
+                WorkflowDiagListener& operator=(const WorkflowDiagListener&) = delete;
 
                 void onSyntaxError(Diagnostics::Diagnostic diag) override;
                 void onAmbiguity(Diagnostics::Diagnostic diag) override;

@@ -37,6 +37,8 @@ namespace Parser {
             public:
                 // Constructors
                 DiagnosticListener() = default;
+                DiagnosticListener(const DiagnosticListener&) = delete;
+                DiagnosticListener& operator=(const DiagnosticListener&) = delete;
 
                 virtual void onSyntaxError(Diagnostics::Diagnostic diag) = 0;
                 virtual void onAmbiguity(Diagnostics::Diagnostic diag) = 0;

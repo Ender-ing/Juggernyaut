@@ -43,6 +43,8 @@ namespace Data {
                 const std::string uri;
 
                 Source(std::string srcUri, SourceStore *srcStore) ;
+                Source(const Source&) = delete;
+                Source& operator=(const Source&) = delete;
 
                 // Tracking
                 SourceId getId();

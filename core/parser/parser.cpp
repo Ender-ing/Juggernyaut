@@ -71,7 +71,7 @@ namespace Parser {
 
             // Trigger events
             if (hooks.onANTLRTokenDetected != nullptr) {
-                hooks.onANTLRTokenDetected((const std::string) token->toString());
+                hooks.onANTLRTokenDetected(token->toString());
             }
 
             // Advance
@@ -107,7 +107,7 @@ namespace Parser {
 
         // Trigger Events
         if (hooks.onANTLRTreeGenerated != nullptr) {
-            hooks.onANTLRTreeGenerated((const std::string) tree->toStringTree(&parser));
+            hooks.onANTLRTreeGenerated(tree->toStringTree(&parser));
         }
 
         // Generate an AST
