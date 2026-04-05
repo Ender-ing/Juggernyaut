@@ -39,5 +39,6 @@ This is done as to ensure all architectures are built and tested successfully!
 
 ## Diagnostic codes
 
+- Temporary placeholder: 1
 - Lexer: 1xxxxx
 - Parser: 2xxxxx
