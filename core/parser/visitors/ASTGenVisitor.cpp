@@ -5,6 +5,8 @@
 
 #include "ASTGenVisitor.hpp"
 
+#include "./../../diagnostics/astGen.hpp"
+
 #define DEFAULT_VISIT \
 { return this->visitChildren(context); }
 
@@ -32,7 +34,7 @@ namespace Parser {
                         this->source->addSourceDependency(srcId);
                     }
                 } else {
-                    Diagnostics::Diagnostic diag = Listeners::Internal::getGenRuleDiagnostic(context);
+                    Diagnostics::Diagnostic diag = Diagnostics::getGenRuleDiagnostic(context);
 
                     std::string msg = "failed to resolve import path \"";
                     msg.append(path);
@@ -51,7 +53,7 @@ namespace Parser {
             return nullptr;
         }
         std::any ASTGenVisitor::visitImport_library(ANTLRParser::Import_libraryContext *context) {
-            Diagnostics::Diagnostic diag = Listeners::Internal::getGenRuleDiagnostic(context);
+            Diagnostics::Diagnostic diag = Diagnostics::getGenRuleDiagnostic(context);
 
             // auto tokens = context->IDENTIFIER();
 

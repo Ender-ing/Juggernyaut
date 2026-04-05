@@ -16,15 +16,10 @@
 #include "../../diagnostics/Diagnostic.hpp"
 
 // Store
-#include "./../../data/store/SourceStore.hpp"
+#include "../../data/store/SourceStore.hpp"
 
 namespace Parser {
     namespace Listeners {
-        namespace Internal {
-            extern JUG_PARSER_API Diagnostics::Diagnostic getGenTokenDiagnostic(antlr4::Token *token) ;
-            extern JUG_PARSER_API Diagnostics::Diagnostic getGenNodeDiagnostic(antlr4::tree::TerminalNode *node) ;
-            extern JUG_PARSER_API Diagnostics::Diagnostic getGenRuleDiagnostic(antlr4::ParserRuleContext *context) ;
-        }
         class JUG_PARSER_API ASTGenListener {
             private:
                 std::unique_ptr<Data::Store::Source> &src;
