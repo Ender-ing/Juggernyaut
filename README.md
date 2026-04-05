@@ -8,16 +8,23 @@ An experimental general-purpose programming language in the making!
 ## Overview
 
 - `/compiler`:
-Includes the CLI wrapper.
-
+  The CLI wrapper.
 - `/core`:
-Includes the core components of the compilation process! (e.g. lexter, parser, etc.)
-
+  Includes the core components of the compilation process! (e.g. lexer, parser, etc.)  
+  - `common`:
+    Shared files within the core libraries.
+  - `data`:
+    Data structures that are meant to be shared between different stages.
+  - `diagnostics`:
+    Holds the shared `<Diagnostic>` and functions that generate it.
+  - `parser`:
+    Generates a parser AST and links processing contexts.
+  - `session`
+    Kick starts the entire workflow of the language's front-end!
 - `/extensions`:
-Includes extensions for well-known code editors.
-
+  Includes extensions for well-known code editors.
 - `/server`:
-Includes the server language. (Follows the LSP)
+  The language server for IDEs. (Follows the LSP)
 
 ## Memory debugging
 
