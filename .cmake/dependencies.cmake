@@ -160,5 +160,8 @@ if(NOT TARGET mimalloc)
     set(MI_BUILD_TESTS OFF CACHE BOOL "Skip mimalloc tests" FORCE)
     set(MI_OVERRIDE ON CACHE BOOL "Override standard allocations" FORCE)
     FetchContent_MakeAvailable(mimalloc)
+    set_target_properties(mimalloc PROPERTIES
+        CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
+    )
 endif()
 link_libraries(mimalloc)

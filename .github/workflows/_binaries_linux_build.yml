@@ -78,7 +78,7 @@ jobs:
       if: inputs.build_platform_name == 'x86_32'
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ -DCMAKE_SYSTEM_PROCESSOR=arm \
+          -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ -DCMAKE_SYSTEM_PROCESSOR=i686 \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
 
@@ -87,6 +87,7 @@ jobs:
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
+          -DCMAKE_SYSTEM_PROCESSOR=arm \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
 
