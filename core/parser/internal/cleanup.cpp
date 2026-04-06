@@ -18,16 +18,14 @@ namespace Parser {
         void flushAntlrCache() {
             antlr4::ANTLRInputStream emptyInput("");
             JugLexer tempLexer(&emptyInput);
+            antlr4::CommonTokenStream emptyTokenStream(&tempLexer);
+            JugParser tempParser(&emptyTokenStream);
 
             // Wipe shared Lexer simulator cache
             auto lexerSimulator = tempLexer.getInterpreter<antlr4::atn::LexerATNSimulator>();
             if (lexerSimulator != nullptr) {
                 lexerSimulator->clearDFA();
             }
-
-            antlr4::CommonTokenStream emptyTokenStream(&tempLexer);
-            JugParser tempParser(&emptyTokenStream);
-
             // Wipe shared Parser simulator cache
             auto parserSimulator = tempParser.getInterpreter<antlr4::atn::ParserATNSimulator>();
             if (parserSimulator != nullptr) {
