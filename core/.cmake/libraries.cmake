@@ -13,7 +13,9 @@ attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
 # Libraries
 copy_shared_library(JuggernyautCommonLibrary ${MIMALLOC_LIB_PATH} ${MIMALLOC_VERSION})
-copy_shared_library(JuggernyautCommonLibrary ${MIMALLOC_REDIRECT_LIB_PATH} ${MIMALLOC_VERSION})
+if(WIN32)
+    copy_shared_library(JuggernyautCommonLibrary ${MIMALLOC_WIN_REDIRECT_LIB_PATH} ${MIMALLOC_VERSION})
+endif()
 
 # Create a library from /diagnostics
 add_library(JuggernyautDiagnosticsLibrary SHARED)
