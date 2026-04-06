@@ -35,6 +35,7 @@ namespace Data {
                 bool shouldUpdateAST = true;
 
                 // Dependency tracking
+                std::vector<SourceId> neededBy;
                 std::vector<SourceId> neededSources;
 
                 // Diagnostics
@@ -59,6 +60,7 @@ namespace Data {
                 void invalidateRawContent() ;
                 void invalidateAST() ;
                 const bool getUpdateAST() ;
+                void preventUpdateAST() ;
 
                 // You know nothing about the source's raw content!
                 // This is handled by the store object!

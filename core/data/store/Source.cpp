@@ -35,6 +35,9 @@ namespace Data {
         const bool Source::getUpdateAST() {
             return this->shouldUpdateAST;
         }
+        void Source::preventUpdateAST() {
+            this->shouldUpdateAST = false;
+        }
 
         // Dependency tracking
         void Source::addSourceDependency(SourceId dep) {

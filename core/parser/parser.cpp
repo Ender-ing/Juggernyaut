@@ -126,6 +126,9 @@ namespace Parser {
             hooks.onContextEnd(source->getId());
         }
 
+        // Flag AST as "up-to-date"
+        source->preventUpdateAST();
+
         // Visit dependencies
         investegateContexts(configs, hooks, store, source);
     }
