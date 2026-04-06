@@ -14,12 +14,6 @@ else()
     message(STATUS "[BUILD] Build set to 'Release' mode.")
 endif()
 
-# Fix RPATH issues
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
-
 # Get the current build architecture
 project(ArchitectureSpecificBuild)
 if(CMAKE_GENERATOR_PLATFORM)
