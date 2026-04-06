@@ -70,4 +70,16 @@ namespace Store {
         output = lsp::DocumentUri::fromPath(uri).path();
         return true;
     }
+
+    void DocumentStore::deleteSource(std::unique_ptr<Data::Store::Source> &src) {
+        Data::Store::SourceStore::deleteSource(src);
+
+        std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
+
+        // Delete file data
+        const std::string &uri = src->uri;
+        if (raws.contains(uri)) {
+            raws.erase(uri);
+        }
+    }
 }

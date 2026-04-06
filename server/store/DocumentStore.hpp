@@ -21,5 +21,7 @@ namespace Store {
 
             std::string onFileRawRequest(const std::string &uri) override;
             bool resolvePath(const std::string &uri, std::string &output) override;
+
+            void deleteSource(std::unique_ptr<Data::Store::Source> &src) override;
     };
 }
