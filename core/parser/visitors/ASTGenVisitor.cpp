@@ -38,7 +38,7 @@ namespace Parser {
 
                     std::string msg = "failed to resolve import path \"";
                     msg.append(path);
-                    msg.append("\" : ");
+                    msg.append("\": ");
                     msg.append(output);
 
                     // Update diagnostic data
