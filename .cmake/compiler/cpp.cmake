@@ -178,3 +178,16 @@ check_c_compiler_flag("-fsanitize=leak" CMAKE_CXX_SUPPORTS_FSANITIZE_LEAK)
 # Test for address and undefined sanitizer support combined.
 set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
 check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS_UNDEFINED)
+
+# For ARM targets without FPU, use soft-float ABI
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm(v([0-9])+)?-?[a-z]?$" AND NOT APPLE)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+            # 32-bit ARM (e.g. Raspberry Pi 1-3, older boards)
+            add_compile_options(-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=soft) 
+        else()
+            # 64-bit ARM
+            add_compile_options(-march=armv8-a)
+        endif()
+    endif()
+endif()

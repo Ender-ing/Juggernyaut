@@ -87,7 +87,7 @@ jobs:
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=arm-linux-gnueabi-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabi-g++ \
-          -DCMAKE_SYSTEM_PROCESSOR=arm -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=soft \
+          -DCMAKE_SYSTEM_PROCESSOR=arm \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
 
