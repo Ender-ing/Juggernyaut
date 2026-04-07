@@ -142,7 +142,6 @@ set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
 # Make adding global C/C++ flags easier
 function(add_c_cpp_global_flag flag)
-    add_compile_options(flag)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${flag}")
@@ -184,9 +183,7 @@ check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZ
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm(v([0-9])+)?-?[a-z]?$" AND NOT APPLE)
         if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            # 32-bit ARM (e.g. Raspberry Pi 1-3, older boards)
-            add_c_cpp_global_flag(-mfpu=vfpv3-d16) 
-            add_c_cpp_global_flag(-mfloat-abi=soft)
+            add_compile_options(-mfpu=vfpv3-d16 -mfloat-abi=soft) 
         endif()
     endif()
 endif()
