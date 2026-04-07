@@ -178,3 +178,16 @@ check_c_compiler_flag("-fsanitize=leak" CMAKE_CXX_SUPPORTS_FSANITIZE_LEAK)
 # Test for address and undefined sanitizer support combined.
 set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
 check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS_UNDEFINED)
+
+# Fix ARM32 builds on non-ARM32 hardware
+set(FLAG_VARS 
+    CMAKE_C_FLAGS CMAKE_CXX_FLAGS 
+    CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG 
+    CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE
+)
+foreach(flag_var ${FLAG_VARS})
+    if(${flag_var} MATCHES "-mfloat-abi=hard")
+        string(REPLACE "-mfloat-abi=hard" "" cleaned_flags "${${flag_var}}")
+        set(${flag_var} "${cleaned_flags}" CACHE STRING "" FORCE)
+    endif()
+endforeach()
