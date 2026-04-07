@@ -61,7 +61,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture armhf
         sudo apt-get update
-        sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+        sudo apt-get install gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
         sudo apt-get install -y libc6:armhf libstdc++6:armhf
 
     - name: Make the ".build" directory
@@ -86,7 +86,7 @@ jobs:
       if: inputs.build_platform_name == 'arm32'
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
+          -DCMAKE_C_COMPILER=arm-linux-gnueabi-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabi-g++ \
           -DCMAKE_SYSTEM_PROCESSOR=arm \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
