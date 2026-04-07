@@ -179,15 +179,20 @@ check_c_compiler_flag("-fsanitize=leak" CMAKE_CXX_SUPPORTS_FSANITIZE_LEAK)
 set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
 check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS_UNDEFINED)
 
-# Fix ARM32 builds on non-ARM32 hardware
-set(FLAG_VARS 
-    CMAKE_C_FLAGS CMAKE_CXX_FLAGS 
-    CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG 
-    CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE
-)
-foreach(flag_var ${FLAG_VARS})
-    if(${flag_var} MATCHES "-mfloat-abi=hard")
-        string(REPLACE "-mfloat-abi=hard" "" cleaned_flags "${${flag_var}}")
-        set(${flag_var} "${cleaned_flags}" CACHE STRING "" FORCE)
+# For ARM targets without FPU, use soft-float ABI
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+        # Check if target supports hard float
+        try_compile(HAS_HARD_FLOAT
+            ${CMAKE_BINARY_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/test_hard_float.c
+            COMPILE_DEFINITIONS "-mfloat-abi=hard"
+        )
+
+        if(NOT HAS_HARD_FLOAT)
+            # Fall back to soft-float for targets without FPU
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=soft")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=soft")
+        endif()
     endif()
-endforeach()
+endif()
