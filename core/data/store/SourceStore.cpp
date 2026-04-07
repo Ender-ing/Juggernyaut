@@ -76,11 +76,15 @@ namespace Data {
         }
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
-            if (!uriIndex.contains(uri)) {
+
+            std::string absoluteUri;
+            absoluteUri = (this->resolvePath(uri, absoluteUri)) ? absoluteUri : uri;
+
+            if (!uriIndex.contains(absoluteUri)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
                 // Create a <Source> object
-                std::unique_ptr<Source> src = std::make_unique<Source>(uri, this);
+                std::unique_ptr<Source> src = std::make_unique<Source>(absoluteUri, this);
                 const SourceId &srcId = src->getId();
 
                 if (isEntry) {
@@ -94,7 +98,7 @@ namespace Data {
 
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
-                uriIndex.insert({uri, srcId});
+                uriIndex.insert({absoluteUri, srcId});
             }
         }
 
