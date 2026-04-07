@@ -105,30 +105,27 @@ int main(int argc, const char *argv[]) {
     }
 
     // Parser Diagnostics (OLD! SWITCH TO FILE-BASED REPORTING)
-    session.hooks.parser.onSyntaxError = [](const Diagnostics::Diagnostic &diag) {
-        // Get the position
-        Console::IndividualReport::startLine = diag.range.start.line;
-        Console::IndividualReport::startColumn = diag.range.start.character;
-        Console::IndividualReport::endLine = diag.range.end.line;
-        Console::IndividualReport::endColumn = diag.range.end.character;
+    session.hooks.parser.onContextEnd = [&session](const Data::Store::SourceId srcId) {
+        std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
 
-        // Update stage data
-        int stageId = static_cast<int>(std::floor(diag.code / 100000));
-        if (stageId == 1) {
-            Console::IndividualReport::stage = "Lexer";
-        } else if (stageId == 2) {
-            Console::IndividualReport::stage = "Parser";
-        } else {
-            Console::IndividualReport::stage = "?Unknown Stage?";
-        }
+        source->visitParserDiagnostics([](const Diagnostics::Diagnostic &diag) {
+            // Get the position
+            Console::IndividualReport::startLine = diag.range.start.line;
+            Console::IndividualReport::startColumn = diag.range.start.character;
+            Console::IndividualReport::endLine = diag.range.end.line;
+            Console::IndividualReport::endColumn = diag.range.end.character;
 
-        // Report the error
-        REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
-    };
-    session.hooks.parser.onAmbiguity = [](const Diagnostics::Diagnostic &diag) {
-        REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, " (source: ",
-            diag.range.start.line, ":", diag.range.start.character ," to  " ,
-            diag.range.end.line, ":", diag.range.end.character, ")", Console::END_REPORT);
+            // Update stage data
+            int stageId = static_cast<int>(std::floor(diag.code / 100000));
+            if (stageId == 1) {
+                Console::IndividualReport::stage = "Lexer";
+            } else if (stageId == 2) {
+                Console::IndividualReport::stage = "Parser";
+            } else {
+                Console::IndividualReport::stage = "?Unknown Stage?";
+            }
+            REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
+        });
     };
 
     // Begin the actual work here...
