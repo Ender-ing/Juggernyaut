@@ -17,6 +17,8 @@ namespace Parser {
         class JUG_PARSER_API JugParser : public GeneratedParser::JuggernyautParser {
             public:
                 using GeneratedParser::JuggernyautParser::JuggernyautParser; // Inherit constructors
+                JugParser(const JugParser&) = delete;
+                JugParser& operator=(const JugParser&) = delete;
         };
     }
 }

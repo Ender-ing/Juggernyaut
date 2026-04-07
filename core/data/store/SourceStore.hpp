@@ -31,6 +31,7 @@ namespace Data {
                 // Fix std::unique_ptr bug
                 SourceStore(const SourceStore&) = delete;
                 SourceStore& operator=(const SourceStore&) = delete;
+                virtual ~SourceStore() = default;
 
                 // Unique implementations
                 virtual std::string onFileRawRequest(const std::string &uri) = 0;
@@ -55,7 +56,8 @@ namespace Data {
                 void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
-                // ...
+                virtual void deleteSource(std::unique_ptr<Source> &src) ; // Allow override
+                void cleanup() ;
         };
     }
 }

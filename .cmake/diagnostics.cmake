@@ -1,5 +1,7 @@
 message(STATUS "[DIAGNOSTICS] Enabling diagnostic codes generation...")
 
+include(FetchContent)
+
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/diag_codes_generated")
 
 set(CPP_DIAGCODES_SCAN_DIR ${CMAKE_BINARY_DIR}/..)

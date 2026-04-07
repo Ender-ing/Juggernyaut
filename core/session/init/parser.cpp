@@ -21,5 +21,10 @@ namespace Session {
 
             Parser::sessionWorkflow(parserConfigs, hooks.parser, store);
         }
+        void rejuvenateParser() {
+            Parser::cleanup();
+
+            // ...
+        }
     }
 }

@@ -11,6 +11,9 @@ target_compile_definitions(JuggernyautCommonLibrary PRIVATE JUG_COMMON_LIBRARY_E
 attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
+# Libraries
+copy_proper_shared_library(JuggernyautCommonLibrary $<TARGET_FILE_DIR:mimalloc> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
 
 # Create a library from /diagnostics
 add_library(JuggernyautDiagnosticsLibrary SHARED)
@@ -55,23 +58,7 @@ add_internal_target_cxx_flags(JuggernyautParserLibrary TRUE)
 add_dependencies(JuggernyautParserLibrary antlr4_shared JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
 target_link_libraries(JuggernyautParserLibrary PUBLIC antlr4_shared JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
 # Libraries
-add_custom_command(TARGET JuggernyautParserLibrary
-                    POST_BUILD
-                    COMMAND ${CMAKE_COMMAND}
-                           -E copy ${ANTLR4_RUNTIME_LIBRARIES} .
-                    WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-# Fix antlr4-runtime library naming!
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    get_filename_component(ANTLR_FILENAME "${ANTLR4_RUNTIME_LIBRARIES}" NAME)
-    delete_file(JuggernyautParserLibrary "${ANTLR_FILENAME}.${ANTLR4_TAG}")
-    rename_file(JuggernyautParserLibrary ${ANTLR_FILENAME} "${ANTLR_FILENAME}.${ANTLR4_TAG}")
-    create_symbolic_link(JuggernyautParserLibrary "${ANTLR_FILENAME}.${ANTLR4_TAG}" ${ANTLR_FILENAME} FALSE)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    get_filename_component(ANTLR_FILENAME_NOEXT "${ANTLR4_RUNTIME_LIBRARIES}" NAME_WE)
-    delete_file(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib")
-    rename_file(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.dylib" "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib")
-    create_symbolic_link(JuggernyautParserLibrary "${ANTLR_FILENAME_NOEXT}.${ANTLR4_TAG}.dylib" "${ANTLR_FILENAME_NOEXT}.dylib" FALSE)
-endif()
+copy_shared_library(JuggernyautParserLibrary ${ANTLR4_RUNTIME_LIBRARIES} ${ANTLR4_TAG})
 
 # Create a library from /session
 add_library(JuggernyautSessionLibrary SHARED)

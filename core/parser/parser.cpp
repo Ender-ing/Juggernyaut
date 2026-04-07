@@ -9,6 +9,7 @@
 // Internal
 #include "internal/JugLexer.hpp"
 #include "internal/JugParser.hpp"
+#include "internal/cleanup.hpp"
 
 // Listeners
 #include "listeners/WorkflowDiagListener.hpp"
@@ -64,23 +65,25 @@ namespace Parser {
         lexer.addErrorListener(&listener);
 
         // Process tokens
-        antlr4::Token *token = nullptr;
-        do {
-            // Look ahead and store
-            token = tokens.LT(1);
+        if (hooks.onANTLRTokenDetected == nullptr) {
+            tokens.fill();
+        } else {
+            antlr4::Token *token = nullptr;
+            do {
+                // Look ahead and store
+                token = tokens.LT(1);
 
-            // Trigger events
-            if (hooks.onANTLRTokenDetected != nullptr) {
-                hooks.onANTLRTokenDetected((const std::string) token->toString());
-            }
-
-            // Advance
-            if (token->getType() != antlr4::Token::EOF) {
-                tokens.consume();
-            }
-        } while (token->getType() != antlr4::Token::EOF);
-        // Rewind
-        tokens.seek(0);
+                // Trigger events
+                hooks.onANTLRTokenDetected(token->toString());
+    
+                // Advance
+                if (token->getType() != antlr4::Token::EOF) {
+                    tokens.consume();
+                }
+            } while (token->getType() != antlr4::Token::EOF);
+            // Rewind
+            tokens.seek(0);
+        }
 
         // Trigger context-level event
         if (hooks.onLexerContextEnd != nullptr) {
@@ -107,7 +110,7 @@ namespace Parser {
 
         // Trigger Events
         if (hooks.onANTLRTreeGenerated != nullptr) {
-            hooks.onANTLRTreeGenerated((const std::string) tree->toStringTree(&parser));
+            hooks.onANTLRTreeGenerated(tree->toStringTree(&parser));
         }
 
         // Generate an AST
@@ -124,6 +127,9 @@ namespace Parser {
             hooks.onContextEnd(source->getId());
         }
 
+        // Flag AST as "up-to-date"
+        source->preventUpdateAST();
+
         // Visit dependencies
         investegateContexts(configs, hooks, store, source);
     }
@@ -136,5 +142,11 @@ namespace Parser {
 
             contextWorkflow(configs, hooks, store, src);
         });
+    }
+
+    void cleanup() {
+        Internal::flushAntlrCache();
+
+        // ...
     }
 }

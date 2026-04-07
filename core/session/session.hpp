@@ -49,4 +49,6 @@ namespace Session {
     extern JUG_SESSION_API Session getSessionDefaults() ;
     // Main pipeline trigger funciton
     extern JUG_SESSION_API void initiate(const Session &session) ;
+    // Tidy up the session
+    extern JUG_SESSION_API void rejuvenate(const Session &session) ;
 }

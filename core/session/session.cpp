@@ -5,8 +5,14 @@
 
 #include "session.hpp"
 
+// External library
+#include <mimalloc.h>
+
 // initiation
 #include "init/parser.hpp"
+
+// Store
+#include "../data/store/SourceStore.hpp"
 
 namespace Session {
     Session getSessionDefaults() {
@@ -56,5 +62,16 @@ namespace Session {
 
         // [STAGE] LLVM IR Code Generation
         // ...
+    }
+
+    void rejuvenate(const Session &session) {
+        // Delete unused documents
+        Data::Store::SourceStore *store = session.store;
+        store->cleanup();
+
+        Init::rejuvenateParser();
+
+        // Free unused memory
+        mi_collect(true);
     }
 }

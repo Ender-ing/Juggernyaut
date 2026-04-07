@@ -17,6 +17,43 @@
 namespace Capabilities {
     static std::unique_ptr<Session::SessionDebouncer> debouncer = nullptr;
 
+    lsp::ExecuteCommandOptions configureCommands(lsp::MessageHandler &messageHandler, Session::Session &session) {
+        // Create the ExecuteCommandOptions struct
+        lsp::ExecuteCommandOptions cmdOptions;
+
+        // Register Juggernyaut's specific commands
+        cmdOptions.commands = {
+            "juggernyaut.server.session.trigger",
+            "juggernyaut.server.session.rejuvenate"
+        };
+
+        messageHandler.add<lsp::requests::Workspace_ExecuteCommand>(
+            [&session](const lsp::ExecuteCommandParams&& params) -> lsp::NullOr<lsp::LSPAny> {
+
+                // Route the specific command
+                if (params.command == "juggernyaut.server.session.trigger") {
+
+                    debouncer->trigger();
+
+                    return nullptr;
+                } else if (params.command == "juggernyaut.server.session.rejuvenate") {
+
+                    Session::rejuvenate(session);
+
+                    return nullptr;
+                }
+
+                // If the client requested an unregistered command
+                throw lsp::ResponseError(
+                    (int) lsp::ErrorCodes::MethodNotFound,
+                    "Command not recognized by Juggernyaut"
+                );
+            }
+        );
+
+        return cmdOptions;
+    }
+
     void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
         bool received_shutdown = false;
         Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
@@ -26,7 +63,7 @@ namespace Capabilities {
         }
 
         messageHandler.add<lsp::requests::Initialize>(
-            [](lsp::requests::Initialize::Params&& params) {
+            [&messageHandler, &session](lsp::requests::Initialize::Params&& params) {
                 printMessage<lsp::requests::Initialize>(params);
 
                 /*
@@ -42,6 +79,7 @@ namespace Capabilities {
                             .save = true
                         },
                         .hoverProvider = false,
+                        .executeCommandProvider = configureCommands(messageHandler, session)
                     },
                     .serverInfo = lsp::InitializeResultServerInfo {
                         .name = "Juggernyaut Language Server",

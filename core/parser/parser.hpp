@@ -17,4 +17,5 @@
 
 namespace Parser {
     extern JUG_PARSER_API void sessionWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store) ;
+    extern JUG_PARSER_API void cleanup() ;
 }

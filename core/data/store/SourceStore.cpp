@@ -98,5 +98,45 @@ namespace Data {
             }
         }
 
+        static uint32_t currentRound = 0;
+        void SourceStore::deleteSource(std::unique_ptr<Source> &source) {
+            std::unordered_map<std::string, SourceId> &srcIndex = this->index;
+            std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
+
+            // Empty object
+            source.reset();
+
+            // Remove traces
+            const SourceId &srcId = source->getId();
+            const std::string &uri = source->uri;
+            if (srcIndex.contains(uri)) {
+                srcIndex.erase(uri);
+            }
+            if (srcs.contains(srcId)) {
+                srcs.erase(srcId);
+            }
+            this->removeEntry(srcId);
+        }
+        void SourceStore::cleanup() {
+            SourceStore *srcStore = this;
+
+            // Begin a new round!
+            currentRound++;
+
+            // Update accessible entries
+            this->visitEntries([&srcStore](SourceId srcId) {
+                std::unique_ptr<Data::Store::Source> &src = srcStore->getSourceById(srcId);
+
+                src->round = currentRound;
+            });
+
+            // Discard inaccessible entries
+            std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
+            for (auto &[id, src] : srcs) {
+                if (src->round != currentRound) {
+                    srcStore->deleteSource(src);
+                }
+            }
+        }
     }
 }

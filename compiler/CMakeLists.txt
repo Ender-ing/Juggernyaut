@@ -6,8 +6,6 @@ project(juggernyaut_compiler)
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
-include(FetchContent)
-
 # Shared directories
 set(JUG_BUILD_DIR ${CMAKE_BINARY_DIR})
 set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.cmake)

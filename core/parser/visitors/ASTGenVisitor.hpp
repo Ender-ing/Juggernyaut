@@ -31,6 +31,8 @@ namespace Parser {
                 ASTGenVisitor(Listeners::ASTGenListener *astListener, Data::Store::SourceStore *srcStore,
                     std::unique_ptr<Data::Store::Source> &src)
                     : listener(astListener), store(srcStore), source(src) { }
+                ASTGenVisitor(const ASTGenVisitor&) = delete;
+                ASTGenVisitor& operator=(const ASTGenVisitor&) = delete;
 
                 std::any visitProg(ANTLRParser::ProgContext *context) override ;
                 std::any visitStatement(ANTLRParser::StatementContext *context) override ;

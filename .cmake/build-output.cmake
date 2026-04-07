@@ -59,7 +59,7 @@ elseif(CMAKE_UNIX_GENERATOR_PLATFORM)
     elseif(${CMAKE_UNIX_GENERATOR_PLATFORM} STREQUAL "ARM")
         if(CMAKE_SYSTEM_NAME MATCHES "Linux")
             #add_c_cpp_global_flag("-marm")
-            #add_c_cpp_global_flag("-march=armv7-a")
+            add_c_cpp_global_flag("-march=armv7-a")
             #set(CMAKE_C_COMPILER "arm-linux-gnueabihf-gcc")
             #set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
         elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
@@ -259,5 +259,37 @@ function(rename_file TARGET OLD_PATH NEW_PATH)
         POST_BUILD
         COMMAND ${RENAME_COMMAND}
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+endfunction()
+
+# Fix dynamic libraries
+function(copy_shared_library FUNC_TARGET LIB_PATH LIB_VERSION)
+    # Libraries
+    add_custom_command(TARGET ${FUNC_TARGET}
+                    POST_BUILD
+                    COMMAND ${CMAKE_COMMAND}
+                           -E copy_if_different ${LIB_PATH} .
+                    WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    # Fix antlr4-runtime library naming!
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        get_filename_component(LIB_FILENAME "${LIB_PATH}" NAME)
+        delete_file(${FUNC_TARGET} "${LIB_FILENAME}.${LIB_VERSION}")
+        rename_file(${FUNC_TARGET} ${LIB_FILENAME} "${LIB_FILENAME}.${LIB_VERSION}")
+        create_symbolic_link(${FUNC_TARGET} "${LIB_FILENAME}.${LIB_VERSION}" ${LIB_FILENAME} FALSE)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        get_filename_component(LIB_FILENAME_NOEXT "${LIB_PATH}" NAME_WE)
+        delete_file(${FUNC_TARGET} "${LIB_FILENAME_NOEXT}.${LIB_VERSION}.dylib")
+        rename_file(${FUNC_TARGET} "${LIB_FILENAME_NOEXT}.dylib" "${LIB_FILENAME_NOEXT}.${LIB_VERSION}.dylib")
+        create_symbolic_link(${FUNC_TARGET} "${LIB_FILENAME_NOEXT}.${LIB_VERSION}.dylib" "${LIB_FILENAME_NOEXT}.dylib" FALSE)
+    endif()
+endfunction()
+
+function(copy_proper_shared_library FUNC_TARGET SRC DEST)
+    add_custom_command(TARGET ${FUNC_TARGET} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} 
+            -DSRC_DIR="${SRC}" 
+            -DDST_DIR="${DEST}" 
+            -P "${JUG_CMAKE_DIR}/components/copy_shared_libs.cmake"
+        COMMENT "Gathering dynamic libraries..."
     )
 endfunction()

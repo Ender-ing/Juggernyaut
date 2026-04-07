@@ -1,5 +1,7 @@
 message(STATUS "[DEPENDENCIES] Checking dependencies...")
 
+include(FetchContent)
+
 # VERSION CONTROL
 # Manage the versions for used dependencies
 
@@ -142,3 +144,25 @@ if(DEFINED ANTLR4_TAG)
     endif()
 endif()
 set(ANTLR_EXECUTABLE ${JUG_DEPENDENCIES_ANTLR4_JAR_PATH})
+
+# mimalloc
+if(NOT TARGET mimalloc)
+    set(MIMALLOC_VERSION 3.2.8 CACHE STRING "mimalloc version" FORCE)
+    FetchContent_Declare(
+        mimalloc
+        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+        GIT_TAG v${MIMALLOC_VERSION}
+        SOURCE_DIR ${JUG_DEPENDENCIES_DIR}/mimalloc
+    )
+    set(MI_BUILD_STATIC OFF CACHE BOOL "Build static library" FORCE)
+    set(MI_BUILD_SHARED ON CACHE BOOL "Build shared library" FORCE)
+    set(MI_BUILD_OBJECT OFF CACHE BOOL "Build object library" FORCE)
+    set(MI_BUILD_TESTS OFF CACHE BOOL "Skip mimalloc tests" FORCE)
+    set(MI_OVERRIDE ON CACHE BOOL "Override standard allocations" FORCE)
+    set(MI_NO_OPT_ARCH ON CACHE BOOL "No architecture optimisation" FORCE)
+    FetchContent_MakeAvailable(mimalloc)
+    set_target_properties(mimalloc PROPERTIES
+        CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
+    )
+endif()
+link_libraries(mimalloc)

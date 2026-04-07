@@ -15,6 +15,7 @@ endif()
 if(fmt)
     message(STATUS "[DEPENDENCIES] {fmt} library is present!")
 else()
+    set(FMT_INSTALL OFF CACHE BOOL "Disable fmt installation" FORCE)
     # Download {fmt}
     message(STATUS "[DEPENDENCIES] Fetching {fmt}...")
     set(JUG_DEP_FMT_LIB_PATH ${JUG_DEPENDENCIES_DIR}/fmt)

@@ -13,5 +13,6 @@
 namespace Session {
     namespace Init {
         extern JUG_SESSION_API void parser(const Session &session) ;
+        extern JUG_SESSION_API void rejuvenateParser() ;
     }
 }

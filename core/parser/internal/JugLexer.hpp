@@ -17,6 +17,8 @@ namespace Parser {
         class JUG_PARSER_API JugLexer : public GeneratedLexer::JuggernyautLexer {
             public:
                 using GeneratedLexer::JuggernyautLexer::JuggernyautLexer; // Inherit constructors
+                JugLexer(const JugLexer&) = delete;
+                JugLexer& operator=(const JugLexer&) = delete;
 
                 void emit(std::unique_ptr<antlr4::Token> token) override ;
         };
