@@ -92,5 +92,5 @@ namespace Console {
     extern bool minimalProtocolFinalization;
 
     // Finalise protocol
-    extern void finalize() ;
+    extern void finalize(uint32_t activeSrcs = 0) ;
 }

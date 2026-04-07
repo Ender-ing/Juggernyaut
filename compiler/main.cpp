@@ -106,10 +106,11 @@ int main(int argc, const char *argv[]) {
         return Console::ProcessReport::programStatus;
     }
 
-    session.hooks.parser.onContextStart = [&session](const Data::Store::SourceId srcId) {
+    uint32_t activeSources = 0;
+    session.hooks.parser.onContextStart = [&session, &activeSources](const Data::Store::SourceId srcId) {
         std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
 
-        REPORT(Console::START_REPORT, Console::NORMAL_REPORT, "Processing: ", source->uri, Console::END_REPORT);
+        REPORT(Console::START_REPORT, Console::NORMAL_REPORT, "#", ++activeSources, ": ", source->uri, Console::END_REPORT);
     };
 
     // Parser Diagnostics
@@ -149,6 +150,6 @@ int main(int argc, const char *argv[]) {
     }
 
     // End the program
-    Console::finalize();
+    Console::finalize(activeSources);
     return Console::ProcessReport::programStatus;
 }

@@ -220,7 +220,7 @@ namespace Console {
     bool minimalProtocolFinalization = false;
 
     // Finalise protocol
-    void finalize() {
+    void finalize(uint32_t activeSrcs) {
         Console::Optimization::safetyCheck();
 
         // Check for unwanted called
@@ -230,7 +230,7 @@ namespace Console {
         isFinalized = true;
 
         // Finalize Internal mode
-        Internal::finalize(); //TMP
+        Internal::finalize(activeSrcs); //TMP
 
         // Check for unfinished reports
         if(ProcessReport::didSendReport && !IndividualReport::isNew){

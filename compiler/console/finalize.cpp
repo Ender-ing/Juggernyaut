@@ -47,7 +47,7 @@ namespace Console {
         }
 
         // Handle CLI finalisation
-        void finalize() {
+        void finalize(uint32_t activeSrcs) {
             if (minimalProtocolFinalization) { //TMP
                 std::cout << std::endl;
                 return;
@@ -114,6 +114,14 @@ namespace Console {
                 timeString << color("Duration: ", Color::light_sea_green) << color(getDuration(), Color::light_sea_green);
             }
 
+            std::stringstream files;
+            files << activeSrcs << " file(s) processed";
+
+
+            std::cout << '\n' << '\n' << color(files.str(), Color::light_sea_green) << std::endl;
+            if (isTrackingTime) {
+                std::cout << timeString.str() << std::endl;
+            }
 
             /**
              * Failure!
@@ -131,7 +139,7 @@ namespace Console {
              * 0 action(s), 0 warning(s), 0 error(s), 0 fatal error(s)
             **/
             // Print summary
-            std::cout << '\n' << '\n' << color(status, Color::light_sea_green) << std::endl;
+            std::cout << color(status, Color::light_sea_green) << std::endl;
             if (reports > 0) {
                 std::cout << '\n';
                 std::cout << color("                |\\__/,|   (`\\", Color::golden_rod) << '\n';
@@ -141,9 +149,6 @@ namespace Console {
                     << color("---------------------------------", Color::light_sea_green) << '\n' << '\n';
                 std::cout << actionsString.str() << warningsString.str() << criticalsString.str() << fatalsString.str()
                     << std::endl;
-            }
-            if (isTrackingTime) {
-                std::cout << '\n' << timeString.str() << std::endl;
             }
 
             // Revert
