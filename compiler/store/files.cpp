@@ -19,21 +19,16 @@ namespace Store {
         fs::path fsPath(path);
         return normalizePath(fsPath).string();
     }
-    // Check if a file is accessible
     bool isFileAccessible(const std::string &filePath) {
         // Check if the file is open!
         std::ifstream file(filePath);
         return file.is_open(); // FIle will be closed when out of scope
     }
-    // Check if the file is of a valid format
-    bool isFileValid(const std::string &filePath) {
+    std::string getFileExtension(const std::string &filePath) {
         // Check file extension
         fs::path filePathObj = filePath;
-        std::string extension = filePathObj.extension().string();
-        return (extension == ".jug");
-        /** @brief INCOMPLETE: Add a file data checker! **/
+        return filePathObj.extension().string();
     }
-    // Get the contents of a file
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading
 
@@ -51,18 +46,9 @@ namespace Store {
         // Success
         return true;
     }
-    // Get the parent folder's path
-    std::string getParentPath(const std::string &path, int depth) {
-        // Normalise the path
-        fs::path localPath = fs::path(path).lexically_normal();
-        // Get the parent folder's path string
-        for (int i = 0; i < depth + 1; i++) {
-            localPath = localPath.parent_path();
-        }
-        return normalizePath(localPath).string();
-    }
-    std::string getParentPath(const char *path, int depth) {
-        return getParentPath((std::string) path, depth);
+    std::string getParentPath(const std::string &path) {
+        fs::path localPath = fs::path(path);
+        return localPath.parent_path().string();
     }
     // Get the current process executable directory
     bool getExecutableDir(std::string &store) {

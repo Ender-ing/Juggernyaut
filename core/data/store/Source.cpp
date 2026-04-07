@@ -67,7 +67,8 @@ namespace Data {
         // Raw content
         void Source::fetchRawContent() {
             SourceStore *srcStore = this->store;
-            this->rawContent = srcStore->onFileRawRequest(this->uri);
+            // MISSING: ERROR REPORTING
+            srcStore->_getRawFile(this->uri, this->rawContent);
         }
         const std::string& Source::getRawContent() {
             if (this->shouldUpdateRawContent) {

@@ -10,42 +10,24 @@
 #include "../console/console.hpp"
 
 namespace Store {
-    std::string FileStore::onFileRawRequest(const std::string &uri) {
-        // Check if the file can be opened!
-        if (!isFileAccessible(uri)) {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "file \"", uri,
-                "\" is non-existent or inaccessible", Console::END_REPORT);
-
-            return std::string("");
-        }
-
-        // Check if the file can be opened!
-        if (!isFileValid(uri)) {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "file \"", uri,
-                "\" is corrupted or of an invalid type! (Must use a valid .jug file)", Console::END_REPORT);
-
-            return std::string("");
-        }
-
-        // Get file content
-        std::string content;
-        if (getFileContent(uri, content)) {
-            return content;
+    bool FileStore::_getRawFile(const std::string &uri, std::string &output) {
+        if (!getFileContent(uri, output)) {
+            output = "";
+            return false;
         } else {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't open file: ", uri, Console::END_REPORT);
-            return std::string("");
+            return true;
         }
     }
-    bool FileStore::resolvePath(const std::string &uri, std::string &output) {
-        if (!isFileAccessible(uri)){
-            output = "file is inaccessible";
-            return false;
-        } else if (!isFileValid(uri)) {
-            output = "file is invalid";
-            return false;
-        }
-
-        output = normalizePath(uri);
-        return true;
+    bool FileStore::_isFileAccessible(const std::string &uri) {
+        return isFileAccessible(uri);
+    }
+    std::string FileStore::_getFileExtension(const std::string &uri) {
+        return getFileExtension(uri);
+    }
+    std::string FileStore::_getPathDir(const std::string &uri) {
+        return getParentPath(uri);
+    }
+    std::string FileStore::_getCanonical(const std::string &uri) {
+        return normalizePath(uri);
     }
 }

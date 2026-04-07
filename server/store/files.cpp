@@ -16,13 +16,14 @@ namespace Store {
         std::ifstream file(filePath);
         return file.is_open(); // FIle will be closed when out of scope
     }
-    // Check if the file is of a valid format
-    bool isFileValid(const std::string &filePath) {
+    std::string getFileExtension(const std::string &filePath) {
         // Check file extension
         fs::path filePathObj = filePath;
-        std::string extension = filePathObj.extension().string();
-        return (extension == ".jug");
-        /** @brief INCOMPLETE: Add a file data checker! **/
+        return filePathObj.extension().string();
+    }
+    std::string getParentPath(const std::string &filePath) {
+        fs::path localPath = fs::path(filePath);
+        return localPath.parent_path().string();
     }
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading

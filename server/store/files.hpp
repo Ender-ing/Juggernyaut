@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 
 namespace Store {
     extern bool isFileAccessible(const std::string &filePath) ;
-    // Check if the file is of a valid format
-    extern bool isFileValid(const std::string &filePath) ;
+    extern std::string getFileExtension(const std::string &filePath) ;
+    extern std::string getParentPath(const std::string &filePath) ;
     extern bool getFileContent(const std::string &filePath, std::string &store) ;
 }

@@ -34,12 +34,19 @@ namespace Data {
                 virtual ~SourceStore() = default;
 
                 // Unique implementations
-                virtual std::string onFileRawRequest(const std::string &uri) = 0;
+                // _getRawFile:
+                // Returns: <is_success> (bool)
+                virtual bool _getRawFile(const std::string &uri, std::string &output) = 0;
+                virtual bool _isFileAccessible(const std::string &uri) = 0;
+                virtual std::string _getFileExtension(const std::string &uri) = 0;
+                virtual std::string _getPathDir(const std::string &uri) = 0;
+                virtual std::string _getCanonical(const std::string &uri) = 0;
+
+                // General path lookup
                 // resolvePath:
                 // Returns: <is_success> (bool)
                 // Note: <output> is used as an error message container on failure
-                virtual bool resolvePath(const std::string &uri, std::string &output) = 0;
-                // virtual std::string onFileAbsoluteUriRequest(const std::string &uri) = 0;
+                bool resolvePath(const std::string &uri, std::string &output, SourceId callerId = 0) ;
 
                 // Entry
                 void addEntry(SourceId entry) ;

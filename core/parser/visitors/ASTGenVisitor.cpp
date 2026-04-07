@@ -26,7 +26,7 @@ namespace Parser {
                 path = path.substr(1, path.length() - 2);
 
                 std::string output;
-                if (this->store->resolvePath(path, output)) {
+                if (this->store->resolvePath(path, output, this->source->getId())) {
                     this->store->addSource(output, false);
 
                     Data::Store::SourceId srcId = this->store->getSourceIdByUri(output);

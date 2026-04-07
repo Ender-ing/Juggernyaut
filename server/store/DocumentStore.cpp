@@ -43,32 +43,32 @@ namespace Store {
         }
     }
 
-    std::string DocumentStore::onFileRawRequest(const std::string &uri) {
+    bool DocumentStore::_getRawFile(const std::string &uri, std::string &output) {
         std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
 
         if (raws.contains(uri)) {
-            return raws.at(uri);
+            output = raws.at(uri);
+            return true;
         } else {
-            if (Store::isFileAccessible(uri) && Store::isFileValid(uri)) {
-                std::string content;
-                if (Store::getFileContent(uri, content)) {
-                    return content;
-                }
+            if (!Store::getFileContent(uri, output)) {
+                output = "";
+                return false;
+            } else {
+                return true;
             }
-            return std::string("");
         }
     }
-    bool DocumentStore::resolvePath(const std::string &uri, std::string &output) {
-        if (!Store::isFileAccessible(uri)){
-            output = "file is inaccessible";
-            return false;
-        } else if (!Store::isFileValid(uri)) {
-            output = "file is invalid";
-            return false;
-        }
-
-        output = lsp::DocumentUri::fromPath(uri).path();
-        return true;
+    bool DocumentStore::_isFileAccessible(const std::string &uri) {
+        return Store::isFileAccessible(uri);
+    }
+    std::string DocumentStore::_getFileExtension(const std::string &uri) {
+        return Store::getFileExtension(uri);
+    }
+    std::string DocumentStore::_getPathDir(const std::string &uri) {
+        return Store::getParentPath(uri);
+    }
+    std::string DocumentStore::_getCanonical(const std::string &uri) {
+        return (std::string) lsp::DocumentUri::fromPath(uri).path();
     }
 
     void DocumentStore::deleteSource(std::unique_ptr<Data::Store::Source> &src) {

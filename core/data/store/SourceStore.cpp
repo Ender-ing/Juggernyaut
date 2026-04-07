@@ -12,6 +12,20 @@
 
 namespace Data {
     namespace Store {
+        // General path lookup
+        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId = 0) {
+            if (!this->_isFileAccessible(uri)){
+                output = "file is inaccessible";
+                return false;
+            } else if (this->_getFileExtension(uri) != ".jug") {
+                output = "file is invalid";
+                return false;
+            }
+
+            output = this->_getCanonical(uri);
+            return true;
+        }
+
         // Entry
         void SourceStore::addEntry(SourceId entry) {
             std::vector<SourceId> &entries = this->entryPoints;
