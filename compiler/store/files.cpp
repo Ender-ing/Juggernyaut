@@ -29,6 +29,14 @@ namespace Store {
         fs::path filePathObj = filePath;
         return filePathObj.extension().string();
     }
+    std::string joinPaths(const std::string &base, const std::string path) {
+        fs::path path_1(base);
+        fs::path path_2(path);
+
+        fs::path newPath = path_1 / path_2;
+
+        return newPath.string();
+    }
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading
 

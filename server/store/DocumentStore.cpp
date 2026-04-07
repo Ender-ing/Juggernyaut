@@ -59,16 +59,19 @@ namespace Store {
         }
     }
     bool DocumentStore::_isFileAccessible(const std::string &uri) {
-        return Store::isFileAccessible(uri);
+        return isFileAccessible(uri);
     }
     std::string DocumentStore::_getFileExtension(const std::string &uri) {
-        return Store::getFileExtension(uri);
+        return getFileExtension(uri);
     }
     std::string DocumentStore::_getPathDir(const std::string &uri) {
-        return Store::getParentPath(uri);
+        return getParentPath(uri);
     }
     std::string DocumentStore::_getCanonical(const std::string &uri) {
-        return (std::string) lsp::DocumentUri::fromPath(uri).path();
+        return normalizePath(uri);
+    }
+    std::string DocumentStore::_joinPaths(const std::string &base, const std::string &path) {
+        return joinPaths(base, path);
     }
 
     void DocumentStore::deleteSource(std::unique_ptr<Data::Store::Source> &src) {

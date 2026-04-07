@@ -41,6 +41,7 @@ namespace Data {
                 virtual std::string _getFileExtension(const std::string &uri) = 0;
                 virtual std::string _getPathDir(const std::string &uri) = 0;
                 virtual std::string _getCanonical(const std::string &uri) = 0;
+                virtual std::string _joinPaths(const std::string &base, const std::string &path) = 0;
 
                 // General path lookup
                 // resolvePath:

@@ -18,8 +18,8 @@ namespace Store {
     extern bool isFileAccessible(const std::string &filePath) ;
     extern std::string getFileExtension(const std::string &filePath) ;
     extern bool getFileContent(const std::string &filePath, std::string &store) ;
-    // Get the parent folder's path
     extern std::string getParentPath(const std::string &path) ;
+    extern std::string joinPaths(const std::string &base, const std::string path) ;
     // Get the current process executable directory
     extern bool getExecutableDir(std::string &store) ;
 }

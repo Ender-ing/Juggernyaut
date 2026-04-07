@@ -30,4 +30,7 @@ namespace Store {
     std::string FileStore::_getCanonical(const std::string &uri) {
         return normalizePath(uri);
     }
+    std::string FileStore::_joinPaths(const std::string &base, const std::string &path) {
+        return joinPaths(base, path);
+    }
 }

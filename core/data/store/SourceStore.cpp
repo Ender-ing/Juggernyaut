@@ -13,16 +13,31 @@
 namespace Data {
     namespace Store {
         // General path lookup
-        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId = 0) {
-            if (!this->_isFileAccessible(uri)){
+        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId) {
+            std::string path = uri;
+            if (this->_getFileExtension(path) != ".jug") {
+                path.append(".jug");
+            }
+
+            // Relative path
+            if (callerId != 0) { // To a file
+                std::unique_ptr<Source> &src = this->getSourceById(callerId);
+
+                std::string relativePath = this->_joinPaths(this->_getPathDir(src->uri), path);
+
+                if (this->_isFileAccessible(relativePath)) {
+                    path = this->_getCanonical(relativePath);
+                }
+            } else { // to the running directory
+                // ...
+            }
+
+            if (!this->_isFileAccessible(path)) {
                 output = "file is inaccessible";
-                return false;
-            } else if (this->_getFileExtension(uri) != ".jug") {
-                output = "file is invalid";
                 return false;
             }
 
-            output = this->_getCanonical(uri);
+            output = std::move(path);
             return true;
         }
 
@@ -91,14 +106,11 @@ namespace Data {
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            std::string absoluteUri;
-            absoluteUri = (this->resolvePath(uri, absoluteUri)) ? absoluteUri : uri;
-
-            if (!uriIndex.contains(absoluteUri)) {
+            if (!uriIndex.contains(uri)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
                 // Create a <Source> object
-                std::unique_ptr<Source> src = std::make_unique<Source>(absoluteUri, this);
+                std::unique_ptr<Source> src = std::make_unique<Source>(uri, this);
                 const SourceId &srcId = src->getId();
 
                 if (isEntry) {
@@ -112,7 +124,7 @@ namespace Data {
 
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
-                uriIndex.insert({absoluteUri, srcId});
+                uriIndex.insert({uri, srcId});
             }
         }
 

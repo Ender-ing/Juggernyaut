@@ -19,5 +19,6 @@ namespace Store {
             std::string _getFileExtension(const std::string &uri) override;
             std::string _getPathDir(const std::string &uri) override;
             std::string _getCanonical(const std::string &uri) override;
+            std::string _joinPaths(const std::string &base, const std::string &path) override;
     };
 }

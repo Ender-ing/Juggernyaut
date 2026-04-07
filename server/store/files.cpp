@@ -8,9 +8,15 @@
 // Basic C++ headers
 #include <fstream>
 
+// lsp-framework
+#include "../lspFramework.hpp"
+
 namespace fs = std::filesystem;
 
 namespace Store {
+    std::string normalizePath(const std::string &path) {
+        return (std::string) lsp::DocumentUri::fromPath(path).path();
+    }
     bool isFileAccessible(const std::string &filePath) {
         // Check if the file is open!
         std::ifstream file(filePath);
@@ -23,7 +29,16 @@ namespace Store {
     }
     std::string getParentPath(const std::string &filePath) {
         fs::path localPath = fs::path(filePath);
-        return localPath.parent_path().string();
+        std::string parent = localPath.parent_path().string();
+        return normalizePath(parent);
+    }
+    std::string joinPaths(const std::string &base, const std::string path) {
+        fs::path path_1(base);
+        fs::path path_2(path);
+
+        fs::path newPath = path_1 / path_2;
+
+        return normalizePath(newPath.string());
     }
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading

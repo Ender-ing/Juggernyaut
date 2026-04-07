@@ -76,6 +76,7 @@ int main(int argc, const char *argv[]) {
 
     // Add input files
     for (auto path : Base::InitialConfigs::entryPaths) {
+        // TO-DO: USE STORE RESOLVE
         store.addSource(path, true);
     }
 
