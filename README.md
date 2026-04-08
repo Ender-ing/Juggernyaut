@@ -9,10 +9,10 @@ An experimental general-purpose programming language in the making!
 
 - `/compiler`:
   The CLI wrapper.
+- `/configs`:
+  Processing `jug.toml` config files
 - `/core`:
   Includes the core components of the compilation process! (e.g. lexer, parser, etc.)  
-  - `common`:
-    Shared files within the core libraries.
   - `data`:
     Data structures that are meant to be shared between different stages.
   - `diagnostics`:
@@ -25,6 +25,11 @@ An experimental general-purpose programming language in the making!
   Includes extensions for well-known code editors.
 - `/server`:
   The language server for IDEs. (Follows the LSP)
+- `/utility`:
+  - `common`:
+    The common library
+  - `diag_codes`:
+    Diagnostic code generator
 
 ## Memory debugging
 
