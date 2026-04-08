@@ -37,7 +37,8 @@ namespace Configs {
         rawContent.clear();
         rawContent.shrink_to_fit();
 
-        toml::table table = result.table();
+        toml::table &table = result.table();
+        table;
         // ...
 
         return true;
