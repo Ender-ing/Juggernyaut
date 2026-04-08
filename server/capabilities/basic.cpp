@@ -11,6 +11,9 @@
 // Session
 #include "../session/SessionDebouncer.hpp"
 
+// Configs
+#include "../../configs/configs.hpp"
+
 // Store
 #include "../store/DocumentStore.hpp"
 
@@ -82,7 +85,7 @@ namespace Capabilities {
                         messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(msgParams));
 
                         // Load external configs
-                        // ...
+                        Configs::updateSessionConfigs(session, configUri);
                     }
                 }
 

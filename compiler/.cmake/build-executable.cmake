@@ -4,9 +4,9 @@ add_executable(
     JuggernyautCompiler ${JUG_COMPILER_MAIN_CPP_PATH}
 )
 
-# Link core libraries
-add_dependencies(JuggernyautCompiler JuggernyautSessionLibrary)
-target_link_libraries(JuggernyautCompiler PUBLIC JuggernyautSessionLibrary)
+# Link libraries
+add_dependencies(JuggernyautCompiler JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+target_link_libraries(JuggernyautCompiler PUBLIC JuggernyautSessionLibrary JuggernyautConfigsLibrary)
 
 # Link compiler libraries
 include(${JUG_COMPILER_CMAKE_DIR}/libraries.cmake)

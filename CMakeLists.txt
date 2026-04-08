@@ -18,9 +18,10 @@ set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
 include(${JUG_CMAKE_DIR}/shared.cmake)
 
-# ONLY PROJECTS THAT USE THE "CORE" ARE ALLOWED HERE!
+# ONLY DIRECT SDK PROJECTS ARE ALLOWED HERE!
 set(JUG_GLOBAL_BUILD ON)
 add_subdirectory(core)
+add_subdirectory(configs)
 add_subdirectory(compiler)
 add_subdirectory(server)
 

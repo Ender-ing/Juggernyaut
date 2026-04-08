@@ -17,6 +17,9 @@
 // Session
 #include "../core/session/session.hpp"
 
+// Configs
+#include "../configs/configs.hpp"
+
 // Base
 #include "base/config.hpp"
 #include "base/info.hpp"
@@ -74,7 +77,7 @@ int main(int argc, const char *argv[]) {
 
     // Load external configs
     if (!Base::InitialConfigs::Input::config.empty()) {
-        // ...
+        Configs::updateSessionConfigs(session, Base::InitialConfigs::Input::config);
     }
 
     // Add import directories

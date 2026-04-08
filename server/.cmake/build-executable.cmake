@@ -10,9 +10,9 @@ target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/store/*.cpp FAL
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/session/*.cpp FALSE)
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
 
-# Link core libraries
-add_dependencies(JuggernyautServer JuggernyautSessionLibrary)
-target_link_libraries(JuggernyautServer PUBLIC JuggernyautSessionLibrary)
+# Link libraries
+add_dependencies(JuggernyautServer JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+target_link_libraries(JuggernyautServer PUBLIC JuggernyautSessionLibrary JuggernyautConfigsLibrary)
 
 # Link external libraries
 # lsp-framework
