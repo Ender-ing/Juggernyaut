@@ -77,7 +77,13 @@ int main(int argc, const char *argv[]) {
 
     // Load external configs
     if (!Base::InitialConfigs::Input::config.empty()) {
-        Configs::updateSessionConfigs(session, Base::InitialConfigs::Input::config);
+        std::string errorLog;
+        if (!Configs::modifySession(session, Base::InitialConfigs::Input::config, errorLog)) {
+            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't process configuration file: ",
+                errorLog, Console::END_REPORT);
+        }
+        errorLog.clear();
+        errorLog.shrink_to_fit();
     }
 
     // Add import directories
@@ -91,7 +97,7 @@ int main(int argc, const char *argv[]) {
         if (store.resolvePath(path, currentPath)) {
             store.addSource(currentPath, true);
         } else {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Couldn't resolve input path: ", store._getCanonical(path), Console::END_REPORT);
+            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't resolve input path: ", store._getCanonical(path), Console::END_REPORT);
         }
     }
     currentPath.clear();

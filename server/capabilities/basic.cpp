@@ -85,7 +85,16 @@ namespace Capabilities {
                         messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(msgParams));
 
                         // Load external configs
-                        Configs::updateSessionConfigs(session, configUri);
+                        std::string errorLog;
+                        if (!Configs::modifySession(session, configUri, errorLog)) {
+                            auto errorParams = lsp::notifications::Window_ShowMessage::Params{};
+
+                            errorParams.type = lsp::MessageType::Error;
+                            errorParams.message = "Juggernyaut configuration file error: \n";
+                            errorParams.message.append(std::move(errorLog));
+
+                            messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(errorParams));
+                        }
                     }
                 }
 
