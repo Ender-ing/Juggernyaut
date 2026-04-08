@@ -11,13 +11,8 @@ target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/session/*.cpp F
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
 
 # Link core libraries
-foreach(LIB ${CORE_LIBRARIES})
-    message(STATUS "[BUILD] Adding linking target '${LIB}' to executable target 'JuggernyautServer'...")
-    # Mark the library as a dependency of the executable
-    add_dependencies(JuggernyautServer ${LIB})
-    # Add the library
-    target_link_libraries(JuggernyautServer PUBLIC ${LIB})
-endforeach()
+add_dependencies(JuggernyautServer JuggernyautSessionLibrary)
+target_link_libraries(JuggernyautServer PUBLIC JuggernyautSessionLibrary)
 
 # Link external libraries
 # lsp-framework

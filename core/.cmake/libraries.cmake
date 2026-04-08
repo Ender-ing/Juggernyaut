@@ -15,7 +15,6 @@ add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
 add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JugGlobalDiagnostics)
 target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JugGlobalDiagnostics)
 
-
 # Create a library from /data
 add_library(JuggernyautDataLibrary SHARED)
 target_sources_search(JuggernyautDataLibrary ${JUG_CORE_SOURCE_DIR}/data/*.cpp TRUE)
@@ -59,12 +58,3 @@ add_internal_target_cxx_flags(JuggernyautSessionLibrary FALSE)
 # Dependencies
 add_dependencies(JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)
 target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)
-
-# Expose the core libraries
-set(CORE_LIBRARIES
-    JuggernyautDiagnosticsLibrary
-    JuggernyautDataLibrary
-    JuggernyautParserLibrary
-    JuggernyautSessionLibrary
-    PARENT_SCOPE
-)
