@@ -78,7 +78,7 @@ int main(int argc, const char *argv[]) {
     // Load external configs
     if (!Base::InitialConfigs::Input::config.empty()) {
         std::string errorLog;
-        if (!Configs::modifySession(session, Base::InitialConfigs::Input::config, errorLog)) {
+        if (!Configs::modifySession(session, Base::InitialConfigs::Input::config, errorLog, false)) {
             REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't process configuration file: ",
                 errorLog, Console::END_REPORT);
         }

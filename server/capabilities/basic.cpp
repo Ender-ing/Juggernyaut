@@ -86,7 +86,7 @@ namespace Capabilities {
 
                         // Load external configs
                         std::string errorLog;
-                        if (!Configs::modifySession(session, configUri, errorLog)) {
+                        if (!Configs::modifySession(session, configUri, errorLog, false)) {
                             auto errorParams = lsp::notifications::Window_ShowMessage::Params{};
 
                             errorParams.type = lsp::MessageType::Error;

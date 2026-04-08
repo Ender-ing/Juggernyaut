@@ -13,5 +13,5 @@
 
 namespace Configs {
     extern JUG_CONFIGS_API bool modifySession(Session::Session &session, const std::string &configUri,
-        std::string &errorLog) ;
+        std::string &errorLog, bool isStrict) ;
 }
