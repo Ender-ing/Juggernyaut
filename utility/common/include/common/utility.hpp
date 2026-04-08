@@ -20,7 +20,7 @@ namespace Common {
         }
 
         template <typename Type>
-        void fastVectorRemove(const std::vector<Type> &vec, const Type &target) {
+        void fastVectorRemove(std::vector<Type> &vec, const Type &target) {
             auto it = std::find(vec.begin(), vec.end(), target);
             if (it != vec.end()) {
                 // Swap the found element with the last element
