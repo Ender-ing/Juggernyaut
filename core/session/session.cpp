@@ -5,14 +5,16 @@
 
 #include "session.hpp"
 
-// External library
-#include <mimalloc.h>
-
 // initiation
 #include "init/parser.hpp"
 
 // Store
 #include "../data/store/SourceStore.hpp"
+
+#ifdef NDEBUG
+    // External library
+    #include <mimalloc.h>
+#endif
 
 namespace Session {
     Session getSessionDefaults() {
@@ -72,6 +74,8 @@ namespace Session {
         Init::rejuvenateParser();
 
         // Free unused memory
-        mi_collect(true);
+        #ifdef NDEBUG
+            mi_collect(true);
+        #endif
     }
 }

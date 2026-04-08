@@ -16,9 +16,11 @@ namespace Base {
         // Starting Path
         std::string compilerBinPath = "";
 
-        // Main source file
-        std::string mainPath = "";
-        std::vector<std::string> entryPaths;
+        // Source files
+        namespace Input {
+            std::vector<std::string> importDirs;
+            std::vector<std::string> entryPaths;
+        }
 
         // Debug-related
         namespace Debug {

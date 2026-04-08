@@ -69,12 +69,14 @@ namespace Parser {
             tokens.fill();
         } else {
             antlr4::Token *token = nullptr;
+            // Trigger events
+            hooks.onANTLRTokenDetected(1, "");
             do {
                 // Look ahead and store
                 token = tokens.LT(1);
 
                 // Trigger events
-                hooks.onANTLRTokenDetected(token->toString());
+                hooks.onANTLRTokenDetected(2, token->toString());
     
                 // Advance
                 if (token->getType() != antlr4::Token::EOF) {
@@ -83,6 +85,8 @@ namespace Parser {
             } while (token->getType() != antlr4::Token::EOF);
             // Rewind
             tokens.seek(0);
+            // Trigger events
+            hooks.onANTLRTokenDetected(3, "");
         }
 
         // Trigger context-level event

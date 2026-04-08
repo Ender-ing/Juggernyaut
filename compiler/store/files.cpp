@@ -5,6 +5,8 @@
 
 #include "files.hpp"
 
+#include "../_external_sys.hpp"
+
 // Basic C++ headers
 #include <fstream>
 
@@ -13,27 +15,33 @@ namespace fs = std::filesystem;
 namespace Store {
     // Internal functions
     fs::path normalizePath(fs::path &path) {
-        return path.append(".").lexically_normal();
+        return fs::weakly_canonical(path);
     }
     std::string normalizePath(const std::string &path) {
         fs::path fsPath(path);
         return normalizePath(fsPath).string();
     }
-    // Check if a file is accessible
     bool isFileAccessible(const std::string &filePath) {
         // Check if the file is open!
         std::ifstream file(filePath);
         return file.is_open(); // FIle will be closed when out of scope
     }
-    // Check if the file is of a valid format
-    bool isFileValid(const std::string &filePath) {
+    bool isValidDir(const std::string &path) {
+        return (fs::exists(path) && fs::is_directory(path));
+    }
+    std::string getFileExtension(const std::string &filePath) {
         // Check file extension
         fs::path filePathObj = filePath;
-        std::string extension = filePathObj.extension().string();
-        return (extension == ".jug");
-        /** @brief INCOMPLETE: Add a file data checker! **/
+        return filePathObj.extension().string();
     }
-    // Get the contents of a file
+    std::string joinPaths(const std::string &base, const std::string path) {
+        fs::path path_1(base);
+        fs::path path_2(path);
+
+        fs::path newPath = path_1 / path_2;
+
+        return newPath.string();
+    }
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading
 
@@ -51,18 +59,9 @@ namespace Store {
         // Success
         return true;
     }
-    // Get the parent folder's path
-    std::string getParentPath(const std::string &path, int depth) {
-        // Normalise the path
-        fs::path localPath = fs::path(path).lexically_normal();
-        // Get the parent folder's path string
-        for (int i = 0; i < depth + 1; i++) {
-            localPath = localPath.parent_path();
-        }
-        return normalizePath(localPath).string();
-    }
-    std::string getParentPath(const char *path, int depth) {
-        return getParentPath((std::string) path, depth);
+    std::string getParentPath(const std::string &path) {
+        fs::path localPath = fs::path(path);
+        return localPath.parent_path().string();
     }
     // Get the current process executable directory
     bool getExecutableDir(std::string &store) {

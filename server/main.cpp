@@ -11,7 +11,6 @@
 
 // Common headers
 #include "../core/common/headers.hpp"
-#include "../core/common/debug.hpp"
 
 // lsp-framework
 #include "lspFramework.hpp"
@@ -31,9 +30,6 @@
 #include "../core/session/session.hpp"
 
 int main(int argc, const char *argv[]) {
-    // Test for memory leaks
-    Common::CrtDebug::initiateCrtMemoryChecks();
-
     int exit_code = false;
 
     // Setup session

@@ -12,7 +12,7 @@
 #include "../diagnostics/Diagnostic.hpp"
 
 namespace Parser {
-    typedef std::function<void(const std::string&)> TokenReport;
+    typedef std::function<void(const uint8_t&, const std::string&)> TokenReport;
     typedef std::function<void(const std::string&)> TreeReport;
     typedef std::function<void(const Data::Store::SourceId)> StageCall;
 
@@ -26,7 +26,8 @@ namespace Parser {
         StageCall onLexerContextEnd = nullptr;
         StageCall onContextEnd = nullptr;
         // [TokenReport]
-        // Args: <token_text> (const std::string&)
+        // Args: <stage> (const uint8_t&), <token_text> (const std::string&)
+        // Note: stage - 1: triggered before tokens are processed, 2: token is processed, 3: all tokens have been processed
         TokenReport onANTLRTokenDetected = nullptr;
         // [TreeReport]
         // Args: <AST_text> (const std::string&)

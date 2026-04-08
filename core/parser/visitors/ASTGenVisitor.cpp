@@ -26,7 +26,7 @@ namespace Parser {
                 path = path.substr(1, path.length() - 2);
 
                 std::string output;
-                if (this->store->resolvePath(path, output)) {
+                if (this->store->resolvePath(path, output, this->source->getId())) {
                     this->store->addSource(output, false);
 
                     Data::Store::SourceId srcId = this->store->getSourceIdByUri(output);
@@ -36,9 +36,9 @@ namespace Parser {
                 } else {
                     Diagnostics::Diagnostic diag = Diagnostics::getGenRuleDiagnostic(context);
 
-                    std::string msg = "failed to resolve import path \"";
+                    std::string msg = "failed to resolve import path '";
                     msg.append(path);
-                    msg.append("\": ");
+                    msg.append("': ");
                     msg.append(output);
 
                     // Update diagnostic data

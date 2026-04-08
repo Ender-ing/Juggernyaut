@@ -61,8 +61,8 @@ namespace Base {
             ),
             DEFINE_ACTION(
                 "i", "input",
-                "Set a path for the main user input file.",
-                { "<path>" },
+                "Set input file(s) path.",
+                { "<path> (<path>)*" },
                 {
                     // Store
                     std::string filePath;
@@ -74,15 +74,43 @@ namespace Base {
                     if (!success || filePath.at(0) == '-') {
                         // Missing input argument!
                         REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Missing the <path> input argument! (-i, --input)", Console::END_REPORT);
+                            "Missing the <path> argument! (-i, --input)", Console::END_REPORT);
                         ACTION_FATAL_FAILURE;
                     }
 
                     do {
                         // Keep the value!
                         getNextArg(nullptr, true); // Skip the item
-                        Base::InitialConfigs::entryPaths.push_back(filePath);
+                        Base::InitialConfigs::Input::entryPaths.push_back(filePath);
                     } while(getNextArg(&filePath, false) && filePath.at(0) != '-');
+
+                    ACTION_PROGRESS;
+                }
+            ),
+            DEFINE_ACTION(
+                "d", "dirs",
+                "Set import directories.",
+                { "<path> (<path>)*" },
+                {
+                    // Store
+                    std::string dirPath;
+
+                    // Get the next argument and save it!
+                    bool success = getNextArg(&dirPath, false);
+
+                    // Check if the action was successful!
+                    if (!success || dirPath.at(0) == '-') {
+                        // Missing input argument!
+                        REPORT(Console::START_REPORT, Console::FATAL_REPORT,
+                            "Missing the <path> argument! (-d, --dirs)", Console::END_REPORT);
+                        ACTION_FATAL_FAILURE;
+                    }
+
+                    do {
+                        // Keep the value!
+                        getNextArg(nullptr, true); // Skip the item
+                        Base::InitialConfigs::Input::importDirs.push_back(dirPath);
+                    } while(getNextArg(&dirPath, false) && dirPath.at(0) != '-');
 
                     ACTION_PROGRESS;
                 }

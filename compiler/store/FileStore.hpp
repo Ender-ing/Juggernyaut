@@ -14,7 +14,12 @@ namespace Store {
     class FileStore : public Data::Store::SourceStore {
         private:
         public:
-            std::string onFileRawRequest(const std::string &uri) override;
-            bool resolvePath(const std::string &uri, std::string &output) override;
+            bool _getRawFile(const std::string &uri, std::string &output) override;
+            bool _isFileAccessible(const std::string &uri) override;
+            bool _isDirValid(const std::string &path) override;
+            std::string _getFileExtension(const std::string &uri) override;
+            std::string _getPathDir(const std::string &uri) override;
+            std::string _getCanonical(const std::string &uri) override;
+            std::string _joinPaths(const std::string &base, const std::string &path) override;
     };
 }

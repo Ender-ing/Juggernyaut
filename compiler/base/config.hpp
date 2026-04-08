@@ -20,9 +20,11 @@ namespace Base {
         // Starting Path
         extern std::string compilerBinPath;
 
-        // Main source file
-        extern std::string mainPath;
-        extern std::vector<std::string> entryPaths;
+        // Source files
+        namespace Input {
+            extern std::vector<std::string> importDirs;
+            extern std::vector<std::string> entryPaths;
+        }
 
         // Debug-related
         namespace Debug {

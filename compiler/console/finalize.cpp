@@ -47,7 +47,7 @@ namespace Console {
         }
 
         // Handle CLI finalisation
-        void finalize() {
+        void finalize(uint32_t activeSrcs) {
             if (minimalProtocolFinalization) { //TMP
                 std::cout << std::endl;
                 return;
@@ -64,7 +64,7 @@ namespace Console {
             // Attach other status strings
             int warnings = Statistics::warningReports;
             int errors = Statistics::criticalReports + Statistics::fatalReports;
-            int reports = warnings + errors + Statistics::actionReports;
+            int reports = warnings + errors + Statistics::actionReports + Statistics::debugReports;
 
             // Simple message
             if (errors > 0 && warnings > 0) {
@@ -82,6 +82,7 @@ namespace Console {
                 warningsString,
                 criticalsString,
                 fatalsString,
+                debugString,
                 timeString;
             if (Statistics::actionReports > 0) {
                 actionsString << color(std::to_string(Statistics::actionReports), Color::sea_green)
@@ -109,11 +110,27 @@ namespace Console {
                 fatalsString << color(std::to_string(Statistics::fatalReports), Color::crimson)
                     << color(" fatal error(s)", Color::light_sea_green);
             }
+            if (Statistics::debugReports > 0) {
+                if (Statistics::actionReports > 0 || Statistics::warningReports > 0
+                    || Statistics::criticalReports > 0 || Statistics::fatalReports > 0) {
+                    debugString << color(", ", Color::light_sea_green);
+                }
+                debugString << color(std::to_string(Statistics::debugReports), Color::blue_violet)
+                    << color(" debug", Color::light_sea_green);
+            }
 
             if (isTrackingTime) {
                 timeString << color("Duration: ", Color::light_sea_green) << color(getDuration(), Color::light_sea_green);
             }
 
+            std::stringstream files;
+            files << activeSrcs << " file(s) processed";
+
+
+            std::cout << '\n' << '\n' << color(files.str(), Color::light_sea_green) << std::endl;
+            if (isTrackingTime) {
+                std::cout << timeString.str() << std::endl;
+            }
 
             /**
              * Failure!
@@ -131,7 +148,7 @@ namespace Console {
              * 0 action(s), 0 warning(s), 0 error(s), 0 fatal error(s)
             **/
             // Print summary
-            std::cout << '\n' << '\n' << color(status, Color::light_sea_green) << std::endl;
+            std::cout << color(status, Color::light_sea_green) << std::endl;
             if (reports > 0) {
                 std::cout << '\n';
                 std::cout << color("                |\\__/,|   (`\\", Color::golden_rod) << '\n';
@@ -140,10 +157,7 @@ namespace Console {
                     << color("---", Color::light_sea_green) << color("(((", Color::golden_rod)
                     << color("---------------------------------", Color::light_sea_green) << '\n' << '\n';
                 std::cout << actionsString.str() << warningsString.str() << criticalsString.str() << fatalsString.str()
-                    << std::endl;
-            }
-            if (isTrackingTime) {
-                std::cout << '\n' << timeString.str() << std::endl;
+                    << debugString.str() << std::endl;
             }
 
             // Revert

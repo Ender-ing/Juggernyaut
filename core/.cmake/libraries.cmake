@@ -12,8 +12,9 @@ attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
 # Libraries
-copy_proper_shared_library(JuggernyautCommonLibrary $<TARGET_FILE_DIR:mimalloc> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    copy_proper_shared_library(JuggernyautCommonLibrary $<TARGET_FILE_DIR:mimalloc> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
 
 # Create a library from /diagnostics
 add_library(JuggernyautDiagnosticsLibrary SHARED)

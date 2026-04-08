@@ -132,7 +132,7 @@ namespace Console {
                     case FATAL_REPORT:
                         Statistics::fatalReports++;
                         // Update program status
-                        ProcessReport::programStatus = 1;
+                        ProcessReport::programStatus = 2;
                         break;
                     case ACTION_REPORT:
                         Statistics::actionReports++;
@@ -220,7 +220,7 @@ namespace Console {
     bool minimalProtocolFinalization = false;
 
     // Finalise protocol
-    void finalize() {
+    void finalize(uint32_t activeSrcs) {
         Console::Optimization::safetyCheck();
 
         // Check for unwanted called
@@ -230,7 +230,7 @@ namespace Console {
         isFinalized = true;
 
         // Finalize Internal mode
-        Internal::finalize(); //TMP
+        Internal::finalize(activeSrcs); //TMP
 
         // Check for unfinished reports
         if(ProcessReport::didSendReport && !IndividualReport::isNew){

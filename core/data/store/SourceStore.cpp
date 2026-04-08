@@ -12,6 +12,58 @@
 
 namespace Data {
     namespace Store {
+        // Import paths
+        void SourceStore::addImportDir(const std::string &path) {
+            std::vector<std::string> &paths = this->importDirs;
+
+            if (this->_isDirValid(path)) {
+                paths.push_back(path);
+            }
+        }
+        void SourceStore::resetImportDirs() {
+            std::vector<std::string> &paths = this->importDirs;
+
+            paths.clear();
+            paths.shrink_to_fit();
+        }
+
+        // General path lookup
+        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId) {
+            std::string path = uri;
+            if (this->_getFileExtension(path) != ".jug") {
+                path.append(".jug");
+            }
+
+            // Relative path
+            if (callerId != 0) { // To a file
+                std::unique_ptr<Source> &src = this->getSourceById(callerId);
+
+                std::string relativePath = this->_joinPaths(this->_getPathDir(src->uri), path);
+
+                if (this->_isFileAccessible(relativePath)) {
+                    output = this->_getCanonical(relativePath);
+                    return true;
+                }
+            } else { // to the running directory
+                if (this->_isFileAccessible(path)) {
+                    output = this->_getCanonical(path);
+                    return true;
+                }
+            }
+
+            std::string importDir;
+            for (const auto &dir : this->importDirs) {
+                importDir = this->_joinPaths(dir, path);
+                if (this->_isFileAccessible(importDir)) {
+                    output = this->_getCanonical(importDir);
+                    return true;
+                }
+            }
+
+            output = "file is inaccessible";
+            return false;
+        }
+
         // Entry
         void SourceStore::addEntry(SourceId entry) {
             std::vector<SourceId> &entries = this->entryPoints;
@@ -76,6 +128,7 @@ namespace Data {
         }
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
+
             if (!uriIndex.contains(uri)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
@@ -98,6 +151,7 @@ namespace Data {
             }
         }
 
+        // Memory housekeeping
         static uint32_t currentRound = 0;
         void SourceStore::deleteSource(std::unique_ptr<Source> &source) {
             std::unordered_map<std::string, SourceId> &srcIndex = this->index;

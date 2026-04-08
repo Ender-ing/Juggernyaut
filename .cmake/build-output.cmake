@@ -268,7 +268,7 @@ function(copy_shared_library FUNC_TARGET LIB_PATH LIB_VERSION)
     add_custom_command(TARGET ${FUNC_TARGET}
                     POST_BUILD
                     COMMAND ${CMAKE_COMMAND}
-                           -E copy_if_different ${LIB_PATH} .
+                           -E copy ${LIB_PATH} .
                     WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     # Fix antlr4-runtime library naming!
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

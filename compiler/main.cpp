@@ -8,7 +8,6 @@
 
 // Common headers
 #include "../core/common/headers.hpp"
-#include "../core/common/debug.hpp"
 
 #include "console/console.hpp"
 
@@ -40,9 +39,6 @@ const Console::ReportType getReportType(Diagnostics::Severity severity) {
 int main(int argc, const char *argv[]) {
     Console::runtimeTracking();
 
-    // Test for memory leaks
-    Common::CrtDebug::initiateCrtMemoryChecks();
-
     // Initalise communications protocol
     // (Basiclly allowing the default protocol to take effect)
     if (!Base::InitialConfigs::Technical::shouldSkipDefaultInitialization(argc, argv)) {
@@ -71,26 +67,38 @@ int main(int argc, const char *argv[]) {
         return Console::ProcessReport::programStatus;
     }
 
-    // Manage input files
-    Store::FileStore store = Store::FileStore();
-
-    // Add input files
-    for (auto path : Base::InitialConfigs::entryPaths) {
-        store.addSource(path, true);
-    }
-
     // Setup session
+    Store::FileStore store = Store::FileStore();
     Session::Session session = Session::getSessionDefaults();
     session.store = &store;
 
+    // Add import directories
+    for (const auto &dir : Base::InitialConfigs::Input::importDirs) {
+        store.addImportDir(dir);
+    }
+
+    // Add input files
+    std::string currentPath;
+    for (const auto &path : Base::InitialConfigs::Input::entryPaths) {
+        if (store.resolvePath(path, currentPath)) {
+            store.addSource(currentPath, true);
+        } else {
+            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "Couldn't resolve input path: ", store._getCanonical(path), Console::END_REPORT);
+        }
+    }
+    currentPath.clear();
+    currentPath.shrink_to_fit();
+
     // Debug action
     if (Base::InitialConfigs::Debug::Parser::activateAntlrSyntaxTest) {
-        session.hooks.parser.onContextStart = [](const Data::Store::SourceId srcId) {
-            REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens:", Console::END_REPORT);
-        };
-        session.hooks.parser.onANTLRTokenDetected = [](const std::string &tokenText) {
-            Console::IndividualReport::isContinuation = true;
-            REPORT(Console::START_REPORT, Console::DEBUG_REPORT, tokenText, Console::END_REPORT);
+        session.hooks.parser.onANTLRTokenDetected = [](const uint8_t &stage, const std::string &tokenText) {
+            if (stage == 2) {
+                REPORT(tokenText, "\n");
+            } else if (stage == 1) {
+                REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Tokens: \n");
+            } else if (stage == 3) {
+                REPORT(Console::END_REPORT);
+            }
         };
         session.hooks.parser.onANTLRTreeGenerated = [](const std::string &treeText) {
             REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "Parse Tree: \n", treeText, Console::END_REPORT);
@@ -104,46 +112,41 @@ int main(int argc, const char *argv[]) {
         return Console::ProcessReport::programStatus;
     }
 
-    // Parser Diagnostics (OLD! SWITCH TO FILE-BASED REPORTING)
-    session.hooks.parser.onSyntaxError = [](const Diagnostics::Diagnostic &diag) {
-        // Get the position
-        Console::IndividualReport::startLine = diag.range.start.line;
-        Console::IndividualReport::startColumn = diag.range.start.character;
-        Console::IndividualReport::endLine = diag.range.end.line;
-        Console::IndividualReport::endColumn = diag.range.end.character;
+    uint32_t activeSources = 0;
+    session.hooks.parser.onContextStart = [&session, &activeSources](const Data::Store::SourceId srcId) {
+        std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
 
-        // Update stage data
-        int stageId = static_cast<int>(std::floor(diag.code / 100000));
-        if (stageId == 1) {
-            Console::IndividualReport::stage = "Lexer";
-        } else if (stageId == 2) {
-            Console::IndividualReport::stage = "Parser";
-        } else {
-            Console::IndividualReport::stage = "?Unknown Stage?";
-        }
-
-        // Report the error
-        REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
+        REPORT(Console::START_REPORT, Console::NORMAL_REPORT, "#", ++activeSources, ": ", source->uri, Console::END_REPORT);
     };
-    session.hooks.parser.onAmbiguity = [](const Diagnostics::Diagnostic &diag) {
-        REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, " (source: ",
-            diag.range.start.line, ":", diag.range.start.character ," to  " ,
-            diag.range.end.line, ":", diag.range.end.character, ")", Console::END_REPORT);
+
+    // Parser Diagnostics
+    session.hooks.parser.onContextEnd = [&session](const Data::Store::SourceId srcId) {
+        std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
+
+        source->visitParserDiagnostics([](const Diagnostics::Diagnostic &diag) {
+            // Get the position
+            Console::IndividualReport::startLine = diag.range.start.line;
+            Console::IndividualReport::startColumn = diag.range.start.character;
+            Console::IndividualReport::endLine = diag.range.end.line;
+            Console::IndividualReport::endColumn = diag.range.end.character;
+
+            // Update stage data
+            int stageId = static_cast<int>(std::floor(diag.code / 100000));
+            if (stageId == 1) {
+                Console::IndividualReport::stage = "Lexer";
+            } else if (stageId == 2) {
+                Console::IndividualReport::stage = "Parser";
+            } else {
+                Console::IndividualReport::stage = "?Unknown Stage?";
+            }
+            REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
+        });
     };
 
     // Begin the actual work here...
     Session::initiate(session);
     
-    // Handle memory check results
-    if(Common::CrtDebug::processCrtMemoryReports()){
-        // Exist with an error on memory leaks!
-        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-            "Terminating program due to detected memory errors! Please contact the developers of Juggernyaut!",
-            Console::END_REPORT);
-        return 1;
-    }
-
     // End the program
-    Console::finalize();
+    Console::finalize(activeSources);
     return Console::ProcessReport::programStatus;
 }

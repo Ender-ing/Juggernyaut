@@ -10,6 +10,6 @@
 namespace Console {
     namespace Internal {
         // Handle CLI initialisation
-        extern void finalize() ;
+        extern void finalize(uint32_t activeSrcs) ;
     }
 }

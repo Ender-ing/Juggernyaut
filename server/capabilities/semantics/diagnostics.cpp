@@ -8,7 +8,6 @@
 
 // Diagnostics
 #include "../../../core/diagnostics/Diagnostic.hpp"
-#include "../../../core/diagnostics/antlr.hpp"
 
 namespace Capabilities {
     namespace Semantics {

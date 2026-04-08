@@ -8,21 +8,40 @@
 // Basic C++ headers
 #include <fstream>
 
+// lsp-framework
+#include "../lspFramework.hpp"
+
 namespace fs = std::filesystem;
 
 namespace Store {
+    std::string normalizePath(const std::string &path) {
+        return (std::string) lsp::DocumentUri::fromPath(path).path();
+    }
     bool isFileAccessible(const std::string &filePath) {
         // Check if the file is open!
         std::ifstream file(filePath);
-        return file.is_open(); // FIle will be closed when out of scope
+        return file.is_open(); // File will be closed when out of scope
     }
-    // Check if the file is of a valid format
-    bool isFileValid(const std::string &filePath) {
+    bool isValidDir(const std::string &path) {
+        return (fs::exists(path) && fs::is_directory(path));
+    }
+    std::string getFileExtension(const std::string &filePath) {
         // Check file extension
         fs::path filePathObj = filePath;
-        std::string extension = filePathObj.extension().string();
-        return (extension == ".jug");
-        /** @brief INCOMPLETE: Add a file data checker! **/
+        return filePathObj.extension().string();
+    }
+    std::string getParentPath(const std::string &filePath) {
+        fs::path localPath = fs::path(filePath);
+        std::string parent = localPath.parent_path().string();
+        return normalizePath(parent);
+    }
+    std::string joinPaths(const std::string &base, const std::string path) {
+        fs::path path_1(base);
+        fs::path path_2(path);
+
+        fs::path newPath = path_1 / path_2;
+
+        return normalizePath(newPath.string());
     }
     bool getFileContent(const std::string &filePath, std::string &store) {
         std::ifstream file(filePath); // Open the file for reading

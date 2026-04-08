@@ -13,8 +13,11 @@
 namespace fs = std::filesystem;
 
 namespace Store {
+    extern std::string normalizePath(const std::string &path) ;
     extern bool isFileAccessible(const std::string &filePath) ;
-    // Check if the file is of a valid format
-    extern bool isFileValid(const std::string &filePath) ;
+    extern bool isValidDir(const std::string &path) ;
+    extern std::string getFileExtension(const std::string &filePath) ;
+    extern std::string getParentPath(const std::string &filePath) ;
+    extern std::string joinPaths(const std::string &base, const std::string path) ;
     extern bool getFileContent(const std::string &filePath, std::string &store) ;
 }
