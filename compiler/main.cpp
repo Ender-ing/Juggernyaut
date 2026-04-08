@@ -72,6 +72,11 @@ int main(int argc, const char *argv[]) {
     Session::Session session = Session::getSessionDefaults();
     session.store = &store;
 
+    // Load external configs
+    if (!Base::InitialConfigs::Input::config.empty()) {
+        // ...
+    }
+
     // Add import directories
     for (const auto &dir : Base::InitialConfigs::Input::importDirs) {
         store.addImportDir(dir);

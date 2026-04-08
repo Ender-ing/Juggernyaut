@@ -66,10 +66,29 @@ namespace Capabilities {
             [&messageHandler, &session](lsp::requests::Initialize::Params&& params) {
                 printMessage<lsp::requests::Initialize>(params);
 
+                // Get the workspace's 'jug.toml' file
+                if (!params.rootUri.isNull()) {
+                    const std::string rootUri = std::string(params.rootUri.value().path());
+
+                    // Look for 'jug.toml'
+                    const std::string configUri = session.store->_joinPaths(rootUri, "jug.toml");
+                    if (session.store->_isFileAccessible(configUri)) {
+                        auto msgParams = lsp::notifications::Window_ShowMessage::Params{};
+
+                        msgParams.type = lsp::MessageType::Info;
+                        msgParams.message = "Juggernyaut configuration file has been imported: \n";
+                        msgParams.message.append(configUri);
+
+                        messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(msgParams));
+
+                        // Load external configs
+                        // ...
+                    }
+                }
+
                 /*
                  * Respond with an InitializeResult containing some basic server info and capabilities
                  */
-
                 return lsp::requests::Initialize::Result {
                     .capabilities = {
                         .positionEncoding = lsp::PositionEncodingKind::UTF16,

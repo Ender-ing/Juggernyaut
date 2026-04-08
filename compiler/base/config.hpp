@@ -24,6 +24,7 @@ namespace Base {
         namespace Input {
             extern std::vector<std::string> importDirs;
             extern std::vector<std::string> entryPaths;
+            extern std::string config;
         }
 
         // Debug-related
