@@ -32,8 +32,9 @@ export function getPlatform(): Platform {
 export async function getCommand(base:string, name:string): Promise<{cmd: string, args: string[]}> {
     const platform = await getPlatform();
     if (platform == Platform.Windows) {
+        const cmd: string = Uri.joinPath(Uri.file(base), `${name}.exe`).fsPath;
         return {
-            cmd: Uri.joinPath(Uri.file(base), `${name}.exe`).fsPath,
+            cmd: cmd,
             args: []
         };
     } else if (platform == Platform.Linux || platform == Platform.Mac) {
