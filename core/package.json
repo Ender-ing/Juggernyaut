@@ -2,8 +2,8 @@
     "scripts": {
         "build-cmake-win-32": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -A x86",
         "build-cmake-win-64": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -A x64",
-        "build-cmake-lix-32": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x86",
-        "build-cmake-lix-64": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64",
+        "build-cmake-lix-32": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -DJUG_GENERATOR_PLATFORM=x86",
+        "build-cmake-lix-64": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Release -DJUG_GENERATOR_PLATFORM=x64",
         "build-binary": "cd ../.build && cmake --build . --config Release --parallel 3 --verbose",
         "debug-build-cmake": "cd ../.build && cmake ../core -DCMAKE_BUILD_TYPE=Debug",
         "debug-build-binary": "cd ../.build && cmake --build . --config Debug",
