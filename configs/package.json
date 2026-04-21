@@ -1,9 +1,9 @@
 {
     "scripts": {
-        "build-cmake-win-32": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x86",
-        "build-cmake-win-64": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64",
-        "build-cmake-lix-32": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x86",
-        "build-cmake-lix-64": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x64",
+        "build-cmake-win-32": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -JUG_GENERATOR_PLATFORM=x86",
+        "build-cmake-win-64": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -JUG_GENERATOR_PLATFORM=x64",
+        "build-cmake-lix-32": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -JUG_GENERATOR_PLATFORM=x86",
+        "build-cmake-lix-64": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -JUG_GENERATOR_PLATFORM=x64",
         "build-binary": "cd ../.build && cmake --build . --config Release --parallel 3 --verbose",
         "debug-build-cmake": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Debug",
         "debug-build-binary": "cd ../.build && cmake --build . --config Debug",
