@@ -70,14 +70,14 @@ jobs:
     - name: Configure CMake
       if: inputs.build_platform_name != 'x86_32' && inputs.build_platform_name != 'arm32'
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
 
     - name: Configure CMake (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ -DCMAKE_SYSTEM_PROCESSOR=i686 \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
       working-directory: .build
@@ -85,7 +85,7 @@ jobs:
     - name: Configure CMake (ARM 32-bit)
       if: inputs.build_platform_name == 'arm32'
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
           -DCMAKE_SYSTEM_PROCESSOR=arm \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"

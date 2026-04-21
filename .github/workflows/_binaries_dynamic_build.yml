@@ -36,7 +36,7 @@ jobs:
     needs:
       - build-binaries-on-windows-x86-64
     with:
-      build_platform: Win32
+      build_platform: x86
       build_platform_name: x86_32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}

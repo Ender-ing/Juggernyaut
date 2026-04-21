@@ -27,8 +27,8 @@ if(DEFINED NEEDS_WIN_RC)
         )
 
         # Get the system platform
-        if(CMAKE_GENERATOR_PLATFORM)
-            if(${CMAKE_GENERATOR_PLATFORM} STREQUAL "Win32")
+        if(DEFINED CMAKE_GENERATOR_PLATFORM)
+            if(${CMAKE_GENERATOR_PLATFORM} STREQUAL "x86")
                 set(WINDOWS_KITS_PLATFORM "x86")
             elseif(${CMAKE_GENERATOR_PLATFORM} STREQUAL "x64")
                 set(WINDOWS_KITS_PLATFORM "x64")

@@ -76,3 +76,20 @@ function(get_ini_value INI_FILE INI_SECTION KEY OUTPUT_VARIABLE)
     # Return value
     set(${OUTPUT_VARIABLE} ${VALUE} PARENT_SCOPE)
 endfunction()
+
+function(get_local_arch OUTPUT_VARIABLE)
+    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
+
+    # Detect ARM vs x86 Architectures
+    if(TARGET_ARCH MATCHES "aarch64|arm64")
+        set(${OUTPUT_VARIABLE} "ARM64" PARENT_SCOPE)
+    elseif(TARGET_ARCH MATCHES "arm|armv7|armv7s|armv7l")
+        set(${OUTPUT_VARIABLE} "ARM" PARENT_SCOPE)
+    elseif(TARGET_ARCH MATCHES "x86_64|amd64")
+        set(${OUTPUT_VARIABLE} "x64" PARENT_SCOPE)
+    elseif(TARGET_ARCH MATCHES "i386|i686|x86")
+        set(${OUTPUT_VARIABLE} "x86" PARENT_SCOPE)
+    else()
+        message(FATAL_ERROR "[UTILITY] Unknown Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+endfunction()
