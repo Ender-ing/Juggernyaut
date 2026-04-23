@@ -7,8 +7,6 @@ set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
 include(FetchContent)
 
-message(STATUS Configuring diagnostic codes generator...)
-
 # Shared directories
 set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.deps)
 set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.cmake)
