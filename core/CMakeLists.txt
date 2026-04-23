@@ -48,3 +48,12 @@ include(${JUG_CORE_CMAKE_DIR}/ANTLR4-gen.cmake)
 
 # Generate Core libraries
 include(${JUG_CORE_CMAKE_DIR}/libraries.cmake)
+
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    # Tests
+    option(JUG_BUILD_TESTS "Build the test suite" OFF)
+    if(JUG_BUILD_TESTS)
+        enable_testing()
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../tests ${JUG_BUILD_DIR}/core_tests)
+    endif()
+endif()

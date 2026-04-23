@@ -45,3 +45,12 @@ include(${JUG_CMAKE_DIR}/shared.cmake)
 
 # Build the libraries!
 include(${JUG_CONFIGS_CMAKE_DIR}/libraries.cmake)
+
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    # Tests
+    option(JUG_BUILD_TESTS "Build the test suite" OFF)
+    if(JUG_BUILD_TESTS)
+        enable_testing()
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../tests ${JUG_BUILD_DIR}/configs_tests)
+    endif()
+endif()

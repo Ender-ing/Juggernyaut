@@ -1,7 +1,6 @@
 # Basic info
 cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 project(juggernyaut)
-#enable_testing()
 
 # Shared directories
 set(JUG_BUILD_DIR ${CMAKE_BINARY_DIR})
@@ -24,6 +23,13 @@ add_subdirectory(core)
 add_subdirectory(configs)
 add_subdirectory(compiler)
 add_subdirectory(server)
+
+# Tests
+option(JUG_BUILD_TESTS "Build the test suite" OFF)
+if(JUG_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 # Delete leftover files
 if(DEFINED JUG_CLEANUP)
