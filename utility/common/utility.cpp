@@ -3,7 +3,7 @@
  * String-related functions
 **/
 
-#include "utility.hpp"
+#include "include/common/utility.hpp"
 
 // Basic C++ headers
 #include <algorithm>

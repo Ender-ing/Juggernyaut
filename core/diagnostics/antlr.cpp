@@ -6,7 +6,7 @@
 #include "antlr.hpp"
 
 // Common
-#include "../common/utility.hpp"
+#include "common/utility.hpp"
 
 #include "DiagCodes.hpp"
 

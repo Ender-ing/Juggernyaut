@@ -6,7 +6,7 @@
 #pragma once
 
 // Common headers
-#include "../../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 // Session
 #include "../../core/session/session.hpp"

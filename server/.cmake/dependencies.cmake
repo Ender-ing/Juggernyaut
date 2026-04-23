@@ -9,6 +9,7 @@ endif()
 if(lsp)
     message(STATUS "[DEPENDENCIES] lsp-framework library is present!")
 else()
+    set(LSP_INSTALL OFF CACHE BOOL "Disable LSP installation" FORCE)
     # Download lsp-framework
     message(STATUS "[DEPENDENCIES] Fetching lsp-framework...")
     set(JUG_DEP_LSP_FRAMEWORK_LIB_PATH ${JUG_DEPENDENCIES_DIR}/lsp-framework)

@@ -6,7 +6,7 @@
 #pragma once
 
 // Common headers
-#include "../../../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 namespace Capabilities {
     namespace Workspace {

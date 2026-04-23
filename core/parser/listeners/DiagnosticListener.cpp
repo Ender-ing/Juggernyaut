@@ -7,7 +7,7 @@
 
 #include "../antlr4.hpp"
 
-#include "../../common/utility.hpp"
+#include "common/utility.hpp"
 
 // Diagnostics
 #include "../../diagnostics/antlr.hpp"

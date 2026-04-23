@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../common/headers.hpp"
+#include "common/headers.hpp"
 #include "dynamic.hpp" // JUG_DIAGNOSTICS_API
 
 // ANTLR4 imports

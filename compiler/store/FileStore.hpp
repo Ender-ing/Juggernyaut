@@ -6,7 +6,7 @@
 #pragma once
 
 // Common headers
-#include "../../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 #include "../../core/data/store/SourceStore.hpp"
 

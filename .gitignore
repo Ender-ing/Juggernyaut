@@ -1,11 +1,19 @@
 # NodeJS
 node_modules
+
 # VSCode Extension
 extensions/VSCode/scripts/*.js
 extensions/VSCode/LICENSE
 *.vsix
 
+# Visual Studio
+.vs
+out
+
+# ANTLR extension
+.antlr
+
+# Build dirs
 .build
 .deps
 .dist
-.antlr

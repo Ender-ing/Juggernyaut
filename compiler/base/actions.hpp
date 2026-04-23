@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 namespace Base {
     namespace Actions {

@@ -10,7 +10,7 @@
 #include <variant>
 
 // Common headers
-#include "../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 // lsp-framework
 #include "lspFramework.hpp"

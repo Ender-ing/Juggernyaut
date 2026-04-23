@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../../core/common/headers.hpp"
+#include "common/headers.hpp"
 
 #include "actions.hpp"
 
@@ -24,6 +24,7 @@ namespace Base {
         namespace Input {
             extern std::vector<std::string> importDirs;
             extern std::vector<std::string> entryPaths;
+            extern std::string config;
         }
 
         // Debug-related

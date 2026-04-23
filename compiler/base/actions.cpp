@@ -37,7 +37,7 @@ namespace Base {
                 "Terminate process when unknown flags are detected.",
                 {},
                 {
-                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "Enabled 'strict flags' mode!", Console::END_REPORT);
+                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "enabled 'strict flags' mode!", Console::END_REPORT);
 
                     // Change to strict flags mode
                     InitialConfigs::Technical::strictFlagDetection = true;
@@ -73,8 +73,8 @@ namespace Base {
                     // Check if the action was successful!
                     if (!success || filePath.at(0) == '-') {
                         // Missing input argument!
-                        REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Missing the <path> argument! (-i, --input)", Console::END_REPORT);
+                        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                            "missing the <path> argument! (-i, --input)", Console::END_REPORT);
                         ACTION_FATAL_FAILURE;
                     }
 
@@ -101,8 +101,8 @@ namespace Base {
                     // Check if the action was successful!
                     if (!success || dirPath.at(0) == '-') {
                         // Missing input argument!
-                        REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Missing the <path> argument! (-d, --dirs)", Console::END_REPORT);
+                        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                            "missing the <path> argument! (-d, --dirs)", Console::END_REPORT);
                         ACTION_FATAL_FAILURE;
                     }
 
@@ -116,21 +116,59 @@ namespace Base {
                 }
             ),
             DEFINE_ACTION(
+                "c", "config",
+                "Set configuration file path.",
+                { "<path>" },
+                {
+                    // Store
+                    std::string filePath;
+
+                    // Get the next argument and save it!
+                    bool success = getNextArg(&filePath, false);
+
+                    // Check if the action was successful!
+                    if (!success || filePath.at(0) == '-') {
+                        // Missing input argument!
+                        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                            "missing the <path> argument! (-c, --config)", Console::END_REPORT);
+                        ACTION_FATAL_FAILURE;
+                    } else {
+                        getNextArg(nullptr, true); // Skip the item
+
+                        if (!filePath.ends_with("jug.toml")) {
+                            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                                "workspace configuration file is invalid: expecting a 'jug.toml' file, received '",
+                                filePath, "'", Console::END_REPORT);
+                            ACTION_FATAL_FAILURE;
+                        } else if (!Store::isFileAccessible(filePath)) {
+                            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
+                                "workspace configuration file is inaccessible or nonexistent: ",
+                                filePath, Console::END_REPORT);
+                            ACTION_FATAL_FAILURE;
+                        }
+
+                        // Report action
+                        REPORT(Console::START_REPORT, Console::ACTION_REPORT, "set workspace configuration file: ",
+                            filePath, Console::END_REPORT);
+
+                        Base::InitialConfigs::Input::config = std::move(filePath);
+
+                        ACTION_PROGRESS;
+                    }
+                }
+            ),
+            DEFINE_ACTION(
                 "l", "license",
                 "Get license text.",
                 {},
                 {
-                    // Report action
-                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "Printing license text!",
-                        Console::END_REPORT);
-
                     // Get the license text
                     std::string content;
                     std::string licensePath = InitialConfigs::compilerBinPath + "/LICENSE";
                     if (!Store::getFileContent(licensePath, content)) {
                         // File isn't accessible!
                         REPORT(Console::START_REPORT, Console::FATAL_REPORT,
-                            "Couldn't access the LICENSE file: ",
+                            "couldn't access the LICENSE file: ",
                             licensePath,
                             BAD_CODE_OR_MEMORY_LEAKS,
                             Console::END_REPORT);
@@ -153,7 +191,7 @@ namespace Base {
                     InitialConfigs::Debug::Parser::activateAntlrSyntaxTest = true;
 
                     // Report status
-                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "Enabled the ANTLR4 parser print syntax test!",
+                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "enabled the ANTLR4 parser print syntax test!",
                         Console::END_REPORT);
 
                     ACTION_PROGRESS;

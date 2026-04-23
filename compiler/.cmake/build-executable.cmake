@@ -4,14 +4,9 @@ add_executable(
     JuggernyautCompiler ${JUG_COMPILER_MAIN_CPP_PATH}
 )
 
-# Link core libraries
-foreach(LIB ${CORE_LIBRARIES})
-    message(STATUS "[BUILD] Adding linking target '${LIB}' to executable target 'JuggernyautCompiler'...")
-    # Mark the library as a dependency of the executable
-    add_dependencies(JuggernyautCompiler ${LIB})
-    # Add the library
-    target_link_libraries(JuggernyautCompiler PUBLIC ${LIB})
-endforeach()
+# Link libraries
+add_dependencies(JuggernyautCompiler JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+target_link_libraries(JuggernyautCompiler PUBLIC JuggernyautSessionLibrary JuggernyautConfigsLibrary)
 
 # Link compiler libraries
 include(${JUG_COMPILER_CMAKE_DIR}/libraries.cmake)

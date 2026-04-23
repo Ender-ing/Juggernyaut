@@ -6,7 +6,7 @@
 #include "Diagnostic.hpp"
 
 // Common
-#include "../common/utility.hpp"
+#include "common/utility.hpp"
 
 namespace Diagnostics {
     // ...

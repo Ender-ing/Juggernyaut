@@ -2,20 +2,6 @@
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS ON)
 
-# Create a library from /common
-add_library(JuggernyautCommonLibrary SHARED)
-target_sources_search(JuggernyautCommonLibrary ${JUG_CORE_SOURCE_DIR}/common/*.cpp TRUE)
-# Expose library exports
-target_compile_definitions(JuggernyautCommonLibrary PRIVATE JUG_COMMON_LIBRARY_EXPORTS)
-# Attach manifest data
-attach_manifest_data(JuggernyautCommonLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
-# Add compiler flags
-add_internal_target_cxx_flags(JuggernyautCommonLibrary FALSE)
-# Libraries
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    copy_proper_shared_library(JuggernyautCommonLibrary $<TARGET_FILE_DIR:mimalloc> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif()
-
 # Create a library from /diagnostics
 add_library(JuggernyautDiagnosticsLibrary SHARED)
 target_sources_search(JuggernyautDiagnosticsLibrary ${JUG_CORE_SOURCE_DIR}/diagnostics/*.cpp TRUE)
@@ -26,9 +12,8 @@ attach_manifest_data(JuggernyautDiagnosticsLibrary ${JUG_CORE_MANIFEST_FILE} TRU
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
 # Dependencies
-add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
-target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JuggernyautCommonLibrary JugGlobalDiagnostics)
-
+add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JugGlobalDiagnostics)
+target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC antlr4_shared JugGlobalDiagnostics)
 
 # Create a library from /data
 add_library(JuggernyautDataLibrary SHARED)
@@ -40,8 +25,8 @@ attach_manifest_data(JuggernyautDataLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautDataLibrary FALSE)
 # Dependencies
-add_dependencies(JuggernyautDataLibrary JuggernyautCommonLibrary JugGlobalDiagnostics)
-target_link_libraries(JuggernyautDataLibrary PUBLIC JuggernyautCommonLibrary JugGlobalDiagnostics)
+add_dependencies(JuggernyautDataLibrary JugGlobalDiagnostics)
+target_link_libraries(JuggernyautDataLibrary PUBLIC JugGlobalDiagnostics)
 
 # Create a library from /parser
 add_library(JuggernyautParserLibrary SHARED
@@ -71,15 +56,5 @@ attach_manifest_data(JuggernyautSessionLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautSessionLibrary FALSE)
 # Dependencies
-add_dependencies(JuggernyautSessionLibrary JuggernyautCommonLibrary JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)
-target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautCommonLibrary JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)
-
-# Expose the core libraries
-set(CORE_LIBRARIES
-    JuggernyautCommonLibrary
-    JuggernyautDiagnosticsLibrary
-    JuggernyautDataLibrary
-    JuggernyautParserLibrary
-    JuggernyautSessionLibrary
-    PARENT_SCOPE
-)
+add_dependencies(JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)
+target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautDiagnosticsLibrary JugGlobalDiagnostics JuggernyautDataLibrary JuggernyautParserLibrary)

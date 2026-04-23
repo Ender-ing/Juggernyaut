@@ -16,7 +16,6 @@ set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.cmake)
 # Directories
 set(JUG_UTILITY_DIAGCODES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(JUG_UTILITY_DIAGCODES_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
-set(JUG_CORE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manifest.ini)
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
 info("[START] Configuring Utility DiagCodes...")

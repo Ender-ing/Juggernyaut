@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../../common/headers.hpp"
+#include "common/headers.hpp"
 #include "../dynamic.hpp" // JUG_DATA_API
 
 #include "types.hpp"
@@ -36,8 +36,6 @@ namespace Data {
                 virtual ~SourceStore() = default;
 
                 // Unique implementations
-                // _getRawFile:
-                // Returns: <is_success> (bool)
                 virtual bool _getRawFile(const std::string &uri, std::string &output) = 0;
                 virtual bool _isFileAccessible(const std::string &uri) = 0;
                 virtual bool _isDirValid(const std::string &path) = 0;

@@ -6,7 +6,7 @@
 #pragma once
 
 #include "headers.hpp"
-#include "dynamic.hpp" // JUG_COMMON_API
+#include "../../dynamic.hpp" // JUG_COMMON_API
 
 namespace Common {
     namespace Strings {

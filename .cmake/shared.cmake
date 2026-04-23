@@ -15,3 +15,6 @@ include(${JUG_CMAKE_DIR}/other/legal.cmake)
 
 # Diagnostic codes
 include(${JUG_CMAKE_DIR}/diagnostics.cmake)
+
+# Diagnostic codes
+include(${JUG_CMAKE_DIR}/common.cmake)

@@ -38,6 +38,12 @@ if(DEFINED CPP_DIAGCODES_SCAN_DIR AND NOT TARGET JugGlobalDiagnostics)
     add_custom_target(GenerateDiagCodes ALL
         DEPENDS ${CPP_DIAGCODES_FILE}
     )
+    # Post-build cleanup
+    if(DEFINED JUG_CLEANUP)
+        add_custom_target(JugDiagnosticsCodeCleanup ALL
+                            COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:JugDiagnosticsCode>)
+        add_dependencies(JugDiagnosticsCodeCleanup GenerateDiagCodes)
+    endif()
 
     # INTERFACE library (Notice we DO NOT use target_sources here anymore!)
     if(NOT TARGET JugGlobalDiagnostics)

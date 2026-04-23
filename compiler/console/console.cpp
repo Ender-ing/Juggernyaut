@@ -199,7 +199,7 @@ namespace Console {
             } else if (holdsAlternatives<REPORT_INPUT_TYPES>(arg)) {
                 ReportInternals::processReportInput(arg);
             } else {
-                throwError("Unknown Comms::report argument type!"); 
+                throwError("unknown Comms::report argument type!"); 
             }
         }
     }

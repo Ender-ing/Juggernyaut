@@ -6,7 +6,7 @@ add_executable(
     ${ANTLR_DiagnosticsCodeParser_CXX_OUTPUTS} # ANTLR4
 )
 
-# ANTLR4
+# Dependencies 
 add_dependencies(JugDiagnosticsCode antlr4_static)
 target_link_libraries(JugDiagnosticsCode PUBLIC antlr4_static)
 target_compile_definitions(JugDiagnosticsCode PRIVATE ANTLR4CPP_STATIC)
