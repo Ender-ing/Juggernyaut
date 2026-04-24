@@ -27,6 +27,6 @@ namespace Store {
             std::string _getCanonical(const std::string &uri) override;
             std::string _joinPaths(const std::string &base, const std::string &path) override;
 
-            void deleteSource(std::unique_ptr<Data::Store::Source> &src) override;
+            void deleteSource(std::unique_ptr<Data::Store::Source> &src, bool erase) override;
     };
 }

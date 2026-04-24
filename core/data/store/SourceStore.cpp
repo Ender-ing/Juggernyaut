@@ -155,23 +155,28 @@ namespace Data {
 
         // Memory housekeeping
         static uint32_t currentRound = 0;
-        void SourceStore::deleteSource(std::unique_ptr<Source> &source) {
+        void SourceStore::deleteSource(std::unique_ptr<Source> &source, bool erase) {
             std::unordered_map<std::string, SourceId> &srcIndex = this->index;
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
-            // Empty object
-            source.reset();
+            // Get data
+            const SourceId srcId = source->getId();
+            const std::string &uri = source->uri;
 
             // Remove traces
-            const SourceId &srcId = source->getId();
-            const std::string &uri = source->uri;
             if (srcIndex.contains(uri)) {
                 srcIndex.erase(uri);
             }
-            if (srcs.contains(srcId)) {
-                srcs.erase(srcId);
-            }
+
+            // Remove entry point
             this->removeEntry(srcId);
+
+            // Delete element
+            if (erase && srcs.contains(srcId)) {
+                srcs.erase(srcId);
+            } else {
+                source.reset(); // THE SOURCE MUST ALWAYS BE RESET!
+            }
         }
         void SourceStore::cleanup() {
             SourceStore *srcStore = this;
@@ -188,9 +193,13 @@ namespace Data {
 
             // Discard inaccessible entries
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
-            for (auto &[id, src] : srcs) {
-                if (src->round != currentRound) {
-                    srcStore->deleteSource(src);
+            auto it = srcs.begin();
+            while (it != srcs.end()) {
+                if (it->second->round != currentRound) {
+                    srcStore->deleteSource(it->second, false);
+                    it = srcs.erase(it); // Erase, and fetch!
+                } else {
+                    ++it; // Skip
                 }
             }
         }

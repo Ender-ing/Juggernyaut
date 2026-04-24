@@ -69,7 +69,7 @@ namespace Data {
                 void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
-                virtual void deleteSource(std::unique_ptr<Source> &src) ; // Allow override
+                virtual void deleteSource(std::unique_ptr<Source> &src, bool erase = true) ; // Allow override
                 void cleanup() ;
         };
     }

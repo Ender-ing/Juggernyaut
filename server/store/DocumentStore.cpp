@@ -77,13 +77,15 @@ namespace Store {
         return joinPaths(base, path);
     }
 
-    void DocumentStore::deleteSource(std::unique_ptr<Data::Store::Source> &src) {
-        Data::Store::SourceStore::deleteSource(src);
+    void DocumentStore::deleteSource(std::unique_ptr<Data::Store::Source> &src, bool erase) {
+        // Get data
+        const std::string uri = src->uri;
+
+        Data::Store::SourceStore::deleteSource(src, erase);
 
         std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
 
         // Delete file data
-        const std::string &uri = src->uri;
         if (raws.contains(uri)) {
             raws.erase(uri);
         }
