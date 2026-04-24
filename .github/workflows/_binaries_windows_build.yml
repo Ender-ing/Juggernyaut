@@ -101,7 +101,7 @@ jobs:
 
     - name: Cleanup (optional)
       if: inputs.bundle_binaries
-      run: ${{inputs.build_platform_name}}.cleanup.bat
+      run: .\${{inputs.build_platform_name}}.cleanup.bat
       working-directory: .dist/${{inputs.build_mode}}
 
     - name: Upload Binaries Artifact (optional)
