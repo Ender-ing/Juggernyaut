@@ -49,7 +49,7 @@ include(${JUG_TESTS_CMAKE_DIR}/utility.cmake)
 
 if((DEFINED JUG_GLOBAL_BUILD) OR (DEFINED JUG_CORE_BUILD))
     message(STATUS "[TESTS] Configuring 'core' tests...")
-    #add_subdirectory(${JUG_TESTS_SOURCE_DIR}/core ${JUG_BUILD_DIR}/tests_core)
+    add_subdirectory(${JUG_TESTS_SOURCE_DIR}/core ${JUG_BUILD_DIR}/tests_core)
 endif()
 if((DEFINED JUG_GLOBAL_BUILD) OR (DEFINED JUG_CONFIGS_BUILD))
     message(STATUS "[TESTS] Configuring 'configs' tests...")
