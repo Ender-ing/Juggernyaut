@@ -1,7 +1,7 @@
 # Basic info
 cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 project(juggernyaut_tests)
-#set(JUG_TESTS_BUILD ON)
+set(JUG_TESTS_BUILD ON)
 
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
@@ -32,11 +32,17 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
 )
 
+# CMake functions & macros
+include(${JUG_CMAKE_DIR}/shared.cmake)
+
+# Manage binary output
+include(${JUG_TESTS_CMAKE_DIR}/build-output.cmake)
+
 # Manage dependencies
 include(${JUG_TESTS_CMAKE_DIR}/dependencies.cmake)
 
-# CMake functions & macros
-include(${JUG_CMAKE_DIR}/shared.cmake)
+# Test utility
+include(${JUG_TESTS_CMAKE_DIR}/utility.cmake)
 
 # Build the executables!
 #include(${JUG_TESTS_CMAKE_DIR}/build-executable.cmake)

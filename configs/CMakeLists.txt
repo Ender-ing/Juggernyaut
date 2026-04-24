@@ -3,6 +3,14 @@ cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 project(juggernyaut_configs)
 set(JUG_CONFIGS_BUILD ON CACHE BOOL "Jug dependency tracking" FORCE)
 
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    # Tests
+    option(JUG_BUILD_TESTS "Build the test suite" OFF)
+    if(JUG_BUILD_TESTS)
+        enable_testing()
+    endif()
+endif()
+
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
@@ -51,7 +59,6 @@ if(NOT DEFINED JUG_GLOBAL_BUILD)
     # Tests
     option(JUG_BUILD_TESTS "Build the test suite" OFF)
     if(JUG_BUILD_TESTS)
-        enable_testing()
         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../tests ${JUG_BUILD_DIR}/configs_tests)
     endif()
 endif()
