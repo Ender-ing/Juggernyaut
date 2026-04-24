@@ -15,6 +15,7 @@ macro(add_test_target TARGET DIR)
     # Link against gtest and required libraries
     target_link_libraries(${TARGET}
         PRIVATE
+        JuggernyautCommonLibrary # Just in case (also, it should already be linked anyways...)
         GTest::gtest # Or gtest_main
     )
     
