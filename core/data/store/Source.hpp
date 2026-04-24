@@ -61,6 +61,7 @@ namespace Data {
                 Source(std::string srcUri, SourceStore *srcStore) ;
                 Source(const Source&) = delete;
                 Source& operator=(const Source&) = delete;
+                virtual ~Source() = default;
 
                 // Tracking
                 SourceId getId();
