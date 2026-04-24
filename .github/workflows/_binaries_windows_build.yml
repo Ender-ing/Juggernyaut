@@ -99,11 +99,10 @@ jobs:
         }
       working-directory: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/
 
-    - name: Clean up Tests (optional)
-      if: ${{inputs.run_tests == true && inputs.bundle_binaries == true}}
-      run: |
-        rmdir /s /q "${{inputs.build_mode}}/${{inputs.build_platform_name}}/test"
-      working-directory: .dist
+    - name: Cleanup (optional)
+      if: inputs.bundle_binaries
+      run: ./${{inputs.build_platform_name}}.cleanup.bat
+      working-directory: .dist/${{inputs.build_mode}}
 
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries

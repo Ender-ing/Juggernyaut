@@ -38,12 +38,13 @@ endif()
 
 # Delete leftover files
 if(DEFINED JUG_CLEANUP)
-    add_custom_target(PostBuildTask ALL
-        COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}"
-        COMMENT "Post-build cleanup..."
-    )
-    add_dependencies(PostBuildTask
-        JuggernyautCompiler # Target from compiler
-        JuggernyautServer # Target from server
-    )
+    #add_custom_target(PostBuildTask ALL
+    #    COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}"
+    #    COMMENT "Post-build cleanup..."
+    #)
+    #add_dependencies(PostBuildTask
+    #    JuggernyautCompiler
+    #    JuggernyautServer
+    #)
+    generate_command(cleanup)
 endif()

@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "Cleaning up extra components..."
+
+# /lib
+rm -rf "@CMAKE_ARCHIVE_OUTPUT_DIRECTORY@"
+
+:: /tests
+rm -rf "@JUG_DIST_FINAL_DIR@/tests"
+
+echo "Cleanup complete!"

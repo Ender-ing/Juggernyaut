@@ -77,11 +77,10 @@ jobs:
           | head -n 1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-    - name: Clean up Tests (optional)
-      if: ${{inputs.run_tests == true && inputs.bundle_binaries == true}}
-      run: |
-        rm -rf ${{inputs.build_mode}}/${{inputs.build_platform_name}}/test
-      working-directory: .dist
+    - name: Cleanup (optional)
+      if: inputs.bundle_binaries
+      run: ./${{inputs.build_platform_name}}.cleanup.sh
+      working-directory: .dist/${{inputs.build_mode}}
 
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries
