@@ -31,12 +31,15 @@ jobs:
   build-binaries-on-macos:
     name: macOS ${{inputs.build_platform_name}}
     runs-on: ${{inputs.mac_system}}
-    permissions:
-      contents: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: 'c-cpp'
 
     - name: Setup CMake 4.2+
       uses: jwlawson/actions-setup-cmake@v2
@@ -84,15 +87,14 @@ jobs:
       run: ./${{inputs.build_platform_name}}.cleanup.sh
       working-directory: .dist/${{inputs.build_mode}}
 
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:c-cpp"
+
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries
       uses: actions/upload-artifact@v7
       with:
         name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-macOS-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
-
-    - name: CMake Dependency Graph
-      uses: philips-forks/cmake-dependency-submission@main
-      with:
-        scanMode: configure
-        buildPath: .build
