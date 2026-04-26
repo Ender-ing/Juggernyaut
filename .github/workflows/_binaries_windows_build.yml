@@ -80,12 +80,6 @@ jobs:
           -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
-    - name: Cmake Dependency Graph
-      uses: philips-forks/cmake-dependency-submission@main
-      with:
-        scanMode: configure
-        buildPath: .build
-
     - name: Build
       run: cmake --build . --config ${{inputs.build_mode}} --parallel 3 --verbose
       working-directory: .build
@@ -118,3 +112,9 @@ jobs:
       with:
         name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-Windows-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
+
+    - name: CMake Dependency Graph
+      uses: philips-forks/cmake-dependency-submission@main
+      with:
+        scanMode: configure
+        buildPath: .build

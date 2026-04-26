@@ -79,12 +79,6 @@ jobs:
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
-    - name: Cmake Dependency Graph
-      uses: philips-forks/cmake-dependency-submission@main
-      with:
-        scanMode: configure
-        buildPath: .build
-
     - name: Configure CMake (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
@@ -130,3 +124,9 @@ jobs:
       with:
         name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-Linux-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
+
+    - name: CMake Dependency Graph
+      uses: philips-forks/cmake-dependency-submission@main
+      with:
+        scanMode: configure
+        buildPath: .build
