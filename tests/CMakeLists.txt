@@ -53,7 +53,7 @@ if(((DEFINED JUG_GLOBAL_BUILD) OR (DEFINED JUG_CORE_BUILD)) AND NOT DEFINED JUG_
 endif()
 if(((DEFINED JUG_GLOBAL_BUILD) OR (DEFINED JUG_CONFIGS_BUILD)) AND NOT DEFINED JUG_TESTS_CONFIGS)
     message(STATUS "[TESTS] Configuring 'configs' tests...")
-    #add_subdirectory(${JUG_TESTS_SOURCE_DIR}/configs ${JUG_BUILD_DIR}/tests_configs)
+    add_subdirectory(${JUG_TESTS_SOURCE_DIR}/configs ${JUG_BUILD_DIR}/tests_configs)
 endif()
 if(((DEFINED JUG_GLOBAL_BUILD) OR (DEFINED JUG_COMPILER_BUILD)) AND NOT DEFINED JUG_TESTS_COMPILER)
     message(STATUS "[TESTS] Configuring 'compiler' tests...")
