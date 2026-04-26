@@ -189,11 +189,11 @@ namespace Data {
         }
         void internal_visitDeps(std::unique_ptr<Data::Store::Source> &src, SourceStore *srcStore) {
             src->visitDependencies([&srcStore](SourceId srcId) {
-                std::unique_ptr<Data::Store::Source> &src = srcStore->getSourceById(srcId);
+                std::unique_ptr<Data::Store::Source> &dep = srcStore->getSourceById(srcId);
 
-                src->round = currentRound;
+                dep->round = currentRound;
 
-                internal_visitDeps(src, srcStore);
+                internal_visitDeps(dep, srcStore);
             });
         }
         void SourceStore::cleanup() {
