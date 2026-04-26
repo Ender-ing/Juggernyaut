@@ -57,7 +57,6 @@ namespace Data {
                 // Entry
                 void addEntry(SourceId entry) ;
                 void removeEntry(SourceId entry) ;
-                void resetEntries() ;
                 void visitEntries(const EntryCall entryCall) ;
 
                 // IDs

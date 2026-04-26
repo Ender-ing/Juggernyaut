@@ -85,11 +85,6 @@ namespace Data {
                 src->setIsEntryPoint(false);
             }
         }
-        void SourceStore::resetEntries() {
-            std::vector<SourceId> &entries = this->entryPoints;
-            entries.clear();
-            entries.shrink_to_fit();
-        }
         void SourceStore::visitEntries(const EntryCall entryCall) {
             if (entryCall != nullptr) {
                 std::vector<SourceId> &entries = this->entryPoints;
