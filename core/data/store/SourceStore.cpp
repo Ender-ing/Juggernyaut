@@ -164,6 +164,10 @@ namespace Data {
             std::unordered_map<std::string, SourceId> &srcIndex = this->index;
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
+            if (source == nullptr) {
+                return;
+            }
+
             // Get data
             const SourceId srcId = source->getId();
             const std::string &uri = source->uri;
