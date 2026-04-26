@@ -9,18 +9,6 @@ on:
 
 jobs:
 
-  # New dependency submission job
-  dependency-submission:
-    name: Cmake Dependency Graph
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Scan and Submit
-        uses: philips-forks/cmake-dependency-submission@main
-        # Uses 'glob' mode by default, scanning the repo without building
-
   # Debug
   build-binaries-debug:
     name: Debug

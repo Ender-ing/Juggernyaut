@@ -31,6 +31,8 @@ jobs:
   build-binaries-on-ubuntu:
     name: Linux ${{inputs.build_platform_name}}
     runs-on: ${{inputs.linux_system}}
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -76,6 +78,12 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
+
+    - name: Cmake Dependency Graph
+      uses: philips-forks/cmake-dependency-submission@main
+      with:
+        scanMode: configure
+        buildPath: .build
 
     - name: Configure CMake (32-bit)
       if: inputs.build_platform_name == 'x86_32'

@@ -31,6 +31,8 @@ jobs:
   build-binaries-on-macos:
     name: macOS ${{inputs.build_platform_name}}
     runs-on: ${{inputs.mac_system}}
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -59,6 +61,12 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
+
+    - name: Cmake Dependency Graph
+      uses: philips-forks/cmake-dependency-submission@main
+      with:
+        scanMode: configure
+        buildPath: .build
 
     - name: Build
       run: cmake --build . --config ${{inputs.build_mode}} --parallel 3 --verbose
