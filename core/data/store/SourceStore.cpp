@@ -111,6 +111,10 @@ namespace Data {
         std::unique_ptr<Source>& SourceStore::getSourceById(const SourceId &id) {
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
+            if (!srcs.contains(id)) {
+                throw std::out_of_range("Attempting to access an invalidated source ID!");
+            }
+
             return srcs.at(id);
         }
         std::unique_ptr<Source>* SourceStore::getSourceByUri(const std::string &uri) {
