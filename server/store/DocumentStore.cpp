@@ -19,14 +19,16 @@ namespace Store {
     void DocumentStore::syncRaw(const std::string &uri, const std::string &rawContent) {
         std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
 
-        if (raws.contains(uri)) {
-            raws.at(uri) = rawContent;
+        const std::string canonical = this->_getCanonical(uri);
+
+        if (raws.contains(canonical)) {
+            raws.at(canonical) = rawContent;
         } else {
-            raws.insert({uri, rawContent});
+            raws.insert({canonical, rawContent});
         }
 
         // Invalidate raw content
-        std::unique_ptr<Data::Store::Source> *srcPtr = this->getSourceByUri(uri);
+        std::unique_ptr<Data::Store::Source> *srcPtr = this->getSourceByUri(canonical);
         if (srcPtr != nullptr) {
             std::unique_ptr<Data::Store::Source> &src = *srcPtr;
             src->invalidateRawContent();
