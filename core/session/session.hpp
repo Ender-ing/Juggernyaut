@@ -43,12 +43,13 @@ namespace Session {
         Configs configs;
         Hooks hooks;
         Data::Store::SourceStore *store = nullptr;
+        bool isRunning = false; // Tracking
     };
     // [Session]
     // Musts: <Session>.store
     extern JUG_SESSION_API Session getSessionDefaults() ;
     // Main pipeline trigger funciton
-    extern JUG_SESSION_API void initiate(const Session &session) ;
+    extern JUG_SESSION_API void initiate(Session &session) ;
     // Tidy up the session
     extern JUG_SESSION_API void rejuvenate(const Session &session) ;
 }
