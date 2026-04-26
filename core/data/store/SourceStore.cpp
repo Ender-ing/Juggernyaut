@@ -103,8 +103,10 @@ namespace Data {
         SourceId SourceStore::getSourceIdByUri(const std::string &uri) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (uriIndex.contains(uri)) {
-                return uriIndex.at(uri);
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (uriIndex.contains(canonical)) {
+                return uriIndex.at(canonical);
             } else {
                 return 0;
             }
@@ -119,10 +121,12 @@ namespace Data {
         std::unique_ptr<Source>* SourceStore::getSourceByUri(const std::string &uri) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (uriIndex.contains(uri)) {
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (uriIndex.contains(canonical)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
-                const SourceId &id = uriIndex.at(uri);
+                const SourceId &id = uriIndex.at(canonical);
                 return &(srcs.at(id));
             } else {
                 return nullptr;
@@ -131,11 +135,16 @@ namespace Data {
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (!uriIndex.contains(uri)) {
+            std::cerr << "OLD-NEW: " << uri << this->_getCanonical(uri) << std::endl;
+            std::cerr << "TEST: " << "./test.jug" << this->_getCanonical("./test.jug") << std::endl;
+
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (!uriIndex.contains(canonical)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
                 // Create a <Source> object
-                std::unique_ptr<Source> src = std::make_unique<Source>(uri, this);
+                std::unique_ptr<Source> src = std::make_unique<Source>(canonical, this);
                 const SourceId &srcId = src->getId();
 
                 if (isEntry) {
@@ -149,7 +158,7 @@ namespace Data {
 
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
-                uriIndex.insert({uri, srcId});
+                uriIndex.insert({canonical, srcId});
             }
         }
 
@@ -172,10 +181,9 @@ namespace Data {
             this->removeEntry(srcId);
 
             // Delete element
+            source.reset();
             if (erase && srcs.contains(srcId)) {
                 srcs.erase(srcId);
-            } else {
-                source.reset(); // THE SOURCE MUST ALWAYS BE RESET!
             }
         }
         void SourceStore::cleanup() {
