@@ -1,6 +1,6 @@
 # Juggernyaut
 
-An experimental general-purpose programming language in the making!
+An experimental general-purpose programming language with *no particular purpose* in the making!
 
 > [!NOTE]
 > On Windows, Developer Mode must be enabled to allow symbolic linking without the need for elevated user privileges!
