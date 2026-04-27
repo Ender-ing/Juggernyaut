@@ -36,4 +36,4 @@ jobs:
         github.event_name == 'pull_request'}}
       security_analysis:
         ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -SEC')) ||
-        github.event_name == 'pull_request'}}
+        (github.event_name == 'pull_request' && endsWith(github.event.pull_request.title, ' -SEC'))}}

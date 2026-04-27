@@ -39,6 +39,15 @@ An experimental general-purpose programming language in the making!
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./NAME
 ```
 
+## Pull Requests
+
+As long as a pull request follows the [style guide](https://ender.ing/docs/category/style-guides),
+and it doesn't mess with the structure of the repository, it'd be gladly accepted!
+
+> [!WARNING]
+> If a contribution requires the addition of a new dependency or resource, it won't be accepted
+> unless ` -SEC` is appended to the name of the pull request - *which is a trigger for security scans*!
+
 ## Diagnostic codes
 
 - Temporary placeholder: 1
