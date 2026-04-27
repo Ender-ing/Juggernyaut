@@ -1,6 +1,6 @@
 /**
  * @brief
- * Parser tests
+ * Configs session tests
 **/
 
 #include "../../gtest.hpp"
