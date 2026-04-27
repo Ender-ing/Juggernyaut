@@ -155,6 +155,14 @@ namespace Data {
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
                 uriIndex.insert({canonical, srcId});
+            } else {
+                // Update entry status
+                const SourceId &srcId = uriIndex.at(canonical);
+                if (isEntry) {
+                    this->addEntry(srcId);
+                } else {
+                    this->removeEntry(srcId);
+                }
             }
         }
 
