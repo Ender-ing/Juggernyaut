@@ -25,7 +25,7 @@ jobs:
   build-binaries-release:
     name: Release
     uses: ./.github/workflows/_binaries_dynamic_build.yml
-    if: ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -REL')) || github.event_name == 'pull_request'}}
+    if: ${{(github.event_name == 'push' && (endsWith(github.event.head_commit.message, ' -REL') || endsWith(github.event.head_commit.message, ' -SEC'))) || github.event_name == 'pull_request'}}
     needs:
       - build-binaries-debug
     with:
