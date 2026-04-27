@@ -12,7 +12,7 @@
         "lix-clean": "rm -f -r \"../.build\" && rm -f -r \"../.dist\"",
         "debug": "cd .. && mkdir .build && npm run debug-build-cmake && npm run debug-build-binary",
         "debug-t": "cd .. && mkdir .build && cd compiler && npm run debug-t-build-cmake && npm run debug-build-binary",
-        "test-d": "cd .. && cd .build && ctest -C Debug -V",
+        "test-d": "cd .. && cd .build && ctest -C Debug -V -j 3",
         "win64": "cd .. && mkdir .build && cd compiler && npm run build-cmake-win-64 && npm run build-binary",
         "lix64": "cd .. && mkdir .build && cd compiler && npm run build-cmake-lix-64 && npm run build-binary"
     }

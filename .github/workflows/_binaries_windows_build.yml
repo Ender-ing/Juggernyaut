@@ -93,7 +93,7 @@ jobs:
 
     - name: Run Tests (optional)
       if: inputs.run_tests
-      run: ctest -C ${{inputs.build_mode}} -V
+      run: ctest -C ${{inputs.build_mode}} -V -j 3
       working-directory: .build
 
     - name: Extract version (optional)
