@@ -24,6 +24,9 @@ on:
       run_tests:
         type: boolean
         default: true
+      security_analysis:
+        type: boolean
+        default: false
 
 jobs:
 
@@ -37,6 +40,7 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Initialize CodeQL
+      if: inputs.security_analysis
       uses: github/codeql-action/init@v4
       with:
         languages: 'c-cpp'
@@ -122,6 +126,7 @@ jobs:
       working-directory: .dist/${{inputs.build_mode}}
 
     - name: Perform CodeQL Analysis
+      if: inputs.security_analysis
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:c-cpp"

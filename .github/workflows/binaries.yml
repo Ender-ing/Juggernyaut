@@ -19,6 +19,7 @@ jobs:
       full_build:
         ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -FULL')) ||
         github.event_name == 'pull_request'}}
+      security_analysis: false
 
   # Release
   build-binaries-release:
@@ -32,4 +33,7 @@ jobs:
       bundle_binaries: false
       full_build:
         ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -FULL')) ||
+        github.event_name == 'pull_request'}}
+      security_analysis:
+        ${{(github.event_name == 'push' && endsWith(github.event.head_commit.message, ' -SEC')) ||
         github.event_name == 'pull_request'}}

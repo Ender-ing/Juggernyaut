@@ -14,6 +14,9 @@ on:
         required: false
         type: string
         default: 0.0.0-github.000
+      security_analysis:
+        type: boolean
+        default: false
 
 # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
 
@@ -29,6 +32,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-windows-x86-32:
     name: Windows x86
     uses: ./.github/workflows/_binaries_windows_build.yml
@@ -41,6 +45,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-windows-arm64:
     name: Windows ARM64
     uses: ./.github/workflows/_binaries_windows_build.yml
@@ -54,6 +59,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
 
   # Linux
   build-binaries-on-linux-x86-64:
@@ -66,6 +72,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-linux-x86-32:
     name: Linux x86
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -79,6 +86,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-linux-arm64:
     name: Linux ARM64
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -92,6 +100,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-linux-arm32:
     name: Linux ARM
     uses: ./.github/workflows/_binaries_linux_build.yml
@@ -105,6 +114,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
 
   # MacOS
   build-binaries-on-mac-arm64:
@@ -117,6 +127,7 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
   build-binaries-on-mac-x86-64:
     name: MacOS x64
     uses: ./.github/workflows/_binaries_mac_build.yml
@@ -130,3 +141,4 @@ jobs:
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
       release_version: ${{inputs.release_version}}
+      security_analysis: ${{inputs.security_analysis}}
