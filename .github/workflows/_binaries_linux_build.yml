@@ -58,21 +58,21 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install -y build-essential cmake valgrind
 
     - name: Install dependencies (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
         sudo dpkg --add-architecture i686
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install -y gcc-i686-linux-gnu g++-i686-linux-gnu
 
     - name: Install dependencies (ARM 32-bit)
       if: inputs.build_platform_name == 'arm32'
       run: |
         sudo dpkg --add-architecture armhf
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         sudo apt-get install -y libc6:armhf libstdc++6:armhf
 
