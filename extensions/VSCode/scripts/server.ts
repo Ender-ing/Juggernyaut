@@ -14,7 +14,7 @@ import {
     Message,
     ErrorAction,
     CloseAction} from 'vscode-languageclient/node';
-import * as sdk from "./sdk"
+import * as toolchain from "./toolchain"
 import { getCommand } from './platform';
 import { info, error, Section } from './channel';
 
@@ -24,11 +24,11 @@ let spawnCount: number = 0;
 
 async function start() {
     // Define the path to the executable!
-    const sdkPath: string = await sdk.getPath();
-    if(sdkPath == "") {
+    const toolchainPath: string = await toolchain.getPath();
+    if(toolchainPath == "") {
         return;
     }
-    const binPath: string = Uri.joinPath(Uri.file(sdkPath), "bin").fsPath;
+    const binPath: string = Uri.joinPath(Uri.file(toolchainPath), "bin").fsPath;
     const command = await getCommand(binPath, "jug-lsp");
 
     // 2. Define how the server is launched

@@ -15,10 +15,10 @@
             "type": "object",
             "title": "Juggernyaut",
             "properties": {
-                "juggernyaut.sdkPath": {
+                "juggernyaut.toolchainPath": {
                     "type": "string",
                     "default": "",
-                    "description": "The absolute path to your preferred Juggernyaut SDK version."
+                    "description": "The absolute path to your preferred Juggernyaut toolchain version."
                 },
                 "juggernyaut.debug.valgrind": {
                     "type": "boolean",
