@@ -36,6 +36,10 @@ namespace Parser {
         std::unique_ptr<Data::Store::Source> &source) {
         // Check the need for updates
         if (!(source->getUpdateAST())) {
+            // Trigger context-level event
+            if (hooks.onContextSkip != nullptr) {
+                hooks.onContextSkip(source->getId());
+            }
             return;
         }
 

@@ -21,6 +21,20 @@ namespace Data {
     namespace Store {
         typedef std::function<void(const SourceId&)> DependencyCall;
         typedef std::function<void(const Diagnostics::Diagnostic&)> DiagnosticCall;
+
+        struct DiagnosticsSection {
+            std::vector<Diagnostics::Diagnostic> diagnostics;
+
+            // Statistics
+            uint32_t errors = 0;
+            uint32_t warnings = 0;
+            uint32_t info = 0;
+            uint32_t hints = 0;
+        };
+        struct DiagnosticsBatch {
+            DiagnosticsSection parser;
+        };
+
         class JUG_DATA_API Source {
             public:
             private:
@@ -39,7 +53,7 @@ namespace Data {
                 std::vector<SourceId> neededSources;
 
                 // Diagnostics
-                std::vector<Diagnostics::Diagnostic> parserDiagnostics;
+                DiagnosticsBatch diagnostics;
             public:
                 const std::string uri;
                 uint32_t round = 0;
@@ -47,6 +61,7 @@ namespace Data {
                 Source(std::string srcUri, SourceStore *srcStore) ;
                 Source(const Source&) = delete;
                 Source& operator=(const Source&) = delete;
+                virtual ~Source() = default;
 
                 // Tracking
                 SourceId getId();

@@ -22,6 +22,18 @@ endif()
 # Force PIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# IPO
+cmake_policy(SET CMP0069 NEW)
+include(CheckIPOSupported)
+
+# Enable IPO
+check_ipo_supported(RESULT ipo_supported OUTPUT error)
+if(ipo_supported AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+elseif((NOT ipo_supported) AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    message(WARNING "IPO/LTO is not supported: ${error}")
+endif()
+
 # Set character set flags based on compiler (Must be set to UTF-8)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # GCC or Clang

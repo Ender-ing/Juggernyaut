@@ -22,9 +22,10 @@ namespace Parser {
 
     struct Hooks {
         // [StageCall]
-        StageCall onContextStart = nullptr;
-        StageCall onLexerContextEnd = nullptr;
-        StageCall onContextEnd = nullptr;
+        StageCall onContextSkip = nullptr; // Context has already been processed
+        StageCall onContextStart = nullptr; // Fresh check started
+        StageCall onLexerContextEnd = nullptr; // Lexer checks ended
+        StageCall onContextEnd = nullptr; // Check ended
         // [TokenReport]
         // Args: <stage> (const uint8_t&), <token_text> (const std::string&)
         // Note: stage - 1: triggered before tokens are processed, 2: token is processed, 3: all tokens have been processed

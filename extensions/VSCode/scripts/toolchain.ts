@@ -1,24 +1,24 @@
 /**
  *
- * Manage SDK info!
+ * Manage toolchain info!
  *
 **/
 
 import { window, commands, workspace } from 'vscode';
-import { findGlobalSDKPath } from './native';
+import { findGlobalToolchainPath } from './native';
 
 export async function getPath(): Promise<string> {
     // Get the current config value
     const config = workspace.getConfiguration('juggernyaut');
-    const sdkPath = config.get<string>('sdkPath');
+    const toolchainPath = config.get<string>('toolchainPath');
 
     // Check the value
-    if (!sdkPath || sdkPath.trim() === '') {
-        const globalSDKPath: string|undefined = await findGlobalSDKPath();
-        if (!globalSDKPath || globalSDKPath.trim() == '') {
+    if (!toolchainPath || toolchainPath.trim() === '') {
+        const globalToolchainPath: string|undefined = await findGlobalToolchainPath();
+        if (!globalToolchainPath || globalToolchainPath.trim() == '') {
             // Warn the user about the missing path value!
             const userChoice = await window.showWarningMessage(
-                'The Juggernyaut SDK path is not set, and no global alternative has been found! Some features are disabled.',
+                'The Juggernyaut toolchain path is not set, and no global alternative has been found! Some features are disabled.',
                 'Open Settings'
             );
 
@@ -26,7 +26,7 @@ export async function getPath(): Promise<string> {
             if (userChoice === 'Open Settings') {
                 await commands.executeCommand(
                     'workbench.action.openSettings', 
-                    'juggernyaut.sdkPath'
+                    'juggernyaut.toolchainPath'
                 );
             }
 
@@ -34,8 +34,8 @@ export async function getPath(): Promise<string> {
             return "";
         }
 
-        return globalSDKPath;
+        return globalToolchainPath;
     }
     // Return the path!
-    return sdkPath;
+    return toolchainPath;
 }

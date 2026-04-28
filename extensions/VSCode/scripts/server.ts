@@ -10,10 +10,13 @@ import {
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
-    Executable} from 'vscode-languageclient/node';
-import * as sdk from "./sdk"
+    Executable,
+    Message,
+    ErrorAction,
+    CloseAction} from 'vscode-languageclient/node';
+import * as toolchain from "./toolchain"
 import { getCommand } from './platform';
-import { info, Section } from './channel';
+import { info, error, Section } from './channel';
 
 export let client: LanguageClient | undefined = undefined;
 let haultCycle: boolean = false;
@@ -21,11 +24,11 @@ let spawnCount: number = 0;
 
 async function start() {
     // Define the path to the executable!
-    const sdkPath: string = await sdk.getPath();
-    if(sdkPath == "") {
+    const toolchainPath: string = await toolchain.getPath();
+    if(toolchainPath == "") {
         return;
     }
-    const binPath: string = Uri.joinPath(Uri.file(sdkPath), "bin").fsPath;
+    const binPath: string = Uri.joinPath(Uri.file(toolchainPath), "bin").fsPath;
     const command = await getCommand(binPath, "jug-lsp");
 
     // 2. Define how the server is launched
@@ -44,7 +47,25 @@ async function start() {
     const clientOptions: LanguageClientOptions = {
         // Register the server for your custom language. 
         // 'yourLanguageId' must match the language id defined in your package.json
-        documentSelector: [{ scheme: 'file', language: 'juggernyaut' }]
+        documentSelector: [{ scheme: 'file', language: 'juggernyaut' }],
+        
+        // Override the default restart behavior
+        errorHandler: {
+            error: (err: Error, message: Message | undefined, count: number | undefined) => {
+                
+                error(Section.SERVER, "An Error occurred!", err);
+                // Triggered when the server encounters an error.
+                // Tell the client to shut down the server instead of continuing.
+                return { action: ErrorAction.Shutdown };
+            },
+            closed: () => {
+
+                error(Section.SERVER, "The server connection has been closed!");
+                // Triggered when the server connection is closed/crashes.
+                // Tell the client to absolutely not restart it.
+                return { action: CloseAction.DoNotRestart };
+            }
+        }
     };
 
     // Create the language client and start the client.

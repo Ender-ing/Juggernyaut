@@ -21,6 +21,12 @@ on:
         required: false
         type: string
         default: 0.0.0-github_linux.000
+      run_tests:
+        type: boolean
+        default: true
+      security_analysis:
+        type: boolean
+        default: false
 
 jobs:
 
@@ -32,6 +38,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+
+    - name: Initialize CodeQL
+      if: ${{inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')}}
+      uses: github/codeql-action/init@v4
+      with:
+        languages: 'c-cpp'
 
     - name: Setup CMake 4.2+
       uses: jwlawson/actions-setup-cmake@v2
@@ -46,21 +58,21 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install -y build-essential cmake valgrind
 
     - name: Install dependencies (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
         sudo dpkg --add-architecture i686
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install -y gcc-i686-linux-gnu g++-i686-linux-gnu
 
     - name: Install dependencies (ARM 32-bit)
       if: inputs.build_platform_name == 'arm32'
       run: |
         sudo dpkg --add-architecture armhf
-        sudo apt-get update
+        sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         sudo apt-get install -y libc6:armhf libstdc++6:armhf
 
@@ -71,7 +83,7 @@ jobs:
       if: inputs.build_platform_name != 'x86_32' && inputs.build_platform_name != 'arm32'
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
+          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Configure CMake (32-bit)
@@ -79,7 +91,7 @@ jobs:
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ -DCMAKE_SYSTEM_PROCESSOR=i686 \
-          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
+          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Configure CMake (ARM 32-bit)
@@ -88,14 +100,17 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
           -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
           -DCMAKE_SYSTEM_PROCESSOR=arm \
-          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}"
+          -DJUG_CLEANUP=ON -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Build
       run: cmake --build . --config ${{inputs.build_mode}} --parallel 3 --verbose
       working-directory: .build
 
-    # TO-DO: ADD TESTS!
+    - name: Run Tests (optional)
+      if: inputs.run_tests
+      run: ctest -C ${{inputs.build_mode}} -V -j 3
+      working-directory: .build
 
     - name: Extract version (optional)
       if: inputs.bundle_binaries
@@ -104,6 +119,17 @@ jobs:
         VERSION=$(${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/jug --version \
           | head -n 1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Cleanup (optional)
+      if: inputs.bundle_binaries
+      run: ./${{inputs.build_platform_name}}.cleanup.sh
+      working-directory: .dist/${{inputs.build_mode}}
+
+    - name: Perform CodeQL Analysis
+      if: ${{inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')}}
+      uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:c-cpp"
 
     - name: Upload Binaries Artifact (optional)
       if: inputs.bundle_binaries

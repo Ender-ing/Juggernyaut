@@ -85,11 +85,6 @@ namespace Data {
                 src->setIsEntryPoint(false);
             }
         }
-        void SourceStore::resetEntries() {
-            std::vector<SourceId> &entries = this->entryPoints;
-            entries.clear();
-            entries.shrink_to_fit();
-        }
         void SourceStore::visitEntries(const EntryCall entryCall) {
             if (entryCall != nullptr) {
                 std::vector<SourceId> &entries = this->entryPoints;
@@ -103,8 +98,10 @@ namespace Data {
         SourceId SourceStore::getSourceIdByUri(const std::string &uri) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (uriIndex.contains(uri)) {
-                return uriIndex.at(uri);
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (uriIndex.contains(canonical)) {
+                return uriIndex.at(canonical);
             } else {
                 return 0;
             }
@@ -114,15 +111,21 @@ namespace Data {
         std::unique_ptr<Source>& SourceStore::getSourceById(const SourceId &id) {
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
+            if (!srcs.contains(id)) {
+                throw std::out_of_range("Attempting to access an invalidated source ID!");
+            }
+
             return srcs.at(id);
         }
         std::unique_ptr<Source>* SourceStore::getSourceByUri(const std::string &uri) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (uriIndex.contains(uri)) {
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (uriIndex.contains(canonical)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
-                const SourceId &id = uriIndex.at(uri);
+                const SourceId &id = uriIndex.at(canonical);
                 return &(srcs.at(id));
             } else {
                 return nullptr;
@@ -131,11 +134,13 @@ namespace Data {
         void SourceStore::addSource(const std::string &uri, bool isEntry = false) {
             std::unordered_map<std::string, SourceId> &uriIndex = this->index;
 
-            if (!uriIndex.contains(uri)) {
+            const std::string canonical = this->_getCanonical(uri);
+
+            if (!uriIndex.contains(canonical)) {
                 std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
                 // Create a <Source> object
-                std::unique_ptr<Source> src = std::make_unique<Source>(uri, this);
+                std::unique_ptr<Source> src = std::make_unique<Source>(canonical, this);
                 const SourceId &srcId = src->getId();
 
                 if (isEntry) {
@@ -149,29 +154,55 @@ namespace Data {
 
                 // Insert data
                 srcs.insert({srcId, std::move(src)});
-                uriIndex.insert({uri, srcId});
+                uriIndex.insert({canonical, srcId});
+            } else {
+                // Update entry status
+                const SourceId &srcId = uriIndex.at(canonical);
+                if (isEntry) {
+                    this->addEntry(srcId);
+                } else {
+                    this->removeEntry(srcId);
+                }
             }
         }
 
         // Memory housekeeping
         static uint32_t currentRound = 0;
-        void SourceStore::deleteSource(std::unique_ptr<Source> &source) {
+        void SourceStore::deleteSource(std::unique_ptr<Source> &source, bool erase) {
             std::unordered_map<std::string, SourceId> &srcIndex = this->index;
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
-            // Empty object
-            source.reset();
+            if (source == nullptr) {
+                return;
+            }
+
+            // Get data
+            const SourceId srcId = source->getId();
+            const std::string &uri = source->uri;
 
             // Remove traces
-            const SourceId &srcId = source->getId();
-            const std::string &uri = source->uri;
             if (srcIndex.contains(uri)) {
                 srcIndex.erase(uri);
             }
-            if (srcs.contains(srcId)) {
-                srcs.erase(srcId);
-            }
+
+            // Remove entry point
             this->removeEntry(srcId);
+
+            // Delete element
+            if (erase && srcs.contains(srcId)) {
+                srcs.erase(srcId);
+            } else {
+                source.reset(); // Reset resource safely!
+            }
+        }
+        void internal_visitDeps(std::unique_ptr<Data::Store::Source> &src, SourceStore *srcStore) {
+            src->visitDependencies([&srcStore](SourceId srcId) {
+                std::unique_ptr<Data::Store::Source> &dep = srcStore->getSourceById(srcId);
+
+                dep->round = currentRound;
+
+                internal_visitDeps(dep, srcStore);
+            });
         }
         void SourceStore::cleanup() {
             SourceStore *srcStore = this;
@@ -184,13 +215,19 @@ namespace Data {
                 std::unique_ptr<Data::Store::Source> &src = srcStore->getSourceById(srcId);
 
                 src->round = currentRound;
+
+                internal_visitDeps(src, srcStore);
             });
 
             // Discard inaccessible entries
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
-            for (auto &[id, src] : srcs) {
-                if (src->round != currentRound) {
-                    srcStore->deleteSource(src);
+            auto it = srcs.begin();
+            while (it != srcs.end()) {
+                if (it->second->round != currentRound) {
+                    srcStore->deleteSource(it->second, false);
+                    it = srcs.erase(it); // Erase, and fetch!
+                } else {
+                    ++it; // Skip
                 }
             }
         }

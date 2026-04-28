@@ -57,7 +57,6 @@ namespace Data {
                 // Entry
                 void addEntry(SourceId entry) ;
                 void removeEntry(SourceId entry) ;
-                void resetEntries() ;
                 void visitEntries(const EntryCall entryCall) ;
 
                 // IDs
@@ -69,7 +68,7 @@ namespace Data {
                 void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
-                virtual void deleteSource(std::unique_ptr<Source> &src) ; // Allow override
+                virtual void deleteSource(std::unique_ptr<Source> &src, bool erase = true) ; // Allow override
                 void cleanup() ;
         };
     }

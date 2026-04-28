@@ -43,7 +43,7 @@ int main(int argc, const char *argv[]) {
         auto messageHandler = lsp::MessageHandler(connection);
 
         Capabilities::configureProtocol(messageHandler, session, exit_code);
-        Capabilities::Semantics::setupParserDiagnostics(messageHandler, session);
+        Capabilities::Semantics::setupGlobalDiagnostics(messageHandler, session);
 
         while(true) {
             messageHandler.processIncomingMessages();

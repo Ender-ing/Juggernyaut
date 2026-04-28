@@ -7,8 +7,6 @@ set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
 include(FetchContent)
 
-message(STATUS Configuring the common library...)
-
 # Shared directories
 set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.deps)
 set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.cmake)
@@ -19,7 +17,7 @@ set(JUG_UTILITY_COMMON_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
 set(JUG_UTILITY_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../manifest.ini)
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
-info("[START] Configuring Utility DiagCodes...")
+info("[START] Configuring the Common Library...")
 
 # CMake modules path
 set(CMAKE_MODULE_PATH
