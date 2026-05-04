@@ -60,6 +60,7 @@ namespace Capabilities {
         return cmdOptions;
     }
 
+    std::string configUri = "";
     void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
         bool received_shutdown = false;
         Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
@@ -68,9 +69,8 @@ namespace Capabilities {
             debouncer = std::make_unique<Session::SessionDebouncer>(session);
         }
 
-        std::string configUri = "";
         messageHandler.add<lsp::requests::Initialize>(
-            [&messageHandler, &session, &configUri](lsp::requests::Initialize::Params&& params) {
+            [&messageHandler, &session](lsp::requests::Initialize::Params&& params) {
                 printMessage<lsp::requests::Initialize>(params);
 
                 // Get the workspace's 'jug.toml' file
@@ -79,6 +79,7 @@ namespace Capabilities {
 
                     // Look for 'jug.toml'
                     configUri = session.store->_joinPaths(rootUri, "jug.toml");
+                    std::cerr << "[TESTTTTT] " << configUri << std::endl;
                 }
 
                 /*
@@ -102,7 +103,7 @@ namespace Capabilities {
                 };
             }
         ).add<lsp::notifications::Initialized>(
-            [&session, &messageHandler, &configUri](lsp::notifications::Initialized::Params&& params) {
+            [&session, &messageHandler](lsp::notifications::Initialized::Params&& params) {
                 if (configUri != "" && session.store->_isFileAccessible(configUri)) {
                     // Load external configs
                     Configs::BreakingChanges changes = Docs::updateSessionConfigs(messageHandler, session, configUri);
