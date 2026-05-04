@@ -1,0 +1,10 @@
+@echo off
+echo Cleaning up extra components...
+
+:: /lib
+rmdir /s /q "@CMAKE_ARCHIVE_OUTPUT_DIRECTORY@"
+
+:: /tests
+rmdir /s /q "@JUG_DIST_FINAL_DIR@/tests"
+
+echo Cleanup complete!

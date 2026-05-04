@@ -3,6 +3,10 @@
  * Manage compiler arguments and starting state
 **/
 
+
+// Basic C++ headers
+#include <filesystem>
+
 #include "config.hpp"
 #include "common/strings.hpp"
 
@@ -133,6 +137,19 @@ namespace Base {
 
             // Success!
             return true;
+        }
+        void configsFallback() {
+            const std::string cwd = std::filesystem::current_path().string();
+
+            const std::string defaultPath = Store::joinPaths(cwd, "jug.toml");
+            if (Store::isFileAccessible(defaultPath)) {
+
+                REPORT(Console::START_REPORT,
+                    Console::ACTION_REPORT,
+                    "jug.toml file detected in the current working directory.",
+                    Console::END_REPORT);
+                Base::InitialConfigs::Input::config = defaultPath;
+            }
         }
     }
 }

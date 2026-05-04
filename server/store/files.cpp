@@ -15,7 +15,17 @@ namespace fs = std::filesystem;
 
 namespace Store {
     std::string normalizePath(const std::string &path) {
-        return (std::string) lsp::DocumentUri::fromPath(path).path();
+        std::string sanitized = (std::string) lsp::DocumentUri::fromPath(path).path();
+
+        // Handle Windows backslashes
+        std::replace(sanitized.begin(), sanitized.end(), '\\', '/');
+
+        // Normalize Windows drive letters
+        if (sanitized.length() >= 2 && sanitized[1] == ':') {
+            sanitized[0] = static_cast<char>(std::tolower(static_cast<unsigned char>(sanitized[0])));
+        }
+
+        return sanitized;
     }
     bool isFileAccessible(const std::string &filePath) {
         // Check if the file is open!

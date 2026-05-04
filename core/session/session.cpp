@@ -29,15 +29,24 @@ namespace Session {
             std::move(parserHooks)
         };
 
+        States states;
+
         return {
             std::move(sessionConfigs),
             std::move(sessionHooks),
+            states,
             nullptr
         };
     }
 
     // Main pipeline trigger funciton
-    void initiate(const Session &session) {
+    void initiate(Session &session) {
+        if (session.isRunning) {
+            throw std::runtime_error("Attempting to initiate an running session");
+        } else {
+            session.isRunning = true;
+        }
+
         const Configs &configs = session.configs;
 
         // Check for musts
@@ -64,9 +73,16 @@ namespace Session {
 
         // [STAGE] LLVM IR Code Generation
         // ...
+
+        session.isRunning = false;
     }
 
     void rejuvenate(const Session &session) {
+        // NEVER rejuvenate when a session is running!
+        if (session.isRunning){
+            return;
+        }
+
         // Delete unused documents
         Data::Store::SourceStore *store = session.store;
         store->cleanup();

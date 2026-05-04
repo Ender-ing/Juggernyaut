@@ -50,6 +50,8 @@ namespace Console {
         size_t endLine = 0;
         size_t endColumn = 0;
 
+        int code = 1;
+
         // Reset report data!
         static void reset() {
             // Report basic data
@@ -67,6 +69,8 @@ namespace Console {
             startColumn = 0;
             endLine = 0;
             endColumn = 0;
+
+            code = 1;
         }
 
         // Send report data!

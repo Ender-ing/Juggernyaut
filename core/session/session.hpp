@@ -39,16 +39,25 @@ namespace Session {
     struct Hooks {
         ParserHooks parser;
     };
+
+    // States are used to keep track of Session breaking changes that may require a forced-visit to certain session workflows!
+    // WARNING: Only changes that may change the FINAL OUTPUT of the session may be considered breaking changes! 
+    struct States {
+        uint32_t parser = 0;
+    };
+
     struct Session {
         Configs configs;
         Hooks hooks;
+        States states; // (Tracking for recurring meaningful session visits)
         Data::Store::SourceStore *store = nullptr;
+        bool isRunning = false; // Tracking
     };
     // [Session]
     // Musts: <Session>.store
     extern JUG_SESSION_API Session getSessionDefaults() ;
     // Main pipeline trigger funciton
-    extern JUG_SESSION_API void initiate(const Session &session) ;
+    extern JUG_SESSION_API void initiate(Session &session) ;
     // Tidy up the session
     extern JUG_SESSION_API void rejuvenate(const Session &session) ;
 }

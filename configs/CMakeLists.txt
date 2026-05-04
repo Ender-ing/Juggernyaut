@@ -1,7 +1,15 @@
 # Basic info
 cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 project(juggernyaut_configs)
-#enable_testing()
+set(JUG_CONFIGS_BUILD ON CACHE BOOL "Jug dependency tracking" FORCE)
+
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    # Tests
+    option(JUG_BUILD_TESTS "Build the test suite" OFF)
+    if(JUG_BUILD_TESTS)
+        enable_testing()
+    endif()
+endif()
 
 # Stop build when errors occur
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
@@ -12,10 +20,6 @@ set(JUG_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.cmake)
 set(JUG_LICENSE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE)
 set(JUG_DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.deps)
 set(JUG_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.dist)
-
-if(NOT DEFINED JUG_GLOBAL_BUILD)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../core ${JUG_BUILD_DIR}/configs_core)
-endif()
 
 # Directories
 set(JUG_CONFIGS_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.cmake)
@@ -43,5 +47,18 @@ include(${JUG_CONFIGS_CMAKE_DIR}/dependencies.cmake)
 # CMake functions & macros
 include(${JUG_CMAKE_DIR}/shared.cmake)
 
+# Other sub-builds
+if(NOT DEFINED JUG_CORE_BUILD)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../core ${JUG_BUILD_DIR}/configs_core)
+endif()
+
 # Build the libraries!
 include(${JUG_CONFIGS_CMAKE_DIR}/libraries.cmake)
+
+if(NOT DEFINED JUG_GLOBAL_BUILD)
+    # Tests
+    option(JUG_BUILD_TESTS "Build the test suite" OFF)
+    if(JUG_BUILD_TESTS)
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../tests ${JUG_BUILD_DIR}/configs_tests)
+    endif()
+endif()

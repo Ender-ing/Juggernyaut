@@ -1,5 +1,7 @@
 message(STATUS "[DEPENDENCIES] Checking dependencies...")
 
+include(FetchContent)
+
 # toml++
 if(NOT DEFINED TOMLPP_INCLUDE_DIR)
     set(TOMLPP_VERSION 3.4.0 CACHE STRING "toml++ version" FORCE)

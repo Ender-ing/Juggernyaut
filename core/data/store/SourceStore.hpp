@@ -57,19 +57,18 @@ namespace Data {
                 // Entry
                 void addEntry(SourceId entry) ;
                 void removeEntry(SourceId entry) ;
-                void resetEntries() ;
                 void visitEntries(const EntryCall entryCall) ;
 
                 // IDs
-                SourceId getSourceIdByUri(const std::string &uri) ;
+                SourceId getSourceIdByURI(const std::string &uri) ;
 
                 // Sources
                 std::unique_ptr<Source>& getSourceById(const SourceId &id) ;
-                std::unique_ptr<Source>* getSourceByUri(const std::string &uri) ;
+                std::unique_ptr<Source>* getSourceByURI(const std::string &uri) ;
                 void addSource(const std::string &uri, bool isEntry) ;
 
                 // Memory housekeeping
-                virtual void deleteSource(std::unique_ptr<Source> &src) ; // Allow override
+                virtual void deleteSource(std::unique_ptr<Source> &src, bool erase = true) ; // Allow override
                 void cleanup() ;
         };
     }

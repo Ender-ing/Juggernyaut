@@ -21,6 +21,7 @@ namespace Console {
             const uint32_t white = static_cast<uint32_t>(fmt::color::white);
             const uint32_t golden_rod = static_cast<uint32_t>(fmt::color::golden_rod);
             const uint32_t light_sea_green = static_cast<uint32_t>(fmt::color::light_sea_green);
+            const uint32_t gray = static_cast<uint32_t>(fmt::color::gray);
         }
         std::string color(const std::string &text, const uint32_t color) {
             return fmt::format(fmt::fg(static_cast<fmt::color>(color)), text);

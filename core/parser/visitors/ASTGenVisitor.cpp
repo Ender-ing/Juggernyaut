@@ -29,7 +29,7 @@ namespace Parser {
                 if (this->store->resolvePath(path, output, this->source->getId())) {
                     this->store->addSource(output, false);
 
-                    Data::Store::SourceId srcId = this->store->getSourceIdByUri(output);
+                    Data::Store::SourceId srcId = this->store->getSourceIdByURI(output);
                     if (srcId != 0) {
                         this->source->addSourceDependency(srcId);
                     }

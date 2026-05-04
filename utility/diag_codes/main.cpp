@@ -269,7 +269,7 @@ class Visitor : public DiagnosticsCodeParserVisitor {
             if (context->TYP_NUMBER() != nullptr) {
                 return std::string("int");
             } else if (context->TYP_TEXT() != nullptr) {
-                return std::string("std::string");
+                return std::string("const std::string&");
             }
             this->parser->notifyErrorListeners(
                 context->getStart(), 

@@ -21,6 +21,9 @@
 
 namespace Capabilities {
     namespace Semantics {
-        extern void setupParserDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) ;
+        extern void setupGlobalDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) ;
+
+        extern void resetSourceDiagnostics(const std::string &uri) ;
+        extern void sendSourceDiagnosticsByURI(const std::vector<Diagnostics::Diagnostic> &diags, const std::string &uri) ;
     }
 }

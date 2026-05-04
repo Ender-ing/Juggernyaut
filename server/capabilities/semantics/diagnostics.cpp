@@ -47,10 +47,14 @@ namespace Capabilities {
             return diagnostic;
         }
 
-        void setupParserDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) {
+        lsp::MessageHandler *handler = nullptr;
+        void setupGlobalDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) {
             Data::Store::SourceStore *store = session.store;
 
-            session.hooks.parser.onContextEnd = [store, &messageHandler](const Data::Store::SourceId srcId) {
+            // Update diagnostics handler
+            handler = &messageHandler;
+
+            session.hooks.parser.onContextEnd = [store](const Data::Store::SourceId srcId) {
                 std::unique_ptr<Data::Store::Source> &source = store->getSourceById(srcId);
 
                 std::vector<lsp::Diagnostic> diagnostics;
@@ -63,8 +67,41 @@ namespace Capabilities {
                 auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
                 diagParams.uri = lsp::DocumentUri::fromPath(source->uri); // The URI of the file you just checked
                 diagParams.diagnostics = std::move(diagnostics);
-                messageHandler.sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
+                handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
             };
+        }
+
+        void resetSourceDiagnostics(const std::string &uri) {
+            if (handler == nullptr){
+                return;
+            }
+
+            // Publish empty diagnostics to the editor
+            auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
+            diagParams.uri = lsp::DocumentUri::fromPath(uri); // The URI of the file you just checked
+            diagParams.diagnostics = {};
+            handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
+        }
+        void sendSourceDiagnosticsByURI(const std::vector<Diagnostics::Diagnostic> &diags, const std::string &uri) {
+            std::vector<lsp::Diagnostic> diagnostics;
+
+            for (const auto &diag : diags) {
+                std::cerr << "DIAG: " << diag.message << std::endl;
+                diagnostics.push_back(internal_diagToLSP(diag));
+            }
+
+            // Publish the diagnostics to the editor
+            auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
+            diagParams.uri = lsp::DocumentUri::fromPath(uri); // The URI of the file you just checked
+            std::cerr << "PATH: " << uri << std::endl;
+            diagParams.diagnostics = std::move(diagnostics);
+
+            if (handler == nullptr) {
+                throw std::runtime_error("The message handler has not been set!");
+            }
+
+            std::cerr << "------DATA------ \n" << diagParams.uri.path() << std::endl;
+            handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
         }
     }
 }

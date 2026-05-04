@@ -1,0 +1,74 @@
+/**
+ * @brief
+ * Handle .toml workspace configs
+**/
+
+#include "workspace.hpp"
+
+// Diagnostics
+#include "DiagCodes.hpp"
+
+namespace Configs {
+    namespace Workspace {
+        namespace Internal {
+            void tomlNodeRange(toml::node &node, Diagnostics::Diagnostic &diag) {
+                auto &src = node.source();
+
+                diag.range.start.line = static_cast<uint32_t>((int) src.begin.line - 1);
+                diag.range.start.character = static_cast<uint32_t>((int) src.begin.column - 1);
+                diag.range.end.line = static_cast<uint32_t>((int) src.end.line - 1);
+                diag.range.end.character = static_cast<uint32_t>((int) src.end.column - 1);
+            }
+        }
+        BreakingChanges importDirs(Session::Session &session, std::vector<Diagnostics::Diagnostic> &diags, bool isStrict,
+            toml::table &workspace, const std::string &rootUri) {
+            BreakingChanges breaking = BreakingChanges::None;
+
+            auto importDirsNode = workspace["importDirs"];
+            if (importDirsNode.is_array()) {
+                toml::array *dirs = importDirsNode.as_array();
+
+                // Signal danger
+                breaking = BreakingChanges::Parser;
+
+                if (isStrict) {
+                    session.store->resetImportDirs();
+
+                    /*Diagnostics::Diagnostic diag;
+                    diag.severity = Diagnostics::Severity::Warning;
+                    diag.message = CODE_500003;
+                    diag.code = 500003;
+
+                    // Range
+                    toml::node *node = importDirsNode.node();
+                    Internal::tomlNodeRange(*node, diag);
+
+                    diags.push_back(std::move(diag));*/
+                }
+
+                for (toml::node& dir : *dirs) {
+                    if (dir.is_string()) {
+                        std::string dirStr = dir.value_or("");
+
+                        if (dirStr == "" || !(session.store->_isDirValid(dirStr))) {
+                            Diagnostics::Diagnostic diag;
+                            diag.severity = Diagnostics::Severity::Warning;
+                            diag.message = CODE_500004;
+                            diag.code = 500004;
+
+                            // Range
+                            Internal::tomlNodeRange(dir, diag);
+
+                            diags.push_back(std::move(diag));
+                        } else {
+                            std::string absPath = session.store->_joinPaths(rootUri, dirStr);
+                            session.store->addImportDir(absPath);
+                        }
+                    }
+                }
+            }
+
+            return breaking;
+        }
+    }
+}

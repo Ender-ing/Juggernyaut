@@ -48,6 +48,7 @@ jobs:
       full_build: true
       bundle_binaries: true
       release_version: ${{needs.manage-release-version.outputs.version}}
+      security_analysis: true
 
   create-github-release:
     name: Create GitHub Release

@@ -19,6 +19,11 @@
 #include "visitors/ASTGenVisitor.hpp"
 
 namespace Parser {
+    namespace Internal {
+        uint32_t state = 0;
+        bool forceVisits = false;
+    }
+    
     void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store,
         std::unique_ptr<Data::Store::Source> &source) ;
 
@@ -35,7 +40,11 @@ namespace Parser {
     void contextWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store,
         std::unique_ptr<Data::Store::Source> &source) {
         // Check the need for updates
-        if (!(source->getUpdateAST())) {
+        if (!(source->getUpdateAST()) && !Internal::forceVisits) {
+            // Trigger context-level event
+            if (hooks.onContextSkip != nullptr) {
+                hooks.onContextSkip(source->getId());
+            }
             return;
         }
 
@@ -139,13 +148,23 @@ namespace Parser {
     }
 
     // Triggered by Session::initiate
-    void sessionWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store) {
+    void sessionWorkflow(const Configs &configs, const Hooks &hooks, Data::Store::SourceStore *store, uint32_t parserState) {
+        if (Internal::state != parserState) {
+            // Regenerate AST data globally!
+            Internal::forceVisits = true;
+            // Update state ID
+            Internal::state = parserState;
+        }
         store->visitEntries([&configs, &hooks, &store](const Data::Store::SourceId entryID) {
             // Get source object
             std::unique_ptr<Data::Store::Source> &src = store->getSourceById(entryID);
 
             contextWorkflow(configs, hooks, store, src);
         });
+        // Return to normal workflow state
+        if (Internal::forceVisits) {
+            Internal::forceVisits = false;
+        }
     }
 
     void cleanup() {

@@ -31,6 +31,7 @@ namespace Session {
             Session* sessionPtr;
 
         public:
+            bool allowRuns = false;
             SessionDebouncer(Session& session) ;
             ~SessionDebouncer() ;
             void trigger() ;

@@ -17,6 +17,7 @@ namespace Console {
             extern const uint32_t white;
             extern const uint32_t golden_rod;
             extern const uint32_t light_sea_green;
+            extern const uint32_t gray;
         }
         extern std::string color(const std::string &text, const uint32_t color) ;
     }

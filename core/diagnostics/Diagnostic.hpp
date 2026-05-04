@@ -15,6 +15,8 @@ namespace Diagnostics {
     struct Position {
         uint32_t line;
         uint32_t character;
+
+        bool operator==(const Position&) const = default;
     };
     // The exact position within the final source
     struct Range {
@@ -43,10 +45,10 @@ namespace Diagnostics {
     };*/
     // A report
     struct Diagnostic {
-        Data::Store::SourceId sourceId;
+        Data::Store::SourceId sourceId = 0; // Keep as '0' for non-jug files
         Range range;
         std::string message;
-        int code;
+        int code = 1;
         Severity severity;
         // std::vector<Trace> stack;
         // std::vector<RelatedInformation> related;

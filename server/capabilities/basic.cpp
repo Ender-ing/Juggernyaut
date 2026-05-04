@@ -17,6 +17,9 @@
 // Store
 #include "../store/DocumentStore.hpp"
 
+// Server Session Configs
+#include "docs/configs.hpp"
+
 namespace Capabilities {
     static std::unique_ptr<Session::SessionDebouncer> debouncer = nullptr;
 
@@ -56,39 +59,6 @@ namespace Capabilities {
 
         return cmdOptions;
     }
-    
-    void registerFileWatcher(lsp::MessageHandler &messageHandler, Session::Session &session) {
-        // File watcher rule
-        lsp::FileSystemWatcher watcher;
-        watcher.globPattern = "jug.toml";
-
-        lsp::DidChangeWatchedFilesRegistrationOptions options;
-        options.watchers.push_back(std::move(watcher));
-
-        // Create the registration entry
-        lsp::Registration registration;
-        registration.id = "watch-config-file-id"; 
-        registration.method = "workspace/didChangeWatchedFiles";
-    
-        // Note: Depending on how lspgen generates the struct, registerOptions 
-        // might be a std::any, json::Value, or specifically typed. 
-        // If it's json::Value, you'd serialize 'options' to JSON here.
-        registration.registerOptions = lsp::toJson(std::move(options));;
-
-        lsp::requests::Client_RegisterCapability::Params params;
-        params.registrations.push_back(std::move(registration));
-
-        // Send the request to the client
-        messageHandler.sendRequest<lsp::requests::Client_RegisterCapability>(
-            std::move(params),
-            [](lsp::requests::Client_RegisterCapability::Result&&) { // On Success
-                // ...
-            },
-            [](const lsp::ResponseError& error) { // On Error
-                // ...
-            }
-        );
-    }
 
     void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
         bool received_shutdown = false;
@@ -98,8 +68,9 @@ namespace Capabilities {
             debouncer = std::make_unique<Session::SessionDebouncer>(session);
         }
 
+        std::string configUri = "";
         messageHandler.add<lsp::requests::Initialize>(
-            [&messageHandler, &session](lsp::requests::Initialize::Params&& params) {
+            [&messageHandler, &session, &configUri](lsp::requests::Initialize::Params&& params) {
                 printMessage<lsp::requests::Initialize>(params);
 
                 // Get the workspace's 'jug.toml' file
@@ -107,30 +78,7 @@ namespace Capabilities {
                     const std::string rootUri = std::string(params.rootUri.value().path());
 
                     // Look for 'jug.toml'
-                    const std::string configUri = session.store->_joinPaths(rootUri, "jug.toml");
-                    if (session.store->_isFileAccessible(configUri)) {
-                        auto msgParams = lsp::notifications::Window_ShowMessage::Params{};
-
-                        msgParams.type = lsp::MessageType::Info;
-                        msgParams.message = "Juggernyaut configuration file has been imported: \n";
-                        msgParams.message.append(configUri);
-
-                        messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(msgParams));
-
-                        // Load external configs
-                        std::string errorLog;
-                        if (!Configs::modifySession(session, configUri, errorLog, false)) {
-                            auto errorParams = lsp::notifications::Window_ShowMessage::Params{};
-
-                            errorParams.type = lsp::MessageType::Error;
-                            errorParams.message = "Juggernyaut configuration file error: \n";
-                            errorParams.message.append(std::move(errorLog));
-
-                            messageHandler.sendNotification<lsp::notifications::Window_ShowMessage>(std::move(errorParams));
-                        } else {
-                            registerFileWatcher(messageHandler, session);
-                        }
-                    }
+                    configUri = session.store->_joinPaths(rootUri, "jug.toml");
                 }
 
                 /*
@@ -153,15 +101,19 @@ namespace Capabilities {
                     },
                 };
             }
-        ).add<lsp::notifications::Workspace_DidChangeWatchedFiles>(
-            [](lsp::notifications::Workspace_DidChangeWatchedFiles::Params&& params) {
-                for (const auto& change : params.changes) {
-                    if (change.type == lsp::FileChangeType::Deleted) {
-                        // ...
-                    } else {
-                        // ...
-                    }
+        ).add<lsp::notifications::Initialized>(
+            [&session, &messageHandler, &configUri](lsp::notifications::Initialized::Params&& params) {
+                if (configUri != "" && session.store->_isFileAccessible(configUri)) {
+                    // Load external configs
+                    Configs::BreakingChanges changes = Docs::updateSessionConfigs(messageHandler, session, configUri);
+                    Configs::refreshSessionState(session, changes);
+
+                    // Watch file for changes
+                    Docs::registerConfigsWatcher(messageHandler, session, debouncer, configUri);
                 }
+
+                // Allow Session runs
+                debouncer->allowRuns = true;
             }
         ).add<lsp::requests::Shutdown>(
             [&received_shutdown]() {

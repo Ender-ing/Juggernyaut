@@ -52,5 +52,6 @@ namespace Base {
         // Process and update values through program arguments!
         // [true - sucess, false - failure]
         extern bool updateUsingArgs(int argc, const char *argv[]) ;
+        extern void configsFallback() ;
     }
 }

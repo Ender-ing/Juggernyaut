@@ -11,7 +11,8 @@ namespace Session {
     SessionDebouncer::SessionDebouncer(Session& session)
         : sessionPtr(&session) {
 
-        worker = std::thread([this]() {
+        const auto delay = std::chrono::milliseconds(50);
+        worker = std::thread([this, &delay]() {
             while (!shutdown) {
                 std::unique_lock<std::mutex> lock(mtx);
 
@@ -21,11 +22,14 @@ namespace Session {
 
                 // Wait until the debounce delay has passed since the LAST trigger
                 auto now = std::chrono::steady_clock::now();
-                while (now < triggerTime) {
+                do {
                     cv.wait_until(lock, triggerTime);
                     now = std::chrono::steady_clock::now();
                     if (shutdown) return;
-                }
+                    if (!allowRuns && now >= triggerTime - delay) {
+                        triggerTime += delay;
+                    }
+                } while (now < triggerTime);
 
                 // If we get here, the timer expired without being interrupted!
                 pending = false;

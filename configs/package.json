@@ -6,10 +6,13 @@
         "build-cmake-lix-64": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x64",
         "build-binary": "cd ../.build && cmake --build . --config Release --parallel 3 --verbose",
         "debug-build-cmake": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Debug",
-        "debug-build-binary": "cd ../.build && cmake --build . --config Debug",
+        "debug-t-build-cmake": "cd ../.build && cmake ../configs -DCMAKE_BUILD_TYPE=Debug -DJUG_BUILD_TESTS=ON",
+        "debug-build-binary": "cd ../.build && cmake --build . --config Debug --parallel 3 --verbose",
         "win-clean": "rd /s /q \"../.build\" && rd /s /q \"../.dist\"",
         "lix-clean": "rm -f -r \"../.build\" && rm -f -r \"../.dist\"",
         "debug": "cd .. && mkdir .build && npm run debug-build-cmake && npm run debug-build-binary",
+        "debug-t": "cd .. && mkdir .build && cd configs && npm run debug-t-build-cmake && npm run debug-build-binary",
+        "test-d": "cd .. && cd .build && ctest -C Debug -V -j 3",
         "win64": "cd .. && mkdir .build && cd configs && npm run build-cmake-win-64 && npm run build-binary",
         "lix64": "cd .. && mkdir .build && cd configs && npm run build-cmake-lix-64 && npm run build-binary"
     }

@@ -19,7 +19,7 @@ namespace Session {
             Parser::Configs parserConfigs;
             parserConfigs.terminateAfterLexer = (configs.terminateAfter == Stage::Lexer);
 
-            Parser::sessionWorkflow(parserConfigs, hooks.parser, store);
+            Parser::sessionWorkflow(parserConfigs, hooks.parser, store, session.states.parser);
         }
         void rejuvenateParser() {
             Parser::cleanup();
