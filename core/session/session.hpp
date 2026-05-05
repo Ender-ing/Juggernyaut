@@ -22,7 +22,7 @@ namespace Session {
         Parser=2,
         Transformer=3,
         Semantic=4,
-        IRGen=5 // Strictly needed for the compiler - easier to handle here!
+        IaRC=5
     };
 
     // Core libs
@@ -31,7 +31,7 @@ namespace Session {
 
     // Configs
     struct Configs {
-        Stage terminateAfter = Stage::IRGen;
+        Stage terminateAfter = Stage::IaRC;
         ParserConfigs parser;
     };
 

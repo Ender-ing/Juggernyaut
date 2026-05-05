@@ -20,7 +20,7 @@ namespace Session {
     Session getSessionDefaults() {
         ParserConfigs parserConfigs; // Empty
         Configs sessionConfigs = {
-            Stage::IRGen,
+            Stage::IaRC,
             std::move(parserConfigs)
         };
 
@@ -65,15 +65,16 @@ namespace Session {
             return;
         }
 
-        // [STAGE] Semantic Analysis
+        // [STAGE] Semantic Analyser
         // ...
         if (configs.terminateAfter == Stage::Semantic) {
             return;
         }
 
-        // [STAGE] LLVM IR Code Generation
+        // [STAGE] Integrity & Reachability Checker
         // ...
 
+        // (Stage::IaRC)
         session.isRunning = false;
     }
 

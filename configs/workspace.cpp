@@ -42,8 +42,8 @@ namespace Configs {
                         if (dirStr == "" || !(session.store->_isDirValid(dirStr))) {
                             Diagnostics::Diagnostic diag;
                             diag.severity = Diagnostics::Severity::Error;
-                            diag.message = CODE_500003;
-                            diag.code = 500003;
+                            diag.message = CODE_600003;
+                            diag.code = 600003;
 
                             // Range
                             Internal::tomlNodeRange(dir, diag);

@@ -5,6 +5,60 @@ An experimental general-purpose programming language with *no particular purpose
 > [!NOTE]
 > On Windows, Developer Mode must be enabled to allow symbolic linking without the need for elevated user privileges!
 
+## Plans
+
+- [ ] Core (Front-End)
+  > Goal: To provide a pruned and valid source tree.
+  - [ ] Lexer & Parser
+    > Diagnostics: syntax diagnostics, import diagnostics.
+    >
+    > Goal: To attach a valid AST to all sources.
+    - ...
+  - [ ] Semantic Analyser
+    > Diagnostics: Cross-Source type-checking.
+    >
+    > Goal: To attach a valid symbol table to all sources and validate the AST.
+    - ...
+  - [ ] Integrity & Reachability Checker
+    > Diagnostics: Entry fuunction diagnostics, and build-predictive diagnostics.
+    >
+    > Goal: To designate one entry source as the exclusive entry point,
+    > and attach a pruned AST and a pruned symbols table to each source.
+    - ...
+- [ ] Configs
+  > Diagnostics: Misconfigurations
+  >
+  > Goal: To modify Sessions in a uniform way across different front-end callers.
+  - ...
+- [ ] Package Manager
+  > Diagnostics: -
+  >
+  > Goal: -
+  - ...
+- [ ] Compiler (Includes Back-End)
+  > Goal: To generate a valid binary.
+  - [ ] LLVM IR Generator
+    > Diagnostics: -
+    >
+    > Goal: To attach valid LLVM IR to each source.
+    - ...
+  - [ ] LLVM workflow
+    > Diagnostics: -
+    >
+    > Goal: To verify, optimise, and generate an object file from each source.
+    - ...
+  - [ ] LLD workflow
+    > Diagnostics: -
+    >
+    > Goal: To generate a binary from object files.
+    - ...
+- [ ] Server
+  > Goal: To provide front-end diagnostics, and intellisense.
+  - ...
+- [ ] Extensions
+  > Goal: Enable easy use of the server and compiler in IDEs.
+  - ...
+
 ## Overview
 
 - `/compiler`:
@@ -53,4 +107,4 @@ and it doesn't mess with the structure of the repository, it'd be gladly accepte
 - Temporary placeholder: 1
 - Lexer: 1xxxxx
 - Parser: 2xxxxx
-- Configs: 5xxxxx
+- Configs: 6xxxxx

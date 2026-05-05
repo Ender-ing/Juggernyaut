@@ -23,8 +23,8 @@ namespace Configs {
             if (!(session.store->_getRawFile(configUri, rawContent))) {
                 Diagnostics::Diagnostic err;
                 err.severity = Diagnostics::Severity::Error;
-                err.message = CODE_500001(configUri);
-                err.code = 500001;
+                err.message = CODE_600001(configUri);
+                err.code = 600001;
 
                 return err;
             }
@@ -38,8 +38,8 @@ namespace Configs {
                 std::string description = std::string(err.description());
 
                 diag.severity = Diagnostics::Severity::Error;
-                diag.message = CODE_500002(description);
-                diag.code = 500002;
+                diag.message = CODE_600002(description);
+                diag.code = 600002;
 
                 // Get range
                 const auto errSrc = err.source();
