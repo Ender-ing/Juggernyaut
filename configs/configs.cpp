@@ -9,8 +9,6 @@
 // toml++
 #include "tomlpp.hpp"
 
-// Diagnostics
-#include "DiagCodes.hpp"
 
 namespace Configs {
     namespace Internal {

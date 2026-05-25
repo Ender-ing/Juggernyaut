@@ -45,7 +45,7 @@ namespace Data {
             : store(srcStore), uri(srcUri) {
             this->id = ++(this->store->lastID);
         }
-        SourceId Source::getId() {
+        SourceId Source::getId() const {
             return this->id;
         }
 
@@ -81,8 +81,8 @@ namespace Data {
             srcs.clear();
             srcs.shrink_to_fit();
         }
-        void Source::visitDependencies(DependencyCall depCall) {
-            std::vector<SourceId> deps = this->neededSources;
+        void Source::visitDependencies(DependencyCall depCall) const {
+            const std::vector<SourceId> &deps = this->neededSources;
             for (auto dep : deps) {
                 if (depCall != nullptr) {
                     depCall(dep);

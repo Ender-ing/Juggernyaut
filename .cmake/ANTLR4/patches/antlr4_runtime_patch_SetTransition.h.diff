@@ -1,0 +1,10 @@
+--- runtime/Cpp/runtime/src/atn/SetTransition.h
++++ runtime/Cpp/runtime/src/atn/SetTransition.h
+@@ -13,7 +13,7 @@
+ namespace antlr4 {
+ namespace atn {
+ 
+-  class SetTransition : public Transition {
++  class ANTLR4CPP_PUBLIC SetTransition : public Transition {
+   public:
+     const misc::IntervalSet set;

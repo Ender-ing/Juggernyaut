@@ -10,7 +10,6 @@ if(NOT DEFINED TOMLPP_INCLUDE_DIR)
     if(EXISTS ${JUG_DEP_TOMLPP_LIB_PATH}/CMakeLists.txt)
         FetchContent_Declare(
             tomlplusplus
-            GIT_TAG v${TOMLPP_VERSION}
             SOURCE_DIR ${JUG_DEP_TOMLPP_LIB_PATH}
         )
     else()

@@ -63,7 +63,7 @@ function(get_ini_value INI_FILE INI_SECTION KEY OUTPUT_VARIABLE)
         elseif(ARG_INHERIT)
             string(REGEX REPLACE "ARG:(.*)" "\\1" ARG_INHERIT "${ARG_INHERIT}")
             if(DEFINED ${ARG_INHERIT})
-                set(VALUE "${${ARG_INHERIT}}")
+                string(TOLOWER "${${ARG_INHERIT}}" VALUE)
             else()
                 set(VALUE "NO_ARG_VAL")
             endif()
@@ -122,23 +122,79 @@ function(get_build_arch OUTPUT_VARIABLE)
     endif()
 endfunction()
 
-macro(generate_command SOURCE_NAME)
-    if(WIN32)
-        configure_file(
-            "${JUG_CMAKE_DIR}/components/${SOURCE_NAME}.bat.in"
-            "${JUG_DIST_FINAL_DIR}.${SOURCE_NAME}.bat"
-            @ONLY # Only replace @VAR@ style variables
-        )
-    else()
-        # Generates a .sh file for Linux/macOS users
-        configure_file(
-            "${JUG_CMAKE_DIR}/components/${SOURCE_NAME}.sh.in"
-            "${JUG_DIST_FINAL_DIR}.${SOURCE_NAME}.sh"
-            @ONLY
-            FILE_PERMISSIONS 
-                OWNER_READ OWNER_WRITE OWNER_EXECUTE
-                GROUP_READ GROUP_EXECUTE
-                WORLD_READ WORLD_EXECUTE
-        )
+macro(custom_malloc TARGET)
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        if (${TARGET} MATCHES "^Juggernyaut")
+            add_dependencies(${TARGET} mimalloc)
+        endif()
+        target_link_libraries(${TARGET} INTERFACE mimalloc)
     endif()
 endmacro()
+
+macro(install_command_symlink TARGET_NAME COMPONENT_NAME LINK_NAME)
+    if(WIN32)
+        install(CODE "
+            execute_process(
+                COMMAND cmd /c del /f /q \"${LINK_NAME}.exe\"
+                WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/bin\"
+            )
+            execute_process(
+                COMMAND cmd /c mklink \"${LINK_NAME}.exe\" \"${TARGET_NAME}.exe\"
+                WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/bin\"
+                RESULT_VARIABLE _link_result
+            )
+            if(NOT _link_result EQUAL 0)
+                message(FATAL_ERROR \"Couldn't generate the symbolic link '${LINK_NAME}.exe' for ${TARGET_NAME}.exe!\")
+            endif()
+        " COMPONENT ${COMPONENT_NAME})
+    else()
+        install(CODE "
+            set(DESTDIR_PREFIX \"\$ENV{DESTDIR}\")
+            set(FULL_INSTALL_DIR \"\${DESTDIR_PREFIX}\${CMAKE_INSTALL_PREFIX}/bin\")
+            execute_process(
+                COMMAND \${CMAKE_COMMAND} -E rm -f \"${LINK_NAME}\"
+                WORKING_DIRECTORY \"\${FULL_INSTALL_DIR}\"
+            )
+            execute_process(
+                COMMAND \${CMAKE_COMMAND} -E create_symlink \"${TARGET_NAME}\" \"${LINK_NAME}\"
+                WORKING_DIRECTORY \"\${FULL_INSTALL_DIR}\"
+                RESULT_VARIABLE _link_result
+            )
+            if(NOT _link_result EQUAL 0)
+                message(FATAL_ERROR \"Couldn't generate the symbolic link '${LINK_NAME}' for ${TARGET_NAME}!\")
+            endif()
+        " COMPONENT ${COMPONENT_NAME})
+    endif()
+endmacro()
+
+function(sanitize_version RAW_VERSION OUTPUT_VAR)
+    # Look for version patterns
+    if(RAW_VERSION MATCHES "^([0-9]+\\.[0-9]+\\.[0-9]+)-([A-Za-z_]*)\\.([0-9][0-9][0-9])$")
+        set(SEMVER ${CMAKE_MATCH_1})
+        set(REL_NAME ${CMAKE_MATCH_2})
+        set(REL_PATCH ${CMAKE_MATCH_3})
+
+        string(TOLOWER "${REL_NAME}" REL_NAME)
+        if(REL_NAME STREQUAL "alpha")
+            set(REL_CODE "1")
+        elseif(REL_NAME STREQUAL "beta")
+            set(REL_CODE "2")
+        elseif(REL_NAME STREQUAL "nightly")
+            set(REL_CODE "3")
+        elseif(REL_NAME STREQUAL "candidate")
+            set(REL_CODE "4")
+        elseif(REL_NAME STREQUAL "release")
+            set(REL_CODE "5")
+        elseif(REL_NAME STREQUAL "hotfix")
+            set(REL_CODE "6")
+        else()
+            set(REL_CODE "0") # Fallback for unknown release tags
+        endif()
+
+        # Construct version string
+        set(${OUTPUT_VAR} "${SEMVER}-${REL_CODE}.${REL_PATCH}" PARENT_SCOPE)
+
+    else()
+        message(FATAL_ERROR "[VERSION SANITIZER] Release version string pattern isn't allowed!")
+    endif()
+endfunction()

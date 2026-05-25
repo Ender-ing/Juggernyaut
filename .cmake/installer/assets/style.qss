@@ -1,0 +1,94 @@
+/* Background */
+QWizard {
+    background-color: #FFF3E3; /* Replace with your desired hex code or color name */
+}
+QWizardPage {
+    background-color: transparent;
+}
+QTextBrowser,
+QWizardPage#ComponentSelectionPage QTreeView {
+    background-color: #fffcf8;
+    color: #332512;
+    border: 1px solid #97723e;
+    padding: 5px;
+}
+QWizardPage#ComponentSelectionPage QScrollArea,
+QWizardPage#ComponentSelectionPage QScrollArea > QWidget {
+    background-color: #FFF3E3;
+    border: none;
+    color: #332512;
+}
+QWizardPage#ComponentSelectionPage QLabel {
+    background-color: transparent;
+    color: #332512;
+}
+
+/* Pop-ups */
+QMessageBox, QDialog {
+    background-color: #FFF3E3; /* Matches your main dark background */
+    color: #332512;
+}
+QMessageBox QLabel, QDialog QLabel {
+    color: #332512;
+    font-size: 13px;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #BA8841;
+    color: #FFF3E3;
+    border: 1px solid #97723e;
+    border-radius: 4px;
+    padding: 6px 20px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #FFF3E3;
+    color: #97723e;
+    border: 1px solid #97723e;
+}
+QPushButton:pressed {
+    background-color: #97723e;
+    color: #FFF3E3;
+}
+QPushButton:disabled {
+    background-color: transparent;
+    color: #7c5e33;
+    border: 1px solid #97723e;
+}
+
+/* Separator */
+QFrame[frameShape="4"] {
+    border: none;
+    background-color: #97723e;
+    max-height: 1px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+/* Input Fields */
+QLineEdit {
+    background-color: #FFF3E3;
+    border: 1px solid #97723e;
+    border-radius: 4px;
+    padding: 5px;
+    color: #7c5e33;
+    /* The background color when a user highlights the text with their mouse */
+    selection-background-color: #97723e;
+    selection-color: #fffcf8;
+}
+QLineEdit:focus {
+    background-color: #fffcf8;
+}
+
+/* Selectors */
+QComboBox {
+    background-color: #FFF3E3;
+    border: 1px solid #97723e;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #7c5e33;
+}
+QComboBox:focus {
+    background-color: #fffcf8;
+}

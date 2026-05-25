@@ -79,7 +79,6 @@ namespace Capabilities {
 
                     // Look for 'jug.toml'
                     configUri = session.store->_joinPaths(rootUri, "jug.toml");
-                    std::cerr << "[TESTTTTT] " << configUri << std::endl;
                 }
 
                 /*

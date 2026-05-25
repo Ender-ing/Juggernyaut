@@ -14,13 +14,12 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 
 # add external build for antlrcpp
 if(NOT TARGET antlr4_runtime)
-    include(ExternalAntlr4Cpp)
+    include(FetchAntlr4Cpp)
 endif()
 # Push to Global Cache
 set(ANTLR4_INCLUDE_DIRS ${ANTLR4_INCLUDE_DIRS} CACHE INTERNAL "ANTLR4 Include Dirs")
 set(ANTLR4_RUNTIME_LIBRARIES ${ANTLR4_RUNTIME_LIBRARIES} CACHE INTERNAL "ANTLR4 Libraries")
 # add antlr4cpp artifacts to project environment
-include_directories(${ANTLR4_INCLUDE_DIRS})
 
 # add macros to generate ANTLR Cpp code from grammar
 find_package(ANTLR REQUIRED)
@@ -33,7 +32,3 @@ antlr_target(DiagnosticsCodeParser ${JUG_UTILITY_DIAGCODES_ANTLR4_PARSER_PATH} P
             PACKAGE GeneratedParser
             DEPENDS_ANTLR DiagnosticsCodeLexer
             COMPILE_FLAGS -lib ${ANTLR_DiagnosticsCodeLexer_OUTPUT_DIR})
-
-# include generated files in project environment
-include_directories(${ANTLR_DiagnosticsCodeLexer_OUTPUT_DIR})
-include_directories(${ANTLR_DiagnosticsCodeParser_OUTPUT_DIR})

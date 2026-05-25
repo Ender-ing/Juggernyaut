@@ -9,7 +9,7 @@
 #include "config.hpp"
 #include "info.hpp"
 
-#include "../console/console.hpp"
+#include "console/console.hpp"
 
 #include "../store/files.hpp"
 

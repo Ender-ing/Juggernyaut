@@ -5,9 +5,6 @@
 
 #include "workspace.hpp"
 
-// Diagnostics
-#include "DiagCodes.hpp"
-
 namespace Configs {
     namespace Workspace {
         namespace Internal {

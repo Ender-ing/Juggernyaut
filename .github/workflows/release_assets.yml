@@ -86,7 +86,7 @@ jobs:
             release_id="$release_id_2"
           fi
 
-          # Upload annd check assets!
+          # Upload and check assets!
           function upload_asset() {
             local asset_path="$1"
             echo "Uploading asset: $asset_path"
@@ -105,13 +105,16 @@ jobs:
 
             cd $artifact_dir
 
-            # Check archive type
-            if [[ "$artifact_name" == *.vsix ]]; then
+            # Put all contents of the current directory into an array
+            contents=(*)
 
-              # Upload a plain package file
-              upload_asset "$artifact_name"
+            # Check if the directory contains EXACTLY ONE file
+            if [ ${#contents[@]} -eq 1 ]; then
+              # Upload a sole file
+              file_name="${contents[0]}"
+              upload_asset "$file_name"
               # Save asset hash
-              sha256sum $artifact_name >> ../SHASUMS256.txt
+              sha256sum $file_name >> ../SHASUMS256.txt
             else
               # .tar.gz
               artifact_targz="$artifact_name.tar.gz"

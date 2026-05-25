@@ -34,7 +34,7 @@ int main(int argc, const char *argv[]) {
 
     // Setup session
     Session::Session session = Session::getSessionDefaults();
-    Store::DocumentStore store;
+    Store::DocumentStore store = Store::DocumentStore();
     session.store = &store;
 
     // Initalise protocol

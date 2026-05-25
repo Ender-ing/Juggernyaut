@@ -14,7 +14,7 @@
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wshadow"
     #pragma GCC diagnostic ignored "-Wunused-result"
- #endif
+#endif
 
 #include <lsp/messages.h>
 #include <lsp/connection.h>

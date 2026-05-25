@@ -46,7 +46,14 @@ int main(int argc, const char *argv[]) {
     // (Basiclly allowing the default protocol to take effect)
     if (!Base::InitialConfigs::Technical::shouldSkipDefaultInitialization(argc, argv)) {
         // This is done to allow flags like --version to function normally
-        Console::initalize();
+        Console::initalize({
+            "Juggernyaut Compiler",
+            Base::Info::version,
+            Base::Info::build,
+            Base::Info::arch,
+            Base::Info::osName,
+            Base::Info::osVersion
+        });
     }
 
     // Update initial configurations
@@ -73,8 +80,8 @@ int main(int argc, const char *argv[]) {
     }
 
     // Setup session
-    Store::FileStore store = Store::FileStore();
     Session::Session session = Session::getSessionDefaults();
+    Store::FileStore store = Store::FileStore();
     session.store = &store;
 
     // Stats

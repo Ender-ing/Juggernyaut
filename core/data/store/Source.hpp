@@ -64,13 +64,13 @@ namespace Data {
                 virtual ~Source() = default;
 
                 // Tracking
-                SourceId getId();
+                SourceId getId() const;
 
                 // Dependency tracking
                 void addSourceDependency(SourceId dep) ;
                 void removeSourceDependency(SourceId dep) ;
                 void resetSourceDependencies() ;
-                void visitDependencies(DependencyCall depCall) ;
+                void visitDependencies(DependencyCall depCall) const;
 
                 // Content Tracking
                 void invalidateRawContent() ;

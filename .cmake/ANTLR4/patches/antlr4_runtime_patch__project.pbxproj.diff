@@ -1,19 +1,24 @@
 --- a/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
 +++ b/runtime/Cpp/runtime/antlrcpp.xcodeproj/project.pbxproj
-# Allow ANTLR4 imports from the same directory on macOS
-@@ -2751,6 +2751,7 @@
+@@ -2751,6 +2751,10 @@
  				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
  				LD_RUNPATH_SEARCH_PATHS = (
  					"$(inherited)",
 +					"@executable_path",
++					"@executable_path/../lib",
++					"@loader_path",
++					"@loader_path/../lib",
  					"@executable_path/Frameworks",
  					"@loader_path/Frameworks",
  				);
-@@ -2787,6 +2788,7 @@
+@@ -2787,6 +2791,10 @@
  				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
  				LD_RUNPATH_SEARCH_PATHS = (
  					"$(inherited)",
 +					"@executable_path",
++					"@executable_path/../lib",
++					"@loader_path",
++					"@loader_path/../lib",
  					"@executable_path/Frameworks",
  					"@loader_path/Frameworks",
  				);

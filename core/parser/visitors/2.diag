@@ -1,2 +1,4 @@
-9:
--RESERVED (import source)
+9[TXT $PATH, TXT $CAUSE]:
+-failed to resolve import path "$PATH": $CAUSE
+10:
+-external module inclusion is disabled. (Check project configurations)

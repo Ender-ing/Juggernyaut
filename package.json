@@ -4,16 +4,20 @@
         "build-cmake-win-64": "cd .build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64",
         "build-cmake-lix-32": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x86",
         "build-cmake-lix-64": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Release -DCMAKE_UNIX_GENERATOR_PLATFORM=x64",
-        "build-binary": "cd .build && cmake --build . --config Release --parallel 3 --verbose",
-        "debug-build-cmake": "cd .build && cmake .. -DCMAKE_BUILD_TYPE=Debug",
-        "debug-t-build-cmake": "cd .build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DJUG_BUILD_TESTS=ON",
-        "debug-build-binary": "cd .build && cmake --build . --config Debug --parallel 3 --verbose",
-        "win-clean": "rd /s /q \".build\" && rd /s /q \".dist\"",
-        "lix-clean": "rm -f -r \".build\" && rm -f -r \".dist\"",
+        "build-binary": "cd .build && cmake --build . --config Release --parallel 4 --verbose",
+        "debug-build-cmake": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug",
+        "debug-t-build-cmake": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug -DJUG_BUILD_TESTS=ON",
+        "debug-build-binary": "cd .build && cmake --build . --config Debug --parallel 4 --verbose",
+        "win-clean": "rd /s /q \".build\" && rd /s /q \".out\" && rd /s /q \".dist\"",
+        "lix-clean": "rm -f -r \".build\" && rm -f -r \".out\" && rm -f -r \".dist\"",
+        "install": "cd .build && cmake --install . --config Release",
+        "debug-install": "cd .build && cmake --install . --config Debug",
+        "package": "cd .dist && cpack --config ../.build/CPackConfig.cmake -C Release",
+        "debug-package": "cd .dist && cpack --config ../.build/CPackConfig.cmake -C Debug",
         "debug": "mkdir .build && npm run debug-build-cmake && npm run debug-build-binary",
         "debug-t": "mkdir .build && npm run debug-t-build-cmake && npm run debug-build-binary",
         "test-d": "cd .build && ctest -C Debug -V -j 3",
         "win64": "mkdir .build && npm run build-cmake-win-64 && npm run build-binary",
         "lix64": "mkdir .build && npm run build-cmake-lix-64 && npm run build-binary"
-    }
+    } 
 }

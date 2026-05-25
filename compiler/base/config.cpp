@@ -10,7 +10,7 @@
 #include "config.hpp"
 #include "common/strings.hpp"
 
-#include "../console/console.hpp"
+#include "console/console.hpp"
 
 #include "../store/files.hpp"
 

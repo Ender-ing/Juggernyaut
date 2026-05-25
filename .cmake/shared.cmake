@@ -1,20 +1,23 @@
 # Manage C++ compiler settings
-include(${JUG_CMAKE_DIR}/compiler/cpp.cmake)
+if (NOT DEFINED add_c_cpp_global_flag)
+    include(${JUG_CMAKE_DIR}/compiler/cpp.cmake)
+endif()
 
 # CMake functions & macros
-include(${JUG_CMAKE_DIR}/utility.cmake)
+if (NOT DEFINED target_sources_search)
+    include(${JUG_CMAKE_DIR}/utility.cmake)
+endif()
 
 # Manage binary output
-include(${JUG_CMAKE_DIR}/build-output.cmake)
+if (NOT DEFINED JUG_BINARY_MODE)
+    include(${JUG_CMAKE_DIR}/build-output.cmake)
+endif()
 
 # Manage shared dependencies
 include(${JUG_CMAKE_DIR}/dependencies.cmake)
 
-# CMake files that are not related to the main building process
-include(${JUG_CMAKE_DIR}/other/legal.cmake)
+# Libraries
+include(${JUG_CMAKE_DIR}/libraries.cmake)
 
 # Diagnostic codes
 include(${JUG_CMAKE_DIR}/diagnostics.cmake)
-
-# Diagnostic codes
-include(${JUG_CMAKE_DIR}/common.cmake)

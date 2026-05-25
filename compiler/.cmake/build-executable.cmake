@@ -5,8 +5,9 @@ add_executable(
 )
 
 # Link libraries
-add_dependencies(JuggernyautCompiler JuggernyautSessionLibrary JuggernyautConfigsLibrary)
-target_link_libraries(JuggernyautCompiler PUBLIC JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+jug_common(JuggernyautCompiler)
+add_dependencies(JuggernyautCompiler JuggernyautCatConsoleLibrary JuggernyautCommonLibrary JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+target_link_libraries(JuggernyautCompiler PRIVATE JuggernyautCatConsoleLibrary JuggernyautCommonLibrary JuggernyautSessionLibrary JuggernyautConfigsLibrary)
 
 # Link compiler libraries
 include(${JUG_COMPILER_CMAKE_DIR}/libraries.cmake)
@@ -24,9 +25,6 @@ target_link_directories(JuggernyautCompiler PRIVATE "$<TARGET_FILE_DIR:Juggernya
 # Attach manifest data
 # The first use of the "attach_manifest_data" function must be for the main executable!
 attach_manifest_data(JuggernyautCompiler ${JUG_COMPILER_MANIFEST_FILE} TRUE)
-
-# Re-do symbolic linking (POST BUILD)
-manage_symbolic_links(JuggernyautCompiler "jug")
 
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautCompiler FALSE)

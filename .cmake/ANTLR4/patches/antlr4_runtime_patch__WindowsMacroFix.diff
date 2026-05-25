@@ -1,5 +1,3 @@
-# Fix <Windows.h> macro collisions
-# Fix: ParseTreeType::ERROR
 --- a/runtime/Cpp/runtime/src/tree/ParseTreeType.h
 +++ b/runtime/Cpp/runtime/src/tree/ParseTreeType.h
 @@ -15,5 +15,5 @@

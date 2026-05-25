@@ -1,6 +1,5 @@
 --- a/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
 +++ b/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
-# Fix the chrono include bug on Windows (fixed in the dev branch of antlr4!)
 @@ -10,6 +10,7 @@
  #include "support/CPPUtils.h"
  

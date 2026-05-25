@@ -125,7 +125,7 @@ endif()
 
 # ANTLR4 jar
 if(DEFINED ANTLR4_TAG)
-    set(JUG_DEPENDENCIES_ANTLR4_JAR_PATH ${JUG_DEPENDENCIES_DIR}/antlr4/antlr.jar)
+    set(JUG_DEPENDENCIES_ANTLR4_JAR_PATH ${JUG_DEPENDENCIES_DIR}/antlr4-jar/antlr.jar)
     if(NOT EXISTS ${JUG_DEPENDENCIES_ANTLR4_JAR_PATH})
         message(STATUS "[DEPENDENCIES] Downloading ANTLR4 jar (v${ANTLR4_TAG})...")
         file(DOWNLOAD
@@ -147,14 +147,14 @@ set(ANTLR_EXECUTABLE ${JUG_DEPENDENCIES_ANTLR4_JAR_PATH})
 
 # mimalloc
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(NOT TARGET mimalloc)
+    if(NOT DEFINED JUG_DEP_MIMALLOC_LIB_PATH)
         set(MIMALLOC_VERSION 3.2.8 CACHE STRING "mimalloc version" FORCE)
         set(JUG_DEP_MIMALLOC_LIB_PATH ${JUG_DEPENDENCIES_DIR}/mimalloc)
         if(EXISTS ${JUG_DEP_MIMALLOC_LIB_PATH}/CMakeLists.txt)
             FetchContent_Declare(
                 mimalloc
-                GIT_TAG v${MIMALLOC_VERSION}
                 SOURCE_DIR ${JUG_DEP_MIMALLOC_LIB_PATH}
+                EXCLUDE_FROM_ALL
             )
         else()
             FetchContent_Declare(
@@ -162,6 +162,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
                 GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
                 GIT_TAG v${MIMALLOC_VERSION}
                 SOURCE_DIR ${JUG_DEP_MIMALLOC_LIB_PATH}
+                EXCLUDE_FROM_ALL
             )
         endif()
         set(MI_BUILD_STATIC OFF CACHE BOOL "Build static library" FORCE)
@@ -175,5 +176,40 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
         )
     endif()
-    link_libraries(mimalloc)
+    #link_libraries(mimalloc) # BAD!
+endif()
+
+# {fmt} library
+if(DEFINED NEED_FMT_LIB)
+    set(FMT_LIB_VERSION 12.1.0)
+    option(USE_INSTALLED_FMT "Ignore or use installed FMT" OFF) # Default OFF - not using installed fmt
+    set(FMT_SYSTEM_HEADERS ON CACHE INTERNAL "Force fmt system headers")
+    if(USE_INSTALLED_FMT)
+        find_package(fmt)
+    endif()
+    if(fmt)
+        message(STATUS "[DEPENDENCIES] {fmt} library is present!")
+    else()
+        set(FMT_INSTALL OFF CACHE BOOL "Disable fmt installation" FORCE)
+        # Download {fmt}
+        message(STATUS "[DEPENDENCIES] Fetching {fmt}...")
+        set(JUG_DEP_FMT_LIB_PATH ${JUG_DEPENDENCIES_DIR}/fmt)
+        if(EXISTS ${JUG_DEP_FMT_LIB_PATH}/CMakeLists.txt)
+            FetchContent_Declare(fmt
+                SOURCE_DIR ${JUG_DEP_FMT_LIB_PATH}
+                EXCLUDE_FROM_ALL)
+        else()
+            FetchContent_Declare(fmt
+                GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+                GIT_TAG ${FMT_LIB_VERSION}
+                SOURCE_DIR ${JUG_DEP_FMT_LIB_PATH}
+                EXCLUDE_FROM_ALL)
+        endif()
+    endif()
+    FetchContent_MakeAvailable(fmt)
+
+    if(TARGET fmt)
+        ignore_external_target_warnings(fmt)
+        custom_malloc(fmt)
+    endif()
 endif()

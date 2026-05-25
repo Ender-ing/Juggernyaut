@@ -6,7 +6,7 @@
                 "${workspaceFolder}/.build/**",
                 "${workspaceFolder}/.build/*core/**",
                 "${workspaceFolder}/.build/diag_codes/**",
-                "${workspaceFolder}/utility/common/include/**"
+                "${workspaceFolder}/utility/libraries/common/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++-13",

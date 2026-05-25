@@ -10,8 +10,7 @@
 
 // ANTLR4 imports
 #include "../antlr4.hpp"
-#include "JuggernyautParser.h"
-#include "JuggernyautParserVisitor.h"
+#include "../antlr4ParserWithVisitor.hpp"
 
 // Listeners
 #include "../listeners/ASTGenListener.hpp"
@@ -24,8 +23,8 @@ namespace Parser {
         using ANTLRParser = GeneratedParser::JuggernyautParser;
         class JUG_PARSER_API ASTGenVisitor : public GeneratedParser::JuggernyautParserVisitor {
             private:
-                Listeners::ASTGenListener *listener;
-                Data::Store::SourceStore *store;
+                Listeners::ASTGenListener *listener = nullptr;
+                Data::Store::SourceStore *store = nullptr;
                 std::unique_ptr<Data::Store::Source> &source;
             public:
                 ASTGenVisitor(Listeners::ASTGenListener *astListener, Data::Store::SourceStore *srcStore,

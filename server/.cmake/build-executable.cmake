@@ -11,13 +11,14 @@ target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/session/*.cpp F
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
 
 # Link libraries
+jug_common(JuggernyautServer)
 add_dependencies(JuggernyautServer JuggernyautSessionLibrary JuggernyautConfigsLibrary)
-target_link_libraries(JuggernyautServer PUBLIC JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+target_link_libraries(JuggernyautServer PRIVATE JuggernyautSessionLibrary JuggernyautConfigsLibrary)
 
 # Link external libraries
 # lsp-framework
 add_dependencies(JuggernyautServer lsp)
-target_link_libraries(JuggernyautServer PUBLIC lsp)
+target_link_libraries(JuggernyautServer PRIVATE lsp)
 
 # Handle dynamic libraries
 target_link_directories(JuggernyautServer PRIVATE "$<TARGET_FILE_DIR:JuggernyautServer>")
@@ -25,9 +26,6 @@ target_link_directories(JuggernyautServer PRIVATE "$<TARGET_FILE_DIR:Juggernyaut
 # Attach manifest data
 # The first use of the "attach_manifest_data" function must be for the main executable!
 attach_manifest_data(JuggernyautServer ${JUG_SERVER_MANIFEST_FILE} TRUE)
-
-# Re-do symbolic linking (POST BUILD)
-manage_symbolic_links(JuggernyautServer "jug-lsp")
 
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautServer FALSE)

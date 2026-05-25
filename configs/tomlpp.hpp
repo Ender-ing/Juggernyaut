@@ -5,19 +5,12 @@
 
 #pragma once
 
-// Disable known warnings
+// Disable warnings
 #ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable : 5311)  // Deprecated literal operator
-    #pragma warning(disable : 6011)  // Dereferencing NULL pointer
-    #pragma warning(disable : 28199) // Possibly uninitialized memory 'digits'
+    #pragma warning(push, 0) // Sets warning level to 0 (off) for everything below
 #elif defined(__GNUC__) || defined(__clang__)
     #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    #pragma GCC diagnostic ignored "-Wnull-dereference"
-    #ifndef __apple_build_version__
-        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-    #endif
+    #pragma GCC system_header // Tells GCC/Clang to treat everything below as a system header
 #endif
 
 // Imports

@@ -17,9 +17,9 @@ on:
 jobs:
 
   # Windows
-  build-vscode-extension-on-windows-latest:
+  build-vscode-extension-on-windows-2025-vs2026:
     name: Build on Windows
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     steps:
     - name: Checkout code
@@ -38,9 +38,16 @@ jobs:
       run: npm run win-package
       working-directory: ${{github.workspace}}/extensions/VSCode
 
-    - name: Upload Artifacts (optional)
+    - name: Upload Extension Artifact (optional)
       if: inputs.upload_artifact
       uses: actions/upload-artifact@v7
       with:
         name: Juggernyaut-VSCode-Extensions
-        path: ${{github.workspace}}/extensions/VSCode/*.vsix
+        path: ${{github.workspace}}/extensions/VSCode/juggernyaut-*.vsix
+
+    - name: Upload Web Extension Artifact (optional)
+      if: inputs.upload_artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: Juggernyaut-VSCode-Extensions-Web
+        path: ${{github.workspace}}/extensions/VSCode/juggernyaut-web-*.vsix

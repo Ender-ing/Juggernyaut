@@ -4,7 +4,7 @@ on:
       windows_system:
         required: false
         type: string
-        default: windows-latest
+        default: windows-2025-vs2026
       build_platform:
         required: true
         type: string
@@ -64,9 +64,9 @@ jobs:
         } elseif ($arch -eq "x86_32") {
           echo "MSVC_ARCH=x86" >> $env:GITHUB_ENV
         } elseif ($arch -eq "arm64") {
-          echo "MSVC_ARCH=x86_amd64" >> $env:GITHUB_ENV
+          echo "MSVC_ARCH=arm64" >> $env:GITHUB_ENV
         } elseif ($arch -eq "arm32") {
-          echo "MSVC_ARCH=x86_arm" >> $env:GITHUB_ENV
+          echo "MSVC_ARCH=arm" >> $env:GITHUB_ENV
         } else {
           Write-Error "Couldn't determine architecture version to use with MSVC!"
           exit 1
@@ -78,28 +78,49 @@ jobs:
         arch: ${{env.MSVC_ARCH}}
         sdk: 10.0.26100.0
 
+    - name: Install Qt Installer Framework (IFW)
+      if: inputs.bundle_binaries && (inputs.build_platform_name == 'x86_64' || inputs.build_platform_name == 'arm64')
+      uses: jurplel/install-qt-action@v4
+      with:
+        host: 'windows' # Use x64 bins
+        no-qt-binaries: true
+        # The syntax for tools is often <tool_name>,<version>,<architecture_identifier>
+        tools: 'tools_ifw'
+        set-env: false
+
     - name: Make the ".build" directory
       run: mkdir ${{github.workspace}}/.build
 
     - name: Configure CMake
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_GENERATOR_PLATFORM=${{inputs.build_platform}} -DJUG_CLEANUP=ON `
-          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_GENERATOR_PLATFORM=${{inputs.build_platform}} `
+          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}} `
+          -DJUG_BUILD_PLATFORM_NAME=${{inputs.build_platform_name}}
       working-directory: .build
 
     - name: Build
-      run: cmake --build . --config ${{inputs.build_mode}} --parallel 3 --verbose
+      run: cmake --build . --config ${{inputs.build_mode}} --parallel 2 --verbose
       working-directory: .build
 
     - name: Run Tests (optional)
       if: inputs.run_tests
-      run: ctest -C ${{inputs.build_mode}} -V -j 3
+      run: ctest -C ${{inputs.build_mode}} -V -j 2
       working-directory: .build
+
+    - name: Install (optional)
+      if: inputs.bundle_binaries
+      run: cmake --install . --config ${{inputs.build_mode}} --parallel 2 --verbose
+      working-directory: .build
+
+    - name: Package Native Installer (optional)
+      if: inputs.bundle_binaries && (inputs.build_platform_name == 'x86_64' || inputs.build_platform_name == 'arm64')
+      run: cpack --config ../.build/CPackConfig.cmake -C ${{inputs.build_mode}}
+      working-directory: .dist
 
     - name: Extract version (optional)
       if: inputs.bundle_binaries
       run: |
-        $version = (Get-Item "jug.exe").VersionInfo.FileVersion
+        $version = (./jug-cmp --version).Trim()
         if ($version) {
           echo "VERSION=$version" >> $env:GITHUB_ENV
         } else {
@@ -107,11 +128,6 @@ jobs:
           exit 1
         }
       working-directory: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/bin/
-
-    - name: Cleanup (optional)
-      if: inputs.bundle_binaries
-      run: .\${{inputs.build_platform_name}}.cleanup.bat
-      working-directory: .dist/${{inputs.build_mode}}
 
     - name: Perform CodeQL Analysis
       if: ${{inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')}}
@@ -125,3 +141,10 @@ jobs:
       with:
         name: Juggernyaut-${{inputs.build_mode}}-v${{env.VERSION}}-Windows-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/${{inputs.build_mode}}/${{inputs.build_platform_name}}/
+
+    - name: Upload Installer Artifact (optional)
+      if: inputs.bundle_binaries && (inputs.build_platform_name == 'x86_64' || inputs.build_platform_name == 'arm64')
+      uses: actions/upload-artifact@v7
+      with:
+        name: Juggernyaut-Installer-Windows-${{inputs.build_platform_name}}
+        path: ${{github.workspace}}/.dist/Juggernyaut-Installer-v${{env.VERSION}}-${{inputs.build_platform_name}}.exe

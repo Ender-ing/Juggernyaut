@@ -7,16 +7,11 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Recommended for modern C++
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS OFF)
+
 # Fix ANTLR4-related glitch on Windows
 if (MSVC)
     add_compile_definitions(NOMINMAX)
-endif()
-
-# Enable $ORIGIN-based RPATH globally
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(CMAKE_INSTALL_RPATH "$ORIGIN")
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
 # Force PIC
@@ -193,11 +188,21 @@ check_c_compiler_flag("-fsanitize=leak" CMAKE_CXX_SUPPORTS_FSANITIZE_LEAK)
 set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
 check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS_UNDEFINED)
 
-# For ARM targets without FPU, use soft-float ABI
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm(v([0-9])+)?-?[a-z]?$" AND NOT APPLE)
-        if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            add_compile_options(-mfpu=vfpv3-d16 -mfloat-abi=soft) 
-        endif()
-    endif()
+if(MSVC)
+    add_compile_options(
+        /external:W0            # Warning level 0 for external headers
+        #/external:anglebrackets # Treat all < > includes as external # NOOOOOO!
+        /analyze:external-      # Disable static analysis for external headers!
+    )
 endif()
+macro(ignore_external_target_warnings TARGET)
+    if(MSVC)
+        # /w disables all compiler warnings
+        target_compile_options(${TARGET} PRIVATE /w)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # -w inhibits all warning messages
+        target_compile_options(${TARGET} PRIVATE -w)
+    endif()
+    # Supress all warnings
+    set_target_properties(${TARGET} PROPERTIES SYSTEM TRUE)
+endmacro()

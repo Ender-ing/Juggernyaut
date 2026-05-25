@@ -14,7 +14,7 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 
 # add external build for antlrcpp
 if(NOT TARGET antlr4_runtime)
-    include(ExternalAntlr4Cpp)
+    include(FetchAntlr4Cpp)
 endif()
 # Push to Global Cache
 set(ANTLR4_INCLUDE_DIRS ${ANTLR4_INCLUDE_DIRS} CACHE INTERNAL "ANTLR4 Include Dirs")

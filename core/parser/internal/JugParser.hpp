@@ -10,7 +10,7 @@
 
 // ANTLR4 imports
 #include "../antlr4.hpp"
-#include "JuggernyautParser.h"
+#include "../antlr4Parser.hpp"
 
 namespace Parser {
     namespace Internal {

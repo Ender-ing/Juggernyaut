@@ -10,6 +10,9 @@
 
 #include "../data/store/types.hpp"
 
+// Generated codes (.diag files)
+#include "DiagCodes.hpp"
+
 namespace Diagnostics {
     // Line/column data
     struct Position {

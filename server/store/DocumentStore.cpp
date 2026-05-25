@@ -46,8 +46,8 @@ namespace Store {
         }
     }
 
-    bool DocumentStore::_getRawFile(const std::string &uri, std::string &output) {
-        std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
+    bool DocumentStore::_getRawFile(const std::string &uri, std::string &output) const {
+        const std::unordered_map<std::string, std::string> &raws = this->syncedRaws;
 
         if (raws.contains(uri)) {
             output = raws.at(uri);
@@ -61,22 +61,22 @@ namespace Store {
             }
         }
     }
-    bool DocumentStore::_isFileAccessible(const std::string &uri) {
+    bool DocumentStore::_isFileAccessible(const std::string &uri) const {
         return isFileAccessible(uri);
     }
-    bool DocumentStore::_isDirValid(const std::string &path) {
+    bool DocumentStore::_isDirValid(const std::string &path) const {
         return isValidDir(path);
     }
-    std::string DocumentStore::_getFileExtension(const std::string &uri) {
+    std::string DocumentStore::_getFileExtension(const std::string &uri) const {
         return getFileExtension(uri);
     }
-    std::string DocumentStore::_getPathDir(const std::string &uri) {
+    std::string DocumentStore::_getPathDir(const std::string &uri) const {
         return getParentPath(uri);
     }
-    std::string DocumentStore::_getCanonical(const std::string &uri) {
+    std::string DocumentStore::_getCanonical(const std::string &uri) const {
         return normalizePath(uri);
     }
-    std::string DocumentStore::_joinPaths(const std::string &base, const std::string &path) {
+    std::string DocumentStore::_joinPaths(const std::string &base, const std::string &path) const {
         return joinPaths(base, path);
     }
 

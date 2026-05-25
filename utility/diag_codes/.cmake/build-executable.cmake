@@ -8,5 +8,9 @@ add_executable(
 
 # Dependencies 
 add_dependencies(JugDiagnosticsCode antlr4_static)
-target_link_libraries(JugDiagnosticsCode PUBLIC antlr4_static)
+target_link_libraries(JugDiagnosticsCode PRIVATE antlr4_static)
 target_compile_definitions(JugDiagnosticsCode PRIVATE ANTLR4CPP_STATIC)
+
+target_include_directories(JugDiagnosticsCode SYSTEM PRIVATE ${ANTLR4_INCLUDE_DIRS})
+target_include_directories(JugDiagnosticsCode SYSTEM PRIVATE ${ANTLR_DiagnosticsCodeLexer_OUTPUT_DIR})
+target_include_directories(JugDiagnosticsCode SYSTEM PRIVATE ${ANTLR_DiagnosticsCodeParser_OUTPUT_DIR})

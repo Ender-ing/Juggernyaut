@@ -15,6 +15,9 @@
 #include "../parser/Hooks.hpp"
 #include "../parser/Configs.hpp"
 
+// Data
+#include "../data/manager/types.hpp"
+
 namespace Session {
     // Session data
     enum Stage {
@@ -46,12 +49,19 @@ namespace Session {
         uint32_t parser = 0;
     };
 
+    // Manager tools are used to communicate with the sessions manager
+    // in order to facilitate inter-session communication and resource sharing.
+    struct ManagerTools {
+        // Data::Manager::ResolveLibraryPath resolveLibrary = nullptr;
+    };
+
     struct Session {
         Configs configs;
         Hooks hooks;
         States states; // (Tracking for recurring meaningful session visits)
         Data::Store::SourceStore *store = nullptr;
         bool isRunning = false; // Tracking
+        ManagerTools manager;
     };
     // [Session]
     // Musts: <Session>.store

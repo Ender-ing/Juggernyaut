@@ -30,7 +30,7 @@ namespace Data {
         }
 
         // General path lookup
-        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId) {
+        bool SourceStore::resolvePath(const std::string &uri, std::string &output, SourceId callerId) const {
             std::string path = uri;
             if (this->_getFileExtension(path) != ".jug") {
                 path.append(".jug");
@@ -38,7 +38,7 @@ namespace Data {
 
             // Relative path
             if (callerId != 0) { // To a file
-                std::unique_ptr<Source> &src = this->getSourceById(callerId);
+                const std::unique_ptr<Source> &src = this->getSourceById(callerId);
 
                 std::string relativePath = this->_joinPaths(this->_getPathDir(src->uri), path);
 
@@ -85,9 +85,9 @@ namespace Data {
                 src->setIsEntryPoint(false);
             }
         }
-        void SourceStore::visitEntries(const EntryCall entryCall) {
+        void SourceStore::visitEntries(const EntryCall entryCall) const {
             if (entryCall != nullptr) {
-                std::vector<SourceId> &entries = this->entryPoints;
+                const std::vector<SourceId> &entries = this->entryPoints;
                 for (auto &entry : entries) {
                     entryCall(entry);
                 }
@@ -108,6 +108,15 @@ namespace Data {
         }
 
         // Sources
+        const std::unique_ptr<Source>& SourceStore::getSourceById(const SourceId &id) const {
+            const std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
+
+            if (!srcs.contains(id)) {
+                throw std::out_of_range("Attempting to access an invalidated source ID!");
+            }
+
+            return srcs.at(id);
+        }
         std::unique_ptr<Source>& SourceStore::getSourceById(const SourceId &id) {
             std::unordered_map<SourceId, std::unique_ptr<Source>> &srcs = this->sources;
 
@@ -164,6 +173,18 @@ namespace Data {
                     this->removeEntry(srcId);
                 }
             }
+        }
+
+        // External
+        const bool SourceStore::isExternalFetchSet() {
+            return this->resolveLibraryPath != nullptr;
+        }
+        const void* SourceStore::getExternalSymbols(Data::Manager::LibraryPath path) {
+            if (this->resolveLibraryPath != nullptr) {
+                return this->resolveLibraryPath(path);
+            }
+
+            return nullptr;
         }
 
         // Memory housekeeping

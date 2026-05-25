@@ -15,17 +15,19 @@ namespace Store {
         private:
             std::unordered_map<std::string, std::string> syncedRaws;
         public:
+            using Data::Store::SourceStore::SourceStore;
+
             // LSP synchronisation
             void syncRaw(const std::string &uri, const std::string &rawContent) ;
             void syncStatus(const std::string &uri, bool isInEditor) ;
 
-            bool _getRawFile(const std::string &uri, std::string &output) override;
-            bool _isFileAccessible(const std::string &uri) override;
-            bool _isDirValid(const std::string &path) override;
-            std::string _getFileExtension(const std::string &uri) override;
-            std::string _getPathDir(const std::string &uri) override;
-            std::string _getCanonical(const std::string &uri) override;
-            std::string _joinPaths(const std::string &base, const std::string &path) override;
+            bool _getRawFile(const std::string &uri, std::string &output) const override;
+            bool _isFileAccessible(const std::string &uri) const override;
+            bool _isDirValid(const std::string &path) const override;
+            std::string _getFileExtension(const std::string &uri) const override;
+            std::string _getPathDir(const std::string &uri) const override;
+            std::string _getCanonical(const std::string &uri) const override;
+            std::string _joinPaths(const std::string &base, const std::string &path) const override;
 
             void deleteSource(std::unique_ptr<Data::Store::Source> &src, bool erase) override;
     };

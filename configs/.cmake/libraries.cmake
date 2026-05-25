@@ -12,6 +12,7 @@ attach_manifest_data(JuggernyautConfigsLibrary ${JUG_CONFIGS_MANIFEST_FILE} TRUE
 # Add compiler flags
 add_internal_target_cxx_flags(JuggernyautConfigsLibrary FALSE)
 # Dependencies
+jug_common(JuggernyautConfigsLibrary)
 add_dependencies(JuggernyautConfigsLibrary JuggernyautSessionLibrary)
 target_link_libraries(JuggernyautConfigsLibrary PUBLIC JuggernyautSessionLibrary)
-target_include_directories(JuggernyautConfigsLibrary PRIVATE ${TOMLPP_INCLUDE_DIR})
+target_include_directories(JuggernyautConfigsLibrary SYSTEM PRIVATE ${TOMLPP_INCLUDE_DIR})

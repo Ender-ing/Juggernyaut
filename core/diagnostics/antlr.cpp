@@ -8,8 +8,6 @@
 // Common
 #include "common/utility.hpp"
 
-#include "DiagCodes.hpp"
-
 namespace Diagnostics {
     int getAntlrErrorCode(const std::string &msg, std::exception_ptr e, bool &isMsgNum) {
 
