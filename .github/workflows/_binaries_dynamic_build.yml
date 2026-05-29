@@ -27,7 +27,6 @@ jobs:
     name: Windows x64
     uses: ./.github/workflows/_binaries_windows_build.yml
     with:
-      build_platform: x64
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -36,11 +35,10 @@ jobs:
   build-binaries-on-windows-x86-32:
     name: Windows x86
     uses: ./.github/workflows/_binaries_windows_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-windows-x86-64
     with:
-      build_platform: Win32
       build_platform_name: x86_32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -49,12 +47,11 @@ jobs:
   build-binaries-on-windows-arm64:
     name: Windows ARM64
     uses: ./.github/workflows/_binaries_windows_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-windows-x86-64
     with:
       windows_system: windows-11-arm
-      build_platform: ARM64
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -67,7 +64,6 @@ jobs:
     uses: ./.github/workflows/_binaries_linux_build.yml
     with:
       linux_system: ubuntu-latest
-      build_platform: x64
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -76,12 +72,11 @@ jobs:
   build-binaries-on-linux-x86-32:
     name: Linux x86
     uses: ./.github/workflows/_binaries_linux_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-linux-x86-64
     with:
       linux_system: ubuntu-latest
-      build_platform: x86
       build_platform_name: x86_32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -90,12 +85,11 @@ jobs:
   build-binaries-on-linux-arm64:
     name: Linux ARM64
     uses: ./.github/workflows/_binaries_linux_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-linux-x86-64
     with:
       linux_system: ubuntu-24.04-arm
-      build_platform: ARM64
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -104,12 +98,11 @@ jobs:
   build-binaries-on-linux-arm32:
     name: Linux ARM
     uses: ./.github/workflows/_binaries_linux_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-linux-x86-64
     with:
       linux_system: ubuntu-24.04-arm
-      build_platform: ARM
       build_platform_name: arm32
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -122,7 +115,6 @@ jobs:
     uses: ./.github/workflows/_binaries_mac_build.yml
     with:
       mac_system: macos-26
-      build_platform: ARM64
       build_platform_name: arm64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}
@@ -131,12 +123,11 @@ jobs:
   build-binaries-on-mac-x86-64:
     name: MacOS x64
     uses: ./.github/workflows/_binaries_mac_build.yml
-    if: ${{inputs.full_build}}
+    if: inputs.full_build
     needs:
       - build-binaries-on-mac-arm64
     with:
       mac_system: macos-26-intel
-      build_platform: x64
       build_platform_name: x86_64
       build_mode: ${{inputs.build_mode}}
       bundle_binaries: ${{inputs.bundle_binaries}}

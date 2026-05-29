@@ -5,9 +5,6 @@ on:
         required: false
         type: string
         default: ubuntu-latest
-      build_platform:
-        required: true
-        type: string
       build_platform_name:
         required: true
         type: string
@@ -40,7 +37,7 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Initialize CodeQL
-      if: ${{inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')}}
+      if: inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')
       uses: github/codeql-action/init@v4
       with:
         languages: 'c-cpp'
@@ -72,7 +69,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update -o Acquire::Retries=3
-        sudo apt-get install -y gcc-multilib g++-multilib zlib1g-dev:i386 libssl-dev:i386
+        sudo apt-get install -y gcc-multilib g++-multilib libstdc++6-13-dbg:i386 libgcc-s1:i386 zlib1g-dev:i386 libssl-dev:i386
 
     - name: Install dependencies (ARM 32-bit)
       if: inputs.build_platform_name == 'arm32'
@@ -103,37 +100,25 @@ jobs:
     - name: Configure CMake
       if: inputs.build_platform_name != 'x86_32' && inputs.build_platform_name != 'arm32'
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}} \
-          -DJUG_BUILD_PLATFORM_NAME=${{inputs.build_platform_name}}
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} \
+          -DCMAKE_TOOLCHAIN_FILE="../.cmake/target-configs/linux-${{inputs.build_platform_name}}-on-${{inputs.build_platform_name}}.cmake" \
+          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Configure CMake (32-bit)
       if: inputs.build_platform_name == 'x86_32'
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_SYSTEM_PROCESSOR=i686 \
-          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}} \
-          -DJUG_BUILD_PLATFORM_NAME=${{inputs.build_platform_name}}
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} \
+          -DCMAKE_TOOLCHAIN_FILE="../.cmake/target-configs/linux-x86_32-on-x86_64.cmake" \
+          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Configure CMake (ARM 32-bit)
       if: inputs.build_platform_name == 'arm32'
-      env:
-        CFLAGS: "-mfloat-abi=hard"
-        CXXFLAGS: "-mfloat-abi=hard"
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} -DCMAKE_UNIX_GENERATOR_PLATFORM=${{inputs.build_platform}} \
-          -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-          -DCMAKE_SYSTEM_PROCESSOR=arm -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_CROSSCOMPILING_EMULATOR=qemu-arm-static \
-          -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-          -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH=/usr/arm-linux-gnueabihf \
-          -DUSE_HTTPS=OpenSSL \
-          -DOPENSSL_INCLUDE_DIR=/usr/include/arm-linux-gnueabihf \
-          -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/arm-linux-gnueabihf/libcrypto.so \
-          -DOPENSSL_SSL_LIBRARY=/usr/lib/arm-linux-gnueabihf/libssl.so \
-          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}} \
-          -DJUG_BUILD_PLATFORM_NAME=${{inputs.build_platform_name}}
+        cmake .. -DCMAKE_BUILD_TYPE=${{inputs.build_mode}} \
+          -DCMAKE_TOOLCHAIN_FILE="../.cmake/target-configs/linux-arm32-on-arm64.cmake" \
+          -DJUG_RELEASE_VERSION="${{inputs.release_version}}" -DJUG_BUILD_TESTS=${{inputs.run_tests}}
       working-directory: .build
 
     - name: Build
@@ -163,7 +148,7 @@ jobs:
           | head -n 1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
     - name: Perform CodeQL Analysis
-      if: ${{inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')}}
+      if: inputs.security_analysis && !startsWith(inputs.build_platform_name, 'arm')
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:c-cpp"
@@ -183,6 +168,7 @@ jobs:
         path: ${{github.workspace}}/.dist/Juggernyaut-Installer-v${{env.VERSION}}-${{inputs.build_platform_name}}.run
 
     - name: Upload .deb Installer Artifact (optional)
+      if: inputs.bundle_binaries
       uses: actions/upload-artifact@v7
       with:
         name: Juggernyaut-Installer-Linux-${{inputs.build_platform_name}}-native

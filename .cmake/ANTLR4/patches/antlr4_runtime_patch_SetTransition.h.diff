@@ -1,5 +1,5 @@
---- runtime/Cpp/runtime/src/atn/SetTransition.h
-+++ runtime/Cpp/runtime/src/atn/SetTransition.h
+--- a/runtime/Cpp/runtime/src/atn/SetTransition.h
++++ b/runtime/Cpp/runtime/src/atn/SetTransition.h
 @@ -13,7 +13,7 @@
  namespace antlr4 {
  namespace atn {

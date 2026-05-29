@@ -3,7 +3,7 @@ message(STATUS "[DEPENDENCIES] Checking dependencies...")
 include(FetchContent)
 
 # libgit2
-set(GIT2_LIB_VERSION v1.9.3)
+set(GIT2_LIB_VERSION v1.9.4)
 if(libgit2)
     message(STATUS "[DEPENDENCIES] libgit2 library is present!")
 else()
@@ -21,12 +21,14 @@ else()
     if(EXISTS ${JUG_DEP_GIT2_LIB_PATH}/CMakeLists.txt)
         FetchContent_Declare(libgit2
             GIT_TAG ${GIT2_LIB_VERSION}
-            SOURCE_DIR ${JUG_DEP_GIT2_LIB_PATH})
+            SOURCE_DIR ${JUG_DEP_GIT2_LIB_PATH}
+            SYSTEM)
     else()
         FetchContent_Declare(libgit2
             GIT_REPOSITORY https://github.com/libgit2/libgit2.git
             GIT_TAG ${GIT2_LIB_VERSION}
-            SOURCE_DIR ${JUG_DEP_GIT2_LIB_PATH})
+            SOURCE_DIR ${JUG_DEP_GIT2_LIB_PATH}
+            SYSTEM)
     endif()
     FetchContent_MakeAvailable(libgit2)
 

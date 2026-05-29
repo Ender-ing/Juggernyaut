@@ -28,7 +28,7 @@ if(DEFINED CPP_DIAGCODES_SCAN_DIR AND NOT TARGET JugGlobalDiagnostics)
 
     add_custom_command(
         OUTPUT ${CPP_DIAGCODES_FILE}
-        COMMAND JugDiagnosticsCode 
+        COMMAND  $<TARGET_FILE:JugDiagnosticsCode>
             ${CPP_DIAGCODES_OUTPUT_DIR} ${CPP_DIAGCODES_OUTPUT_FILENAME} ${CPP_DIAGCODES_SCAN_DIR}
         DEPENDS JugDiagnosticsCode ${DIAG_FILES}
         COMMENT "Running JugDiagnosticsCode to generate a diagnostic codes files..."

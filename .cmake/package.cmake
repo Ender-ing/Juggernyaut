@@ -2,13 +2,16 @@ set(GLOBAL_PACKAGE_EMAIL_ADDRESS "admin@ender.ing")
 set(GLOBAL_PACKAGE_DESCRIPTION "A complete Toolchain for the Juggernyaut general programming language.")
 set(GLOBAL_PACKAGE_DOCS "https://ender.ing/docs/juggernyaut/")
 set(GLOBAL_DISPLAY_PACKAGE_NAME "Juggernyaut Toolchain")
+set(GLOBAL_WIN_ICO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.ico")
 
 # Package Identity
 set(CPACK_PACKAGE_NAME ${GLOBAL_DISPLAY_PACKAGE_NAME})
 set(CPACK_PACKAGE_VENDOR "Ender-ing")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${GLOBAL_PACKAGE_DESCRIPTION})
+set(CPACK_PACKAGE_CONTACT ${GLOBAL_PACKAGE_EMAIL_ADDRESS})
 set(CPACK_IFW_PRODUCT_URL ${GLOBAL_PACKAGE_DOCS})
 if (WIN32)
-    set(CPACK_IFW_PACKAGE_ICON "${JUG_CMAKE_DIR}/installer/assets/jug_icon.ico")
+    set(CPACK_IFW_PACKAGE_ICON ${GLOBAL_WIN_ICO})
 elseif(APPLE)
     set(CPACK_IFW_PACKAGE_ICON "${JUG_CMAKE_DIR}/installer/assets/jug_icon.icns")
 endif()
@@ -16,17 +19,37 @@ endif()
 sanitize_version("${JUG_RELEASE_VERSION}" PROPER_RELEASE_VERSION)
 set(CPACK_PACKAGE_VERSION "${PROPER_RELEASE_VERSION}")
 
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Ender-ing/Juggernyaut")
-set(CPACK_PACKAGE_FILE_NAME "Juggernyaut-Installer-v${JUG_RELEASE_VERSION}-${JUG_BUILD_PLATFORM_NAME}")
+# Generators' Installer configs
+configure_file(
+    "${JUG_CMAKE_DIR}/installer/package-gen.cmake.in"
+    "${CMAKE_BINARY_DIR}/package-gen.cmake"
+    @ONLY
+)
+set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/package-gen.cmake")
 
 # Generators
 set(CPACK_GENERATOR "IFW")
 if(WIN32)
     # Limit IFW to the available public binaries
-    if((NOT ${JUG_BINARY_PLATFORM} STREQUAL "arm64") AND (NOT ${JUG_BINARY_PLATFORM} STREQUAL "x86_64"))
-        message(WARNING "Generating an installer for this platform is not supported!")
-        set(CPACK_GENERATOR "")
+    if((${JUG_BINARY_PLATFORM} STREQUAL "arm64") OR (${JUG_BINARY_PLATFORM} STREQUAL "x86_64"))
+        list(APPEND CPACK_GENERATOR "NSIS")
+    else()
+        set(CPACK_GENERATOR "NSIS")
     endif()
+
+    # Package Identity
+    set(CPACK_NSIS_MUI_ICON ${GLOBAL_WIN_ICO})
+    set(CPACK_NSIS_MUI_UNIICON ${GLOBAL_WIN_ICO})
+
+    # modify PATH
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    set(CPACK_NSIS_PATH_EXTRA "%INSTDIR%\\\\bin")
+
+    # Prevent files duplication
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+
+    # Ensure it doesn't try to add desktop shortcuts if you don't want them
+    set(CPACK_NSIS_MENU_LINKS "bin/Juggernyaut.exe" "Juggernyaut")
 elseif(APPLE)
     # Limit IFW to the available public binaries
     if((NOT ${JUG_BINARY_PLATFORM} STREQUAL "arm64") AND (NOT ${JUG_BINARY_PLATFORM} STREQUAL "x86_64"))

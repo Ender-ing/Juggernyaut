@@ -1,0 +1,12 @@
+# Install dir
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Ender-ing/Juggernyaut")
+if(UNIX)
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/Ender-ing/juggernyaut")
+endif()
+
+# Installer name
+if(CPACK_GENERATOR MATCHES "NSIS")
+    set(CPACK_PACKAGE_FILE_NAME "Juggernyaut-NSIS-Installer-v@JUG_RELEASE_VERSION@-@JUG_BINARY_PLATFORM@")
+else()
+    set(CPACK_PACKAGE_FILE_NAME "Juggernyaut-Installer-v@JUG_RELEASE_VERSION@-@JUG_BINARY_PLATFORM@")
+endif()

@@ -15,6 +15,7 @@ if((DEFINED GTEST_VERSION) AND (NOT TARGET googletest))
             googletest
             SOURCE_DIR ${JUG_DEP_GTEST_LIB_PATH}
             EXCLUDE_FROM_ALL
+            SYSTEM
         )
     else()
         FetchContent_Declare(
@@ -23,6 +24,7 @@ if((DEFINED GTEST_VERSION) AND (NOT TARGET googletest))
             GIT_TAG v${GTEST_VERSION}
             SOURCE_DIR ${JUG_DEP_GTEST_LIB_PATH}
             EXCLUDE_FROM_ALL
+            SYSTEM
         )
     endif()
     FetchContent_MakeAvailable(googletest)

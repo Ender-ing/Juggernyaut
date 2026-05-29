@@ -150,12 +150,14 @@ set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 #endif()
 
 # Make adding global C/C++ flags easier
-function(add_c_cpp_global_flag flag)
+macro(add_c_cpp_global_flag flag)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${flag}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${flag}")
-endfunction()
+    add_compile_options(${flag})
+    add_link_options(${flag})
+endmacro()
 
 # Make adding global compile definitions easier
 function(add_global_compile_definition definition)
@@ -167,26 +169,32 @@ function(add_global_compile_definition definition)
     endforeach()
 endfunction()
 
-include(CheckCCompilerFlag)
+include(CheckCompilerFlag)
+macro(check_cxx_flags_support FLAGS RESULT_VAR)
+    # Save the original state of required flags
+    set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+    set(OLD_CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS})
 
-# Test for address sanitizer support
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=address")
-check_c_compiler_flag("-fsanitize=address" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS)
-# Test for undefined behavior sanitizer support
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=undefined")
-check_c_compiler_flag("-fsanitize=undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_UNDEFINED)
-# Test for thread sanitizer support
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=thread")
-check_c_compiler_flag("-fsanitize=thread" CMAKE_CXX_SUPPORTS_FSANITIZE_THREAD)
-# Test for memory sanitizer support
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=memory")
-check_c_compiler_flag("-fsanitize=memory" CMAKE_CXX_SUPPORTS_FSANITIZE_MEMORY)
-# Test for leak sanitizer support
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=leak")
-check_c_compiler_flag("-fsanitize=leak" CMAKE_CXX_SUPPORTS_FSANITIZE_LEAK)
-# Test for address and undefined sanitizer support combined.
-set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
-check_c_compiler_flag("-fsanitize=address,undefined" CMAKE_CXX_SUPPORTS_FSANITIZE_ADDRESS_UNDEFINED)
+    # Forward the flags to BOTH the compiler test and the linker test
+    set(CMAKE_REQUIRED_FLAGS "${OLD_CMAKE_REQUIRED_FLAGS} ${FLAGS}")
+    set(CMAKE_REQUIRED_LINK_OPTIONS "${OLD_CMAKE_REQUIRED_LINK_OPTIONS}" "${FLAGS}")
+
+    # Check CXX (C++) capability. (Change to 'C' if checking a pure C project)
+    check_compiler_flag(CXX "${FLAGS}" ${RESULT_VAR})
+
+    # Restore flags
+    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_LINK_OPTIONS ${OLD_CMAKE_REQUIRED_LINK_OPTIONS})
+endmacro()
+
+# Address Sanitizer
+check_cxx_flags_support("-fsanitize=address" HAVE_ASAN)
+# Undefined Behavior Sanitizer
+check_cxx_flags_support("-fsanitize=undefined" HAVE_UBSAN)
+# Combined Address & Undefined
+check_cxx_flags_support("-fsanitize=address,undefined" HAVE_ASAN_UBSAN)
+# Thread Sanitizer (Note: cannot be combined with ASan!)
+check_cxx_flags_support("-fsanitize=thread" HAVE_TSAN)
 
 if(MSVC)
     add_compile_options(
@@ -206,3 +214,12 @@ macro(ignore_external_target_warnings TARGET)
     # Supress all warnings
     set_target_properties(${TARGET} PROPERTIES SYSTEM TRUE)
 endmacro()
+
+# Include the module to check compiler flags
+include(CheckCXXCompilerFlag)
+
+# Ignore GCC version-related warnings
+check_cxx_compiler_flag("-Wno-psabi" HAS_WNO_PSABI)
+if(HAS_WNO_PSABI)
+    add_compile_options(-Wno-psabi)
+endif()

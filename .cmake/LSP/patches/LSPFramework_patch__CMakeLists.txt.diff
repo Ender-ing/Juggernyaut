@@ -1,0 +1,9 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -120,5 +120,5 @@
+ 
+ add_custom_command(
+-	COMMAND lspgen ${LSP_METAMODEL_JSON}
++	COMMAND $<TARGET_FILE:lspgen> ${LSP_METAMODEL_JSON}
+ 	WORKING_DIRECTORY ${LSP_GENERATED_FILES_DIR}/lsp
+ 	OUTPUT ${LSP_GENERATED_HEADERS} ${LSP_GENERATED_SOURCES}

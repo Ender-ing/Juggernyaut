@@ -1,0 +1,40 @@
+message(STATUS "[TOOLCHAIN] Applying configs: ${CMAKE_CURRENT_LIST_FILE}")
+
+# Internal configs
+#set(CMAKE_GENERATOR_PLATFORM ? CACHE STRING "" FORCE)
+set(CMAKE_UNIX_GENERATOR_PLATFORM x86 CACHE STRING "" FORCE)
+set(JUG_BUILD_PLATFORM_NAME x86_32 CACHE STRING "" FORCE)
+set(JUG_MATCH_INSTALL_ARCH ON CACHE STRING "" FORCE)
+
+# CMake configs
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR i686)
+set(CMAKE_LIBRARY_PATH "/usr/lib32;/usr/lib/i386-linux-gnu")
+set(CMAKE_INCLUDE_PATH "/usr/include/i386-linux-gnu")
+set(CMAKE_FIND_ROOT_PATH "/usr/lib/i386-linux-gnu;/usr/lib32;/usr/include/i386-linux-gnu")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# CTest Configs
+#set(CMAKE_TEST_ENVIRONMENT ?)
+
+# C/C++ compiler configs
+#set(CMAKE_C_COMPILER ?)
+#set(CMAKE_CXX_COMPILER ?)
+#set(CMAKE_CROSSCOMPILING_EMULATOR ?)
+
+# C/C++ flags & linker flags
+set(CMAKE_C_FLAGS "-m32" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "-m32" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-m32" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-m32" CACHE STRING "" FORCE)
+
+# libgit2 Configs
+set(REGEX_BACKEND regcomp CACHE STRING "" FORCE)
+
+# OpenSSL configs (for libgit2)
+set(USE_HTTPS OpenSSL CACHE STRING "" FORCE)
+set(OPENSSL_INCLUDE_DIR "/usr/include;/usr/include/i386-linux-gnu" CACHE PATH "" FORCE)
+set(OPENSSL_CRYPTO_LIBRARY "/usr/lib/i386-linux-gnu/libcrypto.so" CACHE FILEPATH "" FORCE)
+set(OPENSSL_SSL_LIBRARY "/usr/lib/i386-linux-gnu/libssl.so" CACHE FILEPATH "" FORCE)

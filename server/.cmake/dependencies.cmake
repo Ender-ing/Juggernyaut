@@ -16,12 +16,20 @@ else()
     set(JUG_DEP_LSP_FRAMEWORK_LIB_PATH ${JUG_DEPENDENCIES_DIR}/lsp-framework)
     if(EXISTS ${JUG_DEP_LSP_FRAMEWORK_LIB_PATH}/CMakeLists.txt)
         FetchContent_Declare(lsp
-            SOURCE_DIR ${JUG_DEP_LSP_FRAMEWORK_LIB_PATH})
+            SOURCE_DIR ${JUG_DEP_LSP_FRAMEWORK_LIB_PATH}
+            SYSTEM)
     else()
         FetchContent_Declare(lsp
             GIT_REPOSITORY https://github.com/leon-bckl/lsp-framework.git
             GIT_TAG ${LSP_FRAMEWORK_LIB_VERSION}
-            SOURCE_DIR ${JUG_DEP_LSP_FRAMEWORK_LIB_PATH})
+            SOURCE_DIR ${JUG_DEP_LSP_FRAMEWORK_LIB_PATH}
+            SYSTEM
+
+            PATCH_COMMAND "${CMAKE_COMMAND}" 
+                "-DPATCH_DIR=${JUG_CMAKE_DIR}/LSP/patches"
+                "-DPATCH_EXE=${GIT_PATCH_EXECUTABLE}"
+                -P "${JUG_CMAKE_DIR}/LSP/patches/apply.cmake"
+            )
     endif()
     FetchContent_MakeAvailable(lsp)
 endif()

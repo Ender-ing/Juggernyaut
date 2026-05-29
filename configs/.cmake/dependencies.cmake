@@ -11,6 +11,7 @@ if(NOT DEFINED TOMLPP_INCLUDE_DIR)
         FetchContent_Declare(
             tomlplusplus
             SOURCE_DIR ${JUG_DEP_TOMLPP_LIB_PATH}
+            SYSTEM
         )
     else()
         FetchContent_Declare(
@@ -18,6 +19,7 @@ if(NOT DEFINED TOMLPP_INCLUDE_DIR)
             GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
             GIT_TAG v${TOMLPP_VERSION}
             SOURCE_DIR ${JUG_DEP_TOMLPP_LIB_PATH}
+            SYSTEM
         )
     endif()
     FetchContent_MakeAvailable(tomlplusplus)
