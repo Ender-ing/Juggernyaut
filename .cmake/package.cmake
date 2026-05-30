@@ -2,7 +2,8 @@ set(GLOBAL_PACKAGE_EMAIL_ADDRESS "admin@ender.ing")
 set(GLOBAL_PACKAGE_DESCRIPTION "A complete Toolchain for the Juggernyaut general programming language.")
 set(GLOBAL_PACKAGE_DOCS "https://ender.ing/docs/juggernyaut/")
 set(GLOBAL_DISPLAY_PACKAGE_NAME "Juggernyaut Toolchain")
-set(GLOBAL_WIN_ICO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.ico")
+set(GLOBAL_PACKAGE_WIN_ICO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.ico")
+set(GLOBAL_PACKAGE_LOGO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.png")
 
 # Package Identity
 set(CPACK_PACKAGE_NAME ${GLOBAL_DISPLAY_PACKAGE_NAME})
@@ -11,7 +12,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${GLOBAL_PACKAGE_DESCRIPTION})
 set(CPACK_PACKAGE_CONTACT ${GLOBAL_PACKAGE_EMAIL_ADDRESS})
 set(CPACK_IFW_PRODUCT_URL ${GLOBAL_PACKAGE_DOCS})
 if (WIN32)
-    set(CPACK_IFW_PACKAGE_ICON ${GLOBAL_WIN_ICO})
+    set(CPACK_IFW_PACKAGE_ICON ${GLOBAL_PACKAGE_WIN_ICO})
 elseif(APPLE)
     set(CPACK_IFW_PACKAGE_ICON "${JUG_CMAKE_DIR}/installer/assets/jug_icon.icns")
 endif()
@@ -21,7 +22,7 @@ set(CPACK_PACKAGE_VERSION "${PROPER_RELEASE_VERSION}")
 
 # Generators' Installer configs
 configure_file(
-    "${JUG_CMAKE_DIR}/installer/package-gen.cmake.in"
+    "${JUG_CMAKE_DIR}/installer/custom/package-gen.cmake.in"
     "${CMAKE_BINARY_DIR}/package-gen.cmake"
     @ONLY
 )
@@ -36,10 +37,37 @@ if(WIN32)
     else()
         set(CPACK_GENERATOR "NSIS")
     endif()
+    if(NOT ${JUG_BINARY_PLATFORM} STREQUAL "arm32")
+        list(APPEND CPACK_GENERATOR "External")
+        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${JUG_CMAKE_DIR}/installer/custom/MSIX.cmake")
+        set(CPACK_EXTERNAL_ENABLE_STAGING ON)
+    endif()
+
+    ## MSIX
+
+    # Configs
+    set(CPACK_MSIX_RUNTIME_FOLDER_NAME ${CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION})
+    set(CPACK_MSIX_GENERATE_UPLOAD ON)
+
+    # Identity
+    set(CPACK_MSIX_PACKAGE_IDENTITY_NAME "JuggernyautToolchain")
+    set(CPACK_MSIX_PACKAGE_ARCHITECTURE ${JUG_BINARY_PLATFORM})
+    set(CPACK_MSIX_PACKAGE_LOGO ${GLOBAL_PACKAGE_LOGO})
+    set(CPACK_MSIX_PACKAGE_LOGO_44 "${JUG_CMAKE_DIR}/installer/assets/jug_icon_44.png")
+    set(CPACK_MSIX_PACKAGE_LOGO_150 "${JUG_CMAKE_DIR}/installer/assets/jug_icon_150.png")
+
+    # Apps
+    include("${JUG_CMAKE_DIR}/installer/custom/MSIXTools.cmake")
+    cpack_msix_add_application_alias(JuggernyautCompiler "Juggernyaut Compiler" "Juggernyaut source compiler" jug-cmp)
+    cpack_msix_add_application_alias(JuggernyautServer "Juggernyaut Server" "Juggernyaut IDE language server"  jug-lsp)
+    cpack_msix_add_application_alias(JuggernyautPackageManager "Juggernyaut Package Manager" "Juggernyaut language package manager" jug-pck)
+    cpack_msix_add_application_alias(jug "Juggernyaut Toolchain" "Juggernyaut development toolchain" jug)
+
+    ## NSIS
 
     # Package Identity
-    set(CPACK_NSIS_MUI_ICON ${GLOBAL_WIN_ICO})
-    set(CPACK_NSIS_MUI_UNIICON ${GLOBAL_WIN_ICO})
+    set(CPACK_NSIS_MUI_ICON ${GLOBAL_PACKAGE_WIN_ICO})
+    set(CPACK_NSIS_MUI_UNIICON ${GLOBAL_PACKAGE_WIN_ICO})
 
     # modify PATH
     set(CPACK_NSIS_MODIFY_PATH ON)
@@ -108,7 +136,7 @@ set(CPACK_IFW_PACKAGE_WATERMARK "${JUG_CMAKE_DIR}/installer/assets/ifw_watermark
 # The top-right header logo
 set(CPACK_IFW_PACKAGE_LOGO "${JUG_CMAKE_DIR}/installer/assets/ifw_backdrop_logo.png")
 # The small window icon
-set(CPACK_IFW_PACKAGE_WINDOW_ICON "${JUG_CMAKE_DIR}/installer/assets/jug_icon.png")
+set(CPACK_IFW_PACKAGE_WINDOW_ICON ${GLOBAL_PACKAGE_LOGO})
 # Top bar banner
 set(CPACK_IFW_PACKAGE_BANNER "${JUG_CMAKE_DIR}/installer/assets/ifw_banner.png")
 # Colouring
