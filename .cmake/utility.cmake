@@ -176,25 +176,75 @@ function(sanitize_version RAW_VERSION OUTPUT_VAR)
 
         string(TOLOWER "${REL_NAME}" REL_NAME)
         if(REL_NAME STREQUAL "alpha")
-            set(REL_CODE "1")
-        elseif(REL_NAME STREQUAL "beta")
             set(REL_CODE "2")
-        elseif(REL_NAME STREQUAL "nightly")
+        elseif(REL_NAME STREQUAL "beta")
             set(REL_CODE "3")
-        elseif(REL_NAME STREQUAL "candidate")
+        elseif(REL_NAME STREQUAL "nightly")
             set(REL_CODE "4")
-        elseif(REL_NAME STREQUAL "release")
+        elseif(REL_NAME STREQUAL "candidate")
             set(REL_CODE "5")
-        elseif(REL_NAME STREQUAL "hotfix")
+        elseif(REL_NAME STREQUAL "release")
             set(REL_CODE "6")
+        elseif(REL_NAME STREQUAL "hotfix")
+            set(REL_CODE "7")
         else()
-            set(REL_CODE "0") # Fallback for unknown release tags
+            set(REL_CODE "1") # Fallback for unknown release tags
         endif()
 
         # Construct version string
-        set(${OUTPUT_VAR} "${SEMVER}-${REL_CODE}.${REL_PATCH}" PARENT_SCOPE)
+        set(${OUTPUT_VAR} "${SEMVER}.${REL_CODE}${REL_PATCH}" PARENT_SCOPE)
 
     else()
         message(FATAL_ERROR "[VERSION SANITIZER] Release version string pattern isn't allowed!")
+    endif()
+endfunction()
+
+function(install_debug_symbols TARGET_NAME COMPONENT_NAME DEBUG_COMPONENT)
+
+    # Set target subfolder
+    get_target_property(TARGET_TYPE ${TARGET_NAME} TYPE)
+    if(TARGET_TYPE STREQUAL "EXECUTABLE")
+        set(TARGET_DEBUG_SUBFOLDER "bin")
+    elseif(TARGET_TYPE STREQUAL "SHARED_LIBRARY" AND WIN32)
+        set(TARGET_DEBUG_SUBFOLDER "bin")
+    else()
+        set(TARGET_DEBUG_SUBFOLDER "lib")
+    endif()
+
+    if(MSVC)
+        install(FILES $<TARGET_PDB_FILE:${TARGET_NAME}>
+            DESTINATION symbols/${TARGET_DEBUG_SUBFOLDER}
+            COMPONENT ${DEBUG_COMPONENT}
+            OPTIONAL
+        )
+    elseif(APPLE)
+        # MACOS: Native Split-DWARF equivalent (.dSYM Bundle)
+        # Apple Clang natively leaves DWARF data in .o files. 
+        # dsymutil links that map into a deployable .dSYM directory bundle.
+        
+        install(CODE "
+            message(STATUS \"Generating .dSYM bundle for ${TARGET_NAME}...\")
+            file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/symbols/${TARGET_DEBUG_SUBFOLDER}\")
+            
+            execute_process(COMMAND dsymutil \"$<TARGET_FILE:${TARGET_NAME}>\" 
+                            -o \"\${CMAKE_INSTALL_PREFIX}/symbols/${TARGET_DEBUG_SUBFOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>.dSYM\")
+            " COMPONENT ${DEBUG_COMPONENT}
+        )
+
+        install(CODE "
+            message(STATUS \"Stripping macOS binary ${TARGET_NAME}...\")
+            execute_process(COMMAND strip -S \"\${CMAKE_INSTALL_PREFIX}/${TARGET_DEBUG_SUBFOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>\")
+            " COMPONENT ${COMPONENT_NAME}
+        )
+    elseif(UNIX AND NOT APPLE)
+        # LINUX: Fission (-gsplit-dwarf) WITHOUT merging
+
+        # Gather all the scattered .dwo files directly from the target's build tree.
+        # CMake outputs object and .dwo files into the CMakeFiles/TargetName.dir/ folder.
+        install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${TARGET_NAME}.dir/"
+            DESTINATION symbols/${TARGET_DEBUG_SUBFOLDER}/${TARGET_NAME}_dwo
+            COMPONENT ${DEBUG_COMPONENT}
+            FILES_MATCHING PATTERN "*.dwo"
+        )
     endif()
 endfunction()

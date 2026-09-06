@@ -166,12 +166,12 @@ jobs:
         name: Juggernyaut-MSIX-Installer-Windows-${{inputs.build_platform_name}}
         path: ${{github.workspace}}/.dist/Juggernyaut-Installer-v${{env.VERSION}}-${{inputs.build_platform_name}}.msix
 
-    - name: Upload APPXUpload Installer Artifact (optional)
+    - name: Upload MSIXUpload Installer Artifact (optional)
       if: inputs.bundle_binaries
       uses: actions/upload-artifact@v7
       with:
-        name: Juggernyaut-APPXUpload-Installer-Windows-${{inputs.build_platform_name}}
-        path: ${{github.workspace}}/.dist/Juggernyaut-Installer-v${{env.VERSION}}-${{inputs.build_platform_name}}.appxupload
+        name: Juggernyaut-MSIXUpload-Installer-Windows-${{inputs.build_platform_name}}
+        path: ${{github.workspace}}/.dist/Juggernyaut-Installer-v${{env.VERSION}}-${{inputs.build_platform_name}}.msixupload
 
     - name: Upload NSIS Installer Artifact (optional)
       if: inputs.bundle_binaries

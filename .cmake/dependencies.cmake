@@ -218,3 +218,28 @@ if(DEFINED NEED_FMT_LIB)
         custom_malloc(fmt)
     endif()
 endif()
+
+# MSIX generator
+if(WIN32)
+    if(DEFINED CPACK_MSIX_GENERATOR)
+        message(STATUS "[DEPENDENCIES] MSIX generator is present!")
+    else()
+        # Download dep
+        message(STATUS "[DEPENDENCIES] Fetching MSIX generator...")
+        set(JUG_DEP_MSIX_GEN_PATH ${JUG_DEPENDENCIES_DIR}/msix-gen)
+        if(EXISTS ${JUG_DEP_MSIX_GEN_PATH}/CMakeLists.txt)
+            FetchContent_Declare(MSIXGen
+                SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
+                EXCLUDE_FROM_ALL
+                SYSTEM)
+        else()
+            FetchContent_Declare(MSIXGen
+                GIT_REPOSITORY https://github.com/Ender-ing/cpack-msix-generator
+                GIT_TAG main
+                SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
+                EXCLUDE_FROM_ALL
+                SYSTEM)
+        endif()
+    endif()
+    FetchContent_MakeAvailable(MSIXGen)
+endif()

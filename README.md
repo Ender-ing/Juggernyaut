@@ -39,8 +39,27 @@ An experimental general-purpose programming language with *no particular purpose
 
 ## Memory debugging
 
+### Linux (Valgrind)
+
 ```bash
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./NAME
+```
+
+### Windows (WinDBG)
+
+```batch
+: Loading debug symbols
+.sympath+ F:\PATH\TO\.dist\Debug\ARCH\symbols\bin
+.reload
+
+:: Inspecting live RAM data
+~*k
+~[ThreadNumber]s
+.frame [Number]
+: Displaying Local variables
+dv /t /v
+: interactive browsing
+dx [VariableName]
 ```
 
 ## Pull Requests

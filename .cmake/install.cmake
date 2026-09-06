@@ -33,6 +33,8 @@ install(TARGETS JuggernyautCommonLibrary JuggernyautCatConsoleLibrary
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
+install_debug_symbols(JuggernyautCommonLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautCatConsoleLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # Core
 install(TARGETS JuggernyautDiagnosticsLibrary JuggernyautDataLibrary
@@ -41,6 +43,11 @@ install(TARGETS JuggernyautDiagnosticsLibrary JuggernyautDataLibrary
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
+install_debug_symbols(JuggernyautDiagnosticsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautDataLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautParserLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautSessionLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautManagerLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # Configs
 install(TARGETS JuggernyautConfigsLibrary
@@ -48,6 +55,7 @@ install(TARGETS JuggernyautConfigsLibrary
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
+install_debug_symbols(JuggernyautConfigsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # External deps (without installs/excluded)
 if(TARGET mimalloc)
@@ -55,6 +63,7 @@ if(TARGET mimalloc)
         RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
         LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
     )
+    install_debug_symbols(mimalloc CmpJuggernyautCompiler CmpDebugExternalCore)
     if(WIN32)
         install(CODE "
             file(GLOB MIMALLOC_REDIRECT_FILES \"${JUG_OUT_FINAL_DIR}/bin/mimalloc-redirect*.dll\")
@@ -75,17 +84,12 @@ install(TARGETS antlr4_shared
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
+install_debug_symbols(antlr4_shared CmpJuggernyautCompiler CmpDebugExternalCore)
 install(TARGETS libgit2package
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautPackageManager
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautPackageManager
 )
-# Copy ANTLR4 binaries
-#add_custom_command(
-#    TARGET JuggernyautToolchain
-#    POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:antlr4_shared> "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_LINKER_FILE:antlr4_shared> "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+install_debug_symbols(libgit2package CmpJuggernyautPackageManager CmpDebugExternalPackageManager)
 
 # Executables
 install(TARGETS JuggernyautCompiler
@@ -93,16 +97,19 @@ install(TARGETS JuggernyautCompiler
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
+install_debug_symbols(JuggernyautCompiler CmpJuggernyautCompiler CmpDebugJuggernyautCompiler)
 install(TARGETS JuggernyautServer
     EXPORT JuggernyautToolchain
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautServer
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautServer
 )
+install_debug_symbols(JuggernyautServer CmpJuggernyautServer CmpDebugJuggernyautServer)
 install(TARGETS JuggernyautPackageManager
     EXPORT JuggernyautToolchain
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautPackageManager
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautPackageManager
 )
+install_debug_symbols(JuggernyautPackageManager CmpJuggernyautPackageManager CmpDebugJuggernyautPackageManager)
 
 # Commands
 install_command_symlink(JuggernyautCompiler CmpJuggernyautCompiler jug-cmp)
@@ -122,6 +129,7 @@ install(TARGETS jug
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautUnified
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautUnified
 )
+install_debug_symbols(jug CmpJuggernyautUnified CmpDebugJuggernyautUnified)
 
 # Cleanup
 if(WIN32)
