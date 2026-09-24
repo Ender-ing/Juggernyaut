@@ -223,3 +223,17 @@ check_cxx_compiler_flag("-Wno-psabi" HAS_WNO_PSABI)
 if(HAS_WNO_PSABI)
     add_compile_options(-Wno-psabi)
 endif()
+
+# Force symbols generation
+if(MSVC)
+    add_compile_options(/Zi)
+    add_link_options(/DEBUG)
+else()
+    add_compile_options(-g) # May embed debug symbols into the binary
+
+    # Check for built-in split flags
+    check_cxx_compiler_flag("-gsplit-dwarf" HAS_GSPLIT_DWARF)
+    if(HAS_GSPLIT_DWARF)
+        add_compile_options(-gsplit-dwarf)
+    endif()
+endif()

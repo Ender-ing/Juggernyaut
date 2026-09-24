@@ -38,26 +38,22 @@ if(WIN32)
         set(CPACK_GENERATOR "NSIS")
     endif()
     if(NOT ${JUG_BINARY_PLATFORM} STREQUAL "arm32")
-        list(APPEND CPACK_GENERATOR "External")
-        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${JUG_CMAKE_DIR}/installer/custom/MSIX.cmake")
-        set(CPACK_EXTERNAL_ENABLE_STAGING ON)
+        cpack_msix_preset()
     endif()
 
     ## MSIX
 
     # Configs
-    set(CPACK_MSIX_RUNTIME_FOLDER_NAME ${CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION})
     set(CPACK_MSIX_GENERATE_UPLOAD ON)
+    set(CPACK_MSIX_DEBUG_PATH_OFFSET "symbols")
 
     # Identity
-    set(CPACK_MSIX_PACKAGE_IDENTITY_NAME "JuggernyautToolchain")
     set(CPACK_MSIX_PACKAGE_ARCHITECTURE ${JUG_BINARY_PLATFORM})
     set(CPACK_MSIX_PACKAGE_LOGO ${GLOBAL_PACKAGE_LOGO})
     set(CPACK_MSIX_PACKAGE_LOGO_44 "${JUG_CMAKE_DIR}/installer/assets/jug_icon_44.png")
     set(CPACK_MSIX_PACKAGE_LOGO_150 "${JUG_CMAKE_DIR}/installer/assets/jug_icon_150.png")
 
     # Apps
-    include("${JUG_CMAKE_DIR}/installer/custom/MSIXTools.cmake")
     cpack_msix_add_application_alias(JuggernyautCompiler "Juggernyaut Compiler" "Juggernyaut source compiler" jug-cmp)
     cpack_msix_add_application_alias(JuggernyautServer "Juggernyaut Server" "Juggernyaut IDE language server"  jug-lsp)
     cpack_msix_add_application_alias(JuggernyautPackageManager "Juggernyaut Package Manager" "Juggernyaut language package manager" jug-pck)
@@ -169,6 +165,15 @@ set(CPACK_COMPONENTS_ALL
 
     # System components
     CmpSystemRuntimeLibs
+
+    # Debug symbols
+    CmpDebugJuggernyautCore
+    CmpDebugJuggernyautCompiler
+    CmpDebugJuggernyautServer
+    CmpDebugJuggernyautPackageManager
+    CmpDebugJuggernyautUnified
+    CmpDebugExternalCore
+    CmpDebugExternalPackageManager
 )
 if(JUG_USES_IFW)
     list(APPEND CPACK_COMPONENTS_ALL QSPathSetup)
@@ -181,6 +186,7 @@ endif()
 set(CPACK_COMPONENTS_GROUPING IGNORE)
 
 # Installation options
+include(CPackComponent)
 
 # Toolchain specifics
 cpack_add_component_group(Toolchain
@@ -237,6 +243,54 @@ if(WIN32 AND JUG_USES_IFW)
     )
 endif()
 
+# Debug symbols
+cpack_add_component_group(DebugSymbs
+    DISPLAY_NAME "Debug Symbols"
+    DESCRIPTION "The debug symbols for non-system components."
+)
+cpack_add_component(CmpDebugJuggernyautCore
+    DISPLAY_NAME "Juggernyaut Core"
+    DESCRIPTION "Debug symbols for core Juggernyaut components."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugJuggernyautCompiler
+    DISPLAY_NAME "Juggernyaut Compiler"
+    DESCRIPTION "Debug symbols for the Juggernyaut compiler."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugJuggernyautServer
+    DISPLAY_NAME "Juggernyaut Server"
+    DESCRIPTION "Debug symbols for the Juggernyaut language server."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugJuggernyautPackageManager
+    DISPLAY_NAME "Juggernyaut Package Manager"
+    DESCRIPTION "Debug symbols for the Juggernyaut package manager."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugJuggernyautUnified
+    DISPLAY_NAME "Juggernyaut unified command"
+    DESCRIPTION "Debug symbols for the unified command."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugExternalCore
+    DISPLAY_NAME "Juggernyaut Core (External)"
+    DESCRIPTION "Debug symbols for external core Juggernyaut components."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+cpack_add_component(CmpDebugExternalPackageManager
+    DISPLAY_NAME "Juggernyaut Package Manager (External)"
+    DESCRIPTION "Debug symbols for external package manager components."
+    GROUP DebugSymbs
+    DISABLED TRUE
+)
+
 # Handle online fetching
 # cpack_ifw_add_repository()
 # cpack_ifw_update_repository()
@@ -263,4 +317,16 @@ if(JUG_USES_IFW)
             SCRIPT "${JUG_CMAKE_DIR}/installer/menu-shortcuts.qs"
         )
     endif()
+
+    # Order groups
+    cpack_ifw_configure_component_group(Toolchain
+        SORTING_PRIORITY 100
+        EXPANDED
+    )
+    cpack_ifw_configure_component_group(SystemConfigs
+        SORTING_PRIORITY 50
+    )
+    cpack_ifw_configure_component_group(DebugSymbs
+        SORTING_PRIORITY 10
+    )
 endif()
