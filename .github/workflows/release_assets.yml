@@ -41,6 +41,10 @@ jobs:
   build-binaries-release-security:
     name: Perform security analysis
     uses: ./.github/workflows/_binaries_dynamic_build.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     needs:
       - manage-release-version
     with:
@@ -50,7 +54,7 @@ jobs:
       release_version: ${{needs.manage-release-version.outputs.version}}
       security_analysis: true
 
-      # binaries binaries
+  # binaries binaries
   build-binaries-release:
     name: Generate 'Release' binaries
     uses: ./.github/workflows/_binaries_dynamic_build.yml
