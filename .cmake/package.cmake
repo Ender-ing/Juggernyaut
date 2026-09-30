@@ -1,7 +1,7 @@
 set(GLOBAL_PACKAGE_EMAIL_ADDRESS "admin@ender.ing")
 set(GLOBAL_PACKAGE_DESCRIPTION "A complete Toolchain for the Juggernyaut general programming language.")
 set(GLOBAL_PACKAGE_DOCS "https://ender.ing/docs/juggernyaut/")
-set(GLOBAL_DISPLAY_PACKAGE_NAME "Juggernyaut Toolchain")
+set(GLOBAL_DISPLAY_PACKAGE_NAME "Juggernyaut")
 set(GLOBAL_PACKAGE_WIN_ICO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.ico")
 set(GLOBAL_PACKAGE_LOGO "${JUG_CMAKE_DIR}/installer/assets/jug_icon.png")
 
@@ -42,6 +42,8 @@ if(WIN32)
     endif()
 
     ## MSIX
+    set(CPACK_MSIX_PACKAGE_PUBLISHER_COMMON_NAME "47B539EA-EBC7-4931-A59E-771381EDF0E6")
+    set(CPACK_MSIX_PACKAGE_IDENTITY_NAME "Ender.ing.Juggernyaut")
 
     # Configs
     set(CPACK_MSIX_GENERATE_UPLOAD ON)

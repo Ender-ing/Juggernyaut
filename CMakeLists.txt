@@ -24,7 +24,7 @@ set(JUG_LICENSE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
 
 # Set a default JUG_RELEASE_VERSION
 if(NOT DEFINED JUG_RELEASE_VERSION)
-    set(JUG_RELEASE_VERSION "0.0.0-danger.000")
+    set(JUG_RELEASE_VERSION "0.0.1-danger.000")
 endif()
 
 include(${JUG_CMAKE_DIR}/messages.cmake)
