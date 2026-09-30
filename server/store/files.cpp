@@ -15,10 +15,20 @@ namespace fs = std::filesystem;
 
 namespace Store {
     std::string normalizePath(const std::string &path) {
-        std::string sanitized = (std::string) lsp::DocumentUri::fromPath(path).path();
+        // Copy string
+        std::string sanitized = path;
 
         // Handle Windows backslashes
         std::replace(sanitized.begin(), sanitized.end(), '\\', '/');
+
+        // Fix duplication of drive letters on Windows
+        #ifdef _WIN32
+            if (sanitized.length() >= 3 && sanitized[0] == '/' && std::isalpha(sanitized[1]) && sanitized[2] == ':') {
+                sanitized = sanitized.substr(1);
+        }
+        #endif
+
+        sanitized = (std::string) lsp::DocumentUri::fileUriFromPath(sanitized).fsPath();
 
         // Normalize Windows drive letters
         if (sanitized.length() >= 2 && sanitized[1] == ':') {

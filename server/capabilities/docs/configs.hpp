@@ -21,9 +21,9 @@
 
 namespace Capabilities {
     namespace Docs {
-        extern Configs::BreakingChanges updateSessionConfigs(lsp::MessageHandler &messageHandler,
+        extern Configs::BreakingChanges updateSessionConfigs(lsp::ServerEndpoint &endpoint,
             Session::Session &session, const std::string &configUri) ;
-        extern void registerConfigsWatcher(lsp::MessageHandler &messageHandler, Session::Session &session,
+        extern void registerConfigsWatcher(lsp::ServerEndpoint &endpoint, Session::Session &session,
             std::unique_ptr<Session::SessionDebouncer> &debouncer, const std::string &configUri) ;
     }
 }

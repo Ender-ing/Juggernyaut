@@ -16,10 +16,13 @@
     #pragma GCC diagnostic ignored "-Wunused-result"
 #endif
 
+#include <lsp/types.h>
+#include <lsp/error.h>
+#include <lsp/io/socket.h>
+#include <lsp/io/standard_io.h>
 #include <lsp/messages.h>
-#include <lsp/connection.h>
-#include <lsp/io/standardio.h>
-#include <lsp/messagehandler.h>
+#include <lsp/protocol_version.h>
+#include <lsp/server_endpoint.h>
 
 // --- Restore warnings back to normal for your code ---
 #ifdef _MSC_VER

@@ -23,18 +23,58 @@
 namespace Capabilities {
     static std::unique_ptr<Session::SessionDebouncer> debouncer = nullptr;
 
-    lsp::ExecuteCommandOptions configureCommands(lsp::MessageHandler &messageHandler, Session::Session &session) {
-        // Create the ExecuteCommandOptions struct
-        lsp::ExecuteCommandOptions cmdOptions;
+    void logStdErr (std::string_view message) {
+        std::cerr << "[DBG] EVENT: " << message << std::endl;
+    }
 
-        // Register Juggernyaut's specific commands
-        cmdOptions.commands = {
-            "juggernyaut.server.session.trigger",
-            "juggernyaut.server.session.rejuvenate"
-        };
+    std::string configUri = "";
+    void configureProtocol(lsp::ServerEndpoint &endpoint, Session::Session &session, int &exit_code) {
+        bool received_shutdown = false;
+        Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
 
-        messageHandler.add<lsp::requests::Workspace_ExecuteCommand>(
-            [&session](const lsp::ExecuteCommandParams&& params) -> lsp::NullOr<lsp::LSPAny> {
+        if (debouncer == nullptr) {
+            debouncer = std::make_unique<Session::SessionDebouncer>(session);
+        }
+
+        endpoint.onInitialize(
+            [&session](auto&& params) -> lsp::InitializeResult {
+                //printMessage<lsp::requests::Initialize>(params);
+                logStdErr("Initialising the connection...");
+
+                // Get the workspace's 'jug.toml' file
+                if (!params.rootUri.isNull()) {
+                    const std::string rootUri = std::string(params.rootUri.value().path());
+
+                    // Look for 'jug.toml'
+                    configUri = session.store->_joinPaths(rootUri, "jug.toml");
+                }
+
+                // Declare basic server info and capabilities
+                return lsp::InitializeResult {
+                    .capabilities = {
+                        .positionEncoding = lsp::PositionEncodingKind::UTF16,
+                        .textDocumentSync = lsp::TextDocumentSyncOptions {
+                            .openClose = true,
+                            .change = lsp::TextDocumentSyncKind::Full,
+                            .save = true
+                        },
+                        .hoverProvider = false,
+                        .definitionProvider = false,
+                        .executeCommandProvider = lsp::ExecuteCommandOptions{
+                            .commands = {
+                                "juggernyaut.server.session.trigger",
+                                "juggernyaut.server.session.rejuvenate"
+                            }
+                        }
+                    },
+                    .serverInfo = lsp::ServerInfo {
+                        .name = "Juggernyaut Language Server",
+                        .version = Base::Info::version
+                    }
+                };
+            }
+        ).onWorkspaceExecuteCommand(
+            [&session](auto&& params) -> lsp::WorkspaceExecuteCommandResult {
 
                 // Route the specific command
                 if (params.command == "juggernyaut.server.session.trigger") {
@@ -50,84 +90,54 @@ namespace Capabilities {
                 }
 
                 // If the client requested an unregistered command
-                throw lsp::ResponseError(
-                    (int) lsp::ErrorCodes::MethodNotFound,
-                    "Command not recognized by Juggernyaut"
-                );
+                throw lsp::RequestError(lsp::MessageError::InvalidParams, "Unknown command: " + params.command);
             }
-        );
+        ).onInitialized(
+            [&session, &endpoint](auto&&) {
+                logStdErr("Initialising the workspace configs...");
 
-        return cmdOptions;
-    }
+                std::thread([&session, &endpoint]() {
+                    try {
+                        if (configUri != "" && session.store->_isFileAccessible(configUri)) {
+                            // Load external configs
+                            Configs::BreakingChanges changes = Docs::updateSessionConfigs(endpoint, session, configUri);
+                            Configs::refreshSessionState(session, changes);
 
-    std::string configUri = "";
-    void configureProtocol(lsp::MessageHandler &messageHandler, Session::Session &session, int &exit_code) {
-        bool received_shutdown = false;
-        Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
+                            // Watch file for changes
+                            Docs::registerConfigsWatcher(endpoint, session, debouncer, configUri);
+                        }
 
-        if (debouncer == nullptr) {
-            debouncer = std::make_unique<Session::SessionDebouncer>(session);
-        }
-
-        messageHandler.add<lsp::requests::Initialize>(
-            [&messageHandler, &session](lsp::requests::Initialize::Params&& params) {
-                printMessage<lsp::requests::Initialize>(params);
-
-                // Get the workspace's 'jug.toml' file
-                if (!params.rootUri.isNull()) {
-                    const std::string rootUri = std::string(params.rootUri.value().path());
-
-                    // Look for 'jug.toml'
-                    configUri = session.store->_joinPaths(rootUri, "jug.toml");
-                }
-
-                /*
-                 * Respond with an InitializeResult containing some basic server info and capabilities
-                 */
-                return lsp::requests::Initialize::Result {
-                    .capabilities = {
-                        .positionEncoding = lsp::PositionEncodingKind::UTF16,
-                        .textDocumentSync = lsp::TextDocumentSyncOptions {
-                            .openClose = true,
-                            .change = lsp::TextDocumentSyncKind::Full,
-                            .save = true
-                        },
-                        .hoverProvider = false,
-                        .executeCommandProvider = configureCommands(messageHandler, session)
-                    },
-                    .serverInfo = lsp::InitializeResultServerInfo {
-                        .name = "Juggernyaut Language Server",
-                        .version = Base::Info::version
-                    },
-                };
+                        // Allow Session runs
+                        debouncer->allowRuns = true;
+                
+                        // Optional: trigger the first debounce run now that everything is loaded
+                        debouncer->trigger();
+                
+                    } catch (const std::exception& e) {
+                        // If TOML parsing or something else fails, log it instead of crashing the server
+                        std::cerr << "Initialization Error: " << e.what() << std::endl;
+                    } catch (...) {
+                        std::cerr << "Unknown Error during initialization thread." << std::endl;
+                    }
+                }).detach();
             }
-        ).add<lsp::notifications::Initialized>(
-            [&session, &messageHandler](lsp::notifications::Initialized::Params&& params) {
-                if (configUri != "" && session.store->_isFileAccessible(configUri)) {
-                    // Load external configs
-                    Configs::BreakingChanges changes = Docs::updateSessionConfigs(messageHandler, session, configUri);
-                    Configs::refreshSessionState(session, changes);
+        ).onShutdown(
+            [&received_shutdown]() -> lsp::ShutdownResult {
+                //printMessage<lsp::requests::Shutdown>();
+                logStdErr("Shutting down the connection...");
 
-                    // Watch file for changes
-                    Docs::registerConfigsWatcher(messageHandler, session, debouncer, configUri);
-                }
-
-                // Allow Session runs
-                debouncer->allowRuns = true;
-            }
-        ).add<lsp::requests::Shutdown>(
-            [&received_shutdown]() {
-                printMessage<lsp::requests::Shutdown>();
                 received_shutdown = true;
-                return lsp::requests::Shutdown::Result();
+                return {};
             }
-        ).add<lsp::notifications::Exit>(
+        ).onExit(
             [&received_shutdown, &exit_code]() {
-                printMessage<lsp::notifications::Exit>();
+                //printMessage<lsp::notifications::Exit>();
+                logStdErr("Exiting...");
+
                 exit_code = received_shutdown ? 0 : 1;
             }
-        ).add<lsp::notifications::TextDocument_DidOpen>(
-            [store](lsp::notifications::TextDocument_DidOpen::Params&& params) {
+        ).onTextDocumentDidOpen(
+            [store](auto&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
                 std::string sourceCode = std::move(params.textDocument.text);
 
@@ -140,8 +150,8 @@ namespace Capabilities {
                 // Refresh the session
                 debouncer->trigger();
             }
-        ).add<lsp::notifications::TextDocument_DidChange>(
-            [store](lsp::notifications::TextDocument_DidChange::Params&& params) {
+        ).onTextDocumentDidChange(
+            [store](auto&& params) {
                 // Note: If you requested Full sync in your InitializeResult, 
                 // params.contentChanges[0].text will contain the entire updated file.
                 if (!params.contentChanges.empty()) {
@@ -161,8 +171,8 @@ namespace Capabilities {
                     debouncer->trigger();
                 }
             }
-        ).add<lsp::notifications::TextDocument_DidClose>(
-            [store](lsp::notifications::TextDocument_DidClose::Params&& params) {
+        ).onTextDocumentDidClose(
+            [store](auto&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
                 // Load doc
                 // TO-DO: Update content too??

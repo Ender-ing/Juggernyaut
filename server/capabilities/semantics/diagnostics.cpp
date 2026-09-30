@@ -47,12 +47,12 @@ namespace Capabilities {
             return diagnostic;
         }
 
-        lsp::MessageHandler *handler = nullptr;
-        void setupGlobalDiagnostics(lsp::MessageHandler &messageHandler, Session::Session &session) {
+        lsp::ServerEndpoint *io = nullptr;
+        void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Session::Session &session) {
             Data::Store::SourceStore *store = session.store;
 
-            // Update diagnostics handler
-            handler = &messageHandler;
+            // Update diagnostics I/O endpoint
+            io = &endpoint;
 
             session.hooks.parser.onContextEnd = [store](const Data::Store::SourceId srcId) {
                 std::unique_ptr<Data::Store::Source> &source = store->getSourceById(srcId);
@@ -64,23 +64,23 @@ namespace Capabilities {
                 });
 
                 // Publish the diagnostics to the editor
-                auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
-                diagParams.uri = lsp::DocumentUri::fromPath(source->uri); // The URI of the file you just checked
-                diagParams.diagnostics = std::move(diagnostics);
-                handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
+                io->textDocumentPublishDiagnostics({
+                    .uri = lsp::DocumentUri::fileUriFromPath(source->uri), // The URI of the file
+                    .diagnostics = std::move(diagnostics)
+                });
             };
         }
 
         void resetSourceDiagnostics(const std::string &uri) {
-            if (handler == nullptr){
+            if (io == nullptr){
                 return;
             }
 
             // Publish empty diagnostics to the editor
-            auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
-            diagParams.uri = lsp::DocumentUri::fromPath(uri); // The URI of the file you just checked
-            diagParams.diagnostics = {};
-            handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
+            io->textDocumentPublishDiagnostics({
+                .uri = lsp::DocumentUri::fileUriFromPath(uri),
+                .diagnostics = {}
+            });
         }
         void sendSourceDiagnosticsByURI(const std::vector<Diagnostics::Diagnostic> &diags, const std::string &uri) {
             std::vector<lsp::Diagnostic> diagnostics;
@@ -90,18 +90,12 @@ namespace Capabilities {
                 diagnostics.push_back(internal_diagToLSP(diag));
             }
 
-            // Publish the diagnostics to the editor
-            auto diagParams = lsp::notifications::TextDocument_PublishDiagnostics::Params{};
-            diagParams.uri = lsp::DocumentUri::fromPath(uri); // The URI of the file you just checked
             std::cerr << "PATH: " << uri << std::endl;
-            diagParams.diagnostics = std::move(diagnostics);
-
-            if (handler == nullptr) {
-                throw std::runtime_error("The message handler has not been set!");
-            }
-
-            std::cerr << "------DATA------ \n" << diagParams.uri.path() << std::endl;
-            handler->sendNotification<lsp::notifications::TextDocument_PublishDiagnostics>(std::move(diagParams));
+            // Publish empty diagnostics to the editor
+            io->textDocumentPublishDiagnostics({
+                .uri = lsp::DocumentUri::fileUriFromPath(uri),
+                .diagnostics = std::move(diagnostics)
+            });
         }
     }
 }
