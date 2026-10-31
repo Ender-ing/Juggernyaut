@@ -32,3 +32,5 @@
 -detected an invalid dependency 'path' value. (Expecting a valid path to a 'jug.toml' file)
 17:
 -detected an invalid input/export uri value. (Expecting a valid path to a '.jug' source file)
+18[TXT $NAME]:
+-the project '$NAME' has been added.

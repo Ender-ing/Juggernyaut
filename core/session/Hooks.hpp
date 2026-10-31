@@ -12,7 +12,8 @@
 #include "../diagnostics/Diagnostic.hpp"
 
 namespace Session {
-    typedef std::function<void()> StageCall;
+    class JUG_SESSION_API Session;
+    using StageCall = std::function<void(const Session*)>;
 
     struct Hooks {
         // [StageCall]

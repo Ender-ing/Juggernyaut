@@ -47,15 +47,16 @@ namespace Session {
     // Lightweight per-file state within THIS session (replaces heavy Source class)
     struct CompilationUnitState {
         const File* file = nullptr;
-        Stage completedStage = Stage::Unprocessed; // TO-DO: Maybe replace this with a 'lastSuccessfulStage'?
+        Stage completedStage = Stage::Unprocessed;
         FileVersion contentRevision = 0; // Synced against VFS file revision
+        bool hasErrors = false;
 
-        // Keep only summary counts after flushing raw Diagnostic vectors
-        uint32_t errorCount = 0;
-        uint32_t warningCount = 0;
         bool isEntryPoint = false;
+        bool isReachable = false;
 
-        std::vector<SourceId> dependencies; // (CompilationUnitState) dependencies
+        // (CompilationUnitState) usage tracking
+        std::vector<SourceId> dependencies;
+        std::vector<SourceId> dependents;
     };
 
     class JUG_SESSION_API Session {
@@ -88,6 +89,7 @@ namespace Session {
             // bool runIaRCStage();
 
         public:
+            // NOTE: Session functions may operate on the assumption that 'hostVFS' and 'unitEnv' actually link to proper memory addresses!
             Session(VFS *hostVFS, const Environment *unitEnv, Configs sessionConfigs = {}, Hooks sessionHooks = {})
                 : vfs(hostVFS), env(unitEnv), configs(std::move(sessionConfigs)), hooks(std::move(sessionHooks)) {}
             ~Session() = default;
@@ -110,8 +112,7 @@ namespace Session {
 
             // Pipeline
             // void refreshDependencies() ; // Refresh all compilation unit  dependencies
-            // Returns true if compilation succeeded up to `configs.terminateAfter` without errors
-            void run();
+            void run() ;
 
             // Flushe caches (ANTLR DFA caches, dead units, ...)
             // void rejuvenate();

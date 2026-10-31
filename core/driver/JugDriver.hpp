@@ -64,7 +64,7 @@ namespace Driver {
                 // Internal
                 void processPendingPaths() ;
                 bool dirConfigLookup(DriverHooks &driverHooks, Data::Host::VFS *vfs, const std::string &uri, const std::string &sourceUri, std::string &outputUri) ;
-                UnitId createUnit(const Setup *setup, UnitConfigs configs, UnitHooks hooks) ;
+                UnitId createUnit(const Setup *setup) ;
                 void loadProject(const std::string &path) ; // Assumes the path has been validated!
 
                 // Lifetime Management (Internal)

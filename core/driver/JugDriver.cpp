@@ -35,9 +35,13 @@ namespace Driver {
                 return dirConfigLookup(driverHooks, vfs, parentDir, sourceUri, outputUri);
             }
         }
-        UnitId JugDriver::createUnit(const Setup *setup, UnitConfigs unitConfigs, UnitHooks unitHooks) {
+        UnitId JugDriver::createUnit(const Setup *setup) {
             UnitId id = static_cast<UnitId>(this->units.size());
-            this->units.push_back(std::make_unique<Unit>(this->host.vfs, setup, unitConfigs, unitHooks));
+            this->units.push_back(std::make_unique<Unit>(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
+                .onDiagnostic = [this](const Diagnostic &diag){
+                    this->emitDiagnostic(diag);
+                }
+            }));
             return id;
         }
         void JugDriver::loadProject(const std::string &path) {
@@ -61,11 +65,15 @@ namespace Driver {
                 if (driverHooks.onEnvironmentLoad != nullptr) {
                     driverHooks.onEnvironmentLoad(vfs->readFile(path));
                 }
-            }
 
-            // Create a unit!
-            Setup *setup = this->setups[file->id].get();
-            createUnit(setup, {},  {});
+                // Create a unit!
+                Setup *setup = this->setups[file->id].get();
+                this->entryPoints.push_back(createUnit(setup));
+
+                // Declare the project to the user!
+                SET_CODE(diag, Info, 700018, path);
+                this->emitDiagnostic(diag);
+            }
         }
 
         // Lifetime Management (Internal)
@@ -181,7 +189,7 @@ namespace Driver {
             }
 
             // Initiate parallel independent session runs!
-            //this->runUnits();
+            this->runUnits();
 
             return true;
         }
