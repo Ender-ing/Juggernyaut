@@ -23,6 +23,7 @@ namespace Session {
     };
 
     struct Configs {
+        bool inheritEnvironmentBuildInputs = true;
         Stage terminateAfter = Stage::IaRC;
         // Parser::SharedConfigs parser;
     };

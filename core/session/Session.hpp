@@ -104,6 +104,7 @@ namespace Session {
 
             // Source & Dependency Registration (Called by JugDriver)
             void addEntryPoint(const File* file) ;
+            void refreshEntryPoints() ;
             // void invalidateSource(SourceId id) ;
             // void linkExternalPackage(const std::string &alias, const SymbolTable *exportedSymbols);
 

@@ -24,6 +24,19 @@ namespace Session {
         // Move unit
         this->units[file->id] = std::move(unit);
     }
+    void Session::refreshEntryPoints() {
+        // Reset entry points
+        this->entryPoints.clear();
+
+        // Check for environment entry points
+        if (this->configs.inheritEnvironmentBuildInputs) {
+            for (const std::string &uri : this->env->build.inputPaths) {
+                const File* file = this->vfs->readFile(uri);
+
+                addEntryPoint(file);
+            }
+        }
+    }
 
     // Pipeline
     void Session::run() {
