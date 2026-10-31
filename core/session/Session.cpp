@@ -57,6 +57,8 @@ namespace Session {
 
     // Pipeline
     void Session::run() {
+        this->isRunning = true;
+
         // Handle exit logic
         struct RunCleanup {
             Session *self;
@@ -73,6 +75,7 @@ namespace Session {
         // ....
 
         // Temporary dummy code
+        // REMOVE LATER!
         for (SourceId id: this->entryPoints) {
             const File *file = this->vfs->readFile(id);
 
@@ -82,5 +85,7 @@ namespace Session {
             diag.severity = Diagnostics::Severity::Info;
             this->emitDiagnostic(diag);
         }
+
+        this->isRunning = false;
     }
 }

@@ -13,6 +13,8 @@
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types
 #endif
 
+// TO-DO: Project index/cache mutations in readFile() using std::shared_mutex!
+
 namespace Data {
     namespace Host {
         using FileId = uint32_t;
