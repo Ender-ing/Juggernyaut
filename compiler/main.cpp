@@ -123,7 +123,7 @@ int main(int argc, const char *argv[]) {
     }else {
         driver.processPaths(Base::InitialConfigs::Input::entryPaths);
     }
-    sourceVisits; // THIS IS OUT OF SYNC! 
+    // sourceVisits; // THIS IS OUT OF SYNC! 
 
     // Debug action
     /*if (Base::InitialConfigs::Debug::Parser::activateAntlrSyntaxTest) {
