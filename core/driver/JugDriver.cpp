@@ -71,7 +71,7 @@ namespace Driver {
         void JugDriver::refreshSetups() {
             for (std::unique_ptr<Setup>& setup : std::views::values(this->setups)) {
                 if (setup->file != nullptr && setup->file->version > setup->version) {
-                    Environment::refreshEnvironment(setup.get(), this->diagnosticEmitter);
+                    Environment::refreshEnvironment(this->host.vfs, setup.get(), this->diagnosticEmitter);
 
                     // Fire relevant events
                     if (this->configs.hooks.driver.onEnvironmentChange != nullptr) {

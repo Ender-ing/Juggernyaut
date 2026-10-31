@@ -45,8 +45,8 @@ namespace Driver {
         bool isValidProjectPath(const std::string &path) {
             return false;
         }
-        bool isValidSourcePath(const std::string &path) {
-            return false;
+        bool isValidSourcePath(VFS *vfs, const std::string &path) {
+            return vfs->exists(path);
         }
 
         // [Package]
@@ -101,13 +101,14 @@ namespace Driver {
         }
 
         // [build]
-        void processBuildSection(const Diagnostics::Event &emit, const File *file, const toml::table& tbl, BuildConfigs &buildConfigs) {
+        void processBuildSection(VFS *vfs, const Diagnostics::Event &emit, const File *file, const toml::table& tbl, BuildConfigs &buildConfigs) {
             for (const auto& [key, val] : tbl) {
                 std::string_view k = key.str();
                 if (k == "export") {
                     if (auto v = val.value<std::string>()) {
-                        buildConfigs.exportPath = *v;
-                        if (!isValidSourcePath(buildConfigs.exportPath)) {
+                        buildConfigs.exportPath = vfs->join(vfs->getParentDirectory(file->canonical), (*v));
+
+                        if (!isValidSourcePath(vfs, buildConfigs.exportPath)) {
                             buildConfigs.exportPath = "";
 
                             emitDiagnostic(emit, file, val.source(), Diagnostics::Severity::Error, CODE_700017, 700017);
@@ -117,16 +118,20 @@ namespace Driver {
                     }
                 } else if (k == "input") {
                     if (auto str = val.value<std::string>()) {
-                        if (isValidSourcePath(*str)) {
-                            buildConfigs.inputPaths.push_back(*str);
+                        const std::string& srcPath = vfs->join(vfs->getParentDirectory(file->canonical), (*str));
+
+                        if (isValidSourcePath(vfs, srcPath)) {
+                            buildConfigs.inputPaths.push_back(std::move(srcPath));
                         } else {
                             emitDiagnostic(emit, file, val.source(), Diagnostics::Severity::Error, CODE_700017, 700017);
                         }
                     } else if (const auto* arr = val.as_array()) {
                         for (const auto& elem : *arr) {
                             if (auto elemStr = elem.value<std::string>()) {
-                                if (isValidSourcePath(*elemStr)) {
-                                    buildConfigs.inputPaths.push_back(*elemStr);
+                                const std::string& srcPath = vfs->join(vfs->getParentDirectory(file->canonical), (*elemStr));
+
+                                if (isValidSourcePath(vfs, srcPath)) {
+                                    buildConfigs.inputPaths.push_back(std::move(srcPath));
                                 } else {
                                     emitDiagnostic(emit, file, elem.source(), Diagnostics::Severity::Error, CODE_700017, 700017);
                                 }
@@ -270,7 +275,7 @@ namespace Driver {
             }
         }
 
-        void refreshEnvironment(Environment* env, const Diagnostics::Event &emit) {
+        void refreshEnvironment(VFS *vfs, Environment* env, const Diagnostics::Event &emit) {
             if (env == nullptr) {
                 return;
             }
@@ -310,7 +315,7 @@ namespace Driver {
                     }
                 } else if (sectionName == "build") {
                     if (const auto* sub_tbl = val.as_table()) {
-                        processBuildSection(emit, file, *sub_tbl, env->build);
+                        processBuildSection(vfs, emit, file, *sub_tbl, env->build);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Diagnostics::Severity::Error, CODE_700005("expected 'build' to be a section table."), 700005);
                     }
@@ -334,7 +339,7 @@ namespace Driver {
             env.file = vfs->readFile(path);
 
             // Populate the environment
-            refreshEnvironment(&env, emit);
+            refreshEnvironment(vfs, &env, emit);
 
             return env;
         }
