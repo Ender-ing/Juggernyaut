@@ -1,0 +1,32 @@
+# The metadata of the project/library
+[package]
+name="UNNAMED-PROJECT"
+publisher="UNNAMED-PUBLISHER"
+version="0.0.1"
+deprecated=false
+
+# The build instructions (only respected within this project!)
+[build]
+flags.ignore-warnings=false
+flags.treat-warnings-as-errors=false # treats warnings as errors
+input=["path/to/file_1.jug", "path/to/file_2.jug"]
+export="lib.jug" # If you want to make a library, you need to specify one entry point for it! This is what the export variable does!
+
+# The dependencies are not processed by the compiler, but rather by the package manager
+# So the compiler is oblivious to this! It'll only try to match the first import path identifier to a folder name,
+# then check the jug.toml file inside that folder for the other import path identifiers
+[dependencies]
+"std"=">=0.1.3" # you will be warned about using this if the dependency isn't backwards compatible!
+"known-package"="^0.2.1,^1.x.2"
+"package"={version = "^0.2.1,^1.x.2", publisher = "someone-else"} # get a version made by a certain publisher
+"my-local-package"={path = "./libs/std/"} # local custom library
+"my-online-package"={publisher = "me", branch = "beta"} # you can specify a branch!
+# looks for: https://github.com/{publisher}/jug-pck-{package}/archive/refs/tags/jugpck-release-v{version}.zip
+#     (git clone --depth 1 --branch jugpck-release-v{version} https://github.com/{publisher}/jug-pck-{package} ...)
+# jug-pck will look for deps within the Ender-ing org by default!
+# All GitHub orgs are not trusted by default (Ender-ing too). Trust must be granted using "jug-pck trust {publisher}"!
+# "jug-pck evil-trust {publisher}" will also look for:
+# https://raw.githubusercontent.com/{publisher}/jug-pck/refs/heads/main/trust.txt
+#     and add the listed items into the trust list!
+# Note that All packages are shared: {JUG_TOOLCHAIN_PATH}/libs/...
+# Note that all GitHub requests would be made with a "User-Agent: jug-pck/{version}" value
