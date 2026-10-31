@@ -24,4 +24,13 @@ namespace Session {
         // Move unit
         this->units[file->id] = std::move(unit);
     }
+
+    // Pipeline
+    void Session::run() {
+        // Refresh dependency graph
+        this->refreshEntryPoints();
+        // ....
+
+        // ...
+    }
 }

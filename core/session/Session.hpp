@@ -110,7 +110,7 @@ namespace Session {
             // Pipeline
             // void refreshDependencies() ; // Refresh all compilation unit  dependencies
             // Returns true if compilation succeeded up to `configs.terminateAfter` without errors
-            // bool run();
+            void run();
 
             // Flushe caches (ANTLR DFA caches, dead units, ...)
             // void rejuvenate();
