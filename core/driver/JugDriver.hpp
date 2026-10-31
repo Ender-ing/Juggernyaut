@@ -41,6 +41,7 @@ namespace Driver {
         struct DriverConfigs {
             const std::string librariesPath = ""; // Absolute path to the root libraries directory!
             Hooks hooks;
+            unsigned int maxThreadsAllowed = 0; // 0 means the driver decides automatically
         };
 
         class JUG_DRIVER_API JugDriver {
@@ -69,6 +70,7 @@ namespace Driver {
                 // Lifetime Management (Internal)
                 void refreshSetups() ; // Checks jug.toml files for updates
                 bool refreshDependencyGraph() ; // Updates dependency graph for parallel processing
+                void runUnits() ;
             public:
                 // NOTE: When the driver is busy(), never change the state of the inputed variables or their children!
                 JugDriver(HostConfigs hostConfigs, DriverConfigs driverConfigs) : host(hostConfigs), configs(driverConfigs) {};

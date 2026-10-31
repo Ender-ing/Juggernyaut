@@ -3,6 +3,7 @@
  * Front-End Driver
 **/
 
+#include "common/systemHeaders.hpp"
 #include "JugDriver.hpp"
 
 // 'jug.toml'-related
@@ -89,9 +90,57 @@ namespace Driver {
             // Reset waves
             executionWaves.clear();
 
-            // ...?
+            // Dummy code
+            if (!this->entryPoints.empty()) {
+                this->executionWaves.push_back(this->entryPoints);
+            }
 
             return true;
+        }
+        void JugDriver::runUnits() {
+            // Execute each topological wave in order
+            const unsigned int systemThreadMax = std::max(1u, std::thread::hardware_concurrency());
+            const unsigned int maxThreads = this->configs.maxThreadsAllowed == 0 ?
+                systemThreadMax :
+                std::min(this->configs.maxThreadsAllowed, systemThreadMax);
+
+            for (const std::vector<UnitId> &wave : this->executionWaves) {
+                if (wave.empty()) {
+                    continue;
+                }
+
+                // Handle single jobs without spawning a thread
+                if (wave.size() == 1) {
+                    Unit *unit = this->units[wave[0]].get();
+                    if (unit != nullptr) {
+                        unit->run();
+                    }
+                    continue;
+                }
+
+                // Run independent units in parallel
+                std::atomic<size_t> nextIdx{0};
+                const size_t waveSize = wave.size();
+                const size_t workerCount = std::min<size_t>(waveSize, maxThreads);
+                std::vector<std::jthread> workers;
+                workers.reserve(workerCount);
+                for (size_t w = 0; w < workerCount; ++w) {
+                    workers.emplace_back([this, &wave, waveSize, &nextIdx]() {
+                        while (true) {
+                            const size_t idx = nextIdx.fetch_add(1, std::memory_order_relaxed);
+                            if (idx >= waveSize) {
+                                break;
+                            }
+                            Unit *unit = this->units[wave[idx]].get();
+                            if (unit != nullptr) {
+                                unit->run();
+                            }
+                        }
+                    });
+                }
+
+                // NOTE: 'std::jthread' destructors automatically join all workers!
+            }
         }
 
         // Lifetime Management (Always cause the driver to become busy!)
@@ -132,7 +181,7 @@ namespace Driver {
             }
 
             // Initiate parallel independent session runs!
-            // ...
+            //this->runUnits();
 
             return true;
         }
