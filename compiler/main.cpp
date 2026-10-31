@@ -120,7 +120,7 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
         driver.addProject(configUri);
-    }else {
+    } else {
         driver.processPaths(Base::InitialConfigs::Input::entryPaths);
     }
     // sourceVisits; // THIS IS OUT OF SYNC! 
