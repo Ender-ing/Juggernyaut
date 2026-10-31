@@ -1,10 +1,28 @@
 {
     "configurations": [
         {
+            "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/.deps/**",
                 "${workspaceFolder}/.build/**",
-                "${workspaceFolder}/.build/*core/**",
+                "${workspaceFolder}/.build/diag_codes/**",
+                "${workspaceFolder}/utility/libraries/common/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/<version>/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c23",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "windows-msvc-x64",
+            "compilerArgs": [
+                "/Zc:preprocessor"
+            ],
+            "compileCommands": "${workspaceFolder}/.build/compile_commands.json"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/.deps/**",
+                "${workspaceFolder}/.build/**",
                 "${workspaceFolder}/.build/diag_codes/**",
                 "${workspaceFolder}/utility/libraries/common/include/**"
             ],
@@ -12,6 +30,8 @@
             "compilerPath": "/usr/bin/g++-13",
             "cStandard": "c23",
             "cppStandard": "c++23",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [],
             "compileCommands": "${workspaceFolder}/.build/compile_commands.json"
         }
     ],
