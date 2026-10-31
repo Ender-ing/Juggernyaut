@@ -194,7 +194,7 @@ namespace Data {
             return std::filesystem::path(path).parent_path().string();
         }
         const std::string VFS::join(const std::string &path, const std::string &append) {
-            return (std::filesystem::path(path) / std::filesystem::path(append)).string();
+            return this->_canonical((std::filesystem::path(path) / std::filesystem::path(append)).string());
         }
         bool VFS::endsWith(const std::string &path, const std::string &end) {
             if (path.length() >= end.length()) {
