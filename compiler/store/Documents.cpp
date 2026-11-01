@@ -25,7 +25,7 @@ namespace Store {
     const std::string Documents::_canonical(const std::string& path) {
         return normalizePath(path);
     }
-    const Timestamp Documents::_lastModified(const std::string& path) {
+    Timestamp Documents::_lastModified(const std::string& path) {
         (void)path;
         return 0;
     }

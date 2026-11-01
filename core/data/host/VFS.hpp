@@ -62,7 +62,7 @@ namespace Data {
                 virtual bool _isDirectory(const std::string& path) = 0;
                 virtual const std::string _canonical(const std::string& path) = 0; // Returns the canonical full path of a file
                 virtual const std::string _cwd() = 0;
-                virtual const Timestamp _lastModified(const std::string& path) = 0;
+                virtual Timestamp _lastModified(const std::string& path) = 0;
 
                 // Technical
                 File* addEmptyFile(const std::string& canonical) ;
