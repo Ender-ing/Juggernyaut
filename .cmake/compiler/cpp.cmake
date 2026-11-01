@@ -165,6 +165,7 @@ function(add_internal_target_cxx_flags TARGET IS_LESS_RESTRICTIVE)
             -Wunused-function        # Warn about unreferenced local/static functions [matches MSVC /we4505]
 
             -Wno-unused-parameter    # Disable unused parameter warning [matches MSVC /wd4100]
+            -Wno-missing-field-initializers # Allow C++20 partial designated initializers [matches MSVC /W4]
         )
 
         # Clang & AppleClang specific equivalents for MSVC warnings

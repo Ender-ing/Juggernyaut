@@ -17,7 +17,7 @@ namespace Session {
                 auto it = this->units.find(diag.file->id);
                 if (it != this->units.end()) {
                     // Check the type of the error
-                    const unsigned int phaseCode = std::abs(diag.code) / 100'000;
+                    const int phaseCode = std::abs(diag.code) / 100'000;
                     switch (phaseCode) {
                     case 1: // Lexer
                     case 2: // Parser
