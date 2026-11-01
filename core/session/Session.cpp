@@ -7,21 +7,39 @@
 
 namespace Session {
     // (Inner) Management
-    void Session::emitDiagnostic(const Diagnostic &diag) {
+    void Session::emitDiagnostic(Diagnostic &diag) {
         // Update internal stats
-        if (diag.severity == Diagnostics::Severity::Error) {
+        if (diag.severity == Diagnostics::Severity::Error ||
+            (this->env->build.flags.treatWarningsAsErrors && diag.severity == Diagnostics::Severity::Warning)) {
             this->hasErrors = true;
 
             if (diag.file != nullptr) {
                 auto it = this->units.find(diag.file->id);
                 if (it != this->units.end()) {
-                    it->second.hasErrors = true; // This is the only place where this value should be set to 'true'!
+                    // Check the type of the error
+                    const unsigned int phaseCode = std::abs(diag.code) / 100'000;
+                    switch (phaseCode) {
+                    case 1: // Lexer
+                    case 2: // Parser
+                        it->second.hasSyntaxErrors = true;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
         }
 
         // Trigger relevent events
         if (this->hooks.onDiagnostic != nullptr) {
+            if (this->env->build.flags.treatWarningsAsErrors &&
+                    diag.severity == Diagnostics::Severity::Warning) {
+                diag.severity = Diagnostics::Severity::Error;
+            }
+            if (this->env->build.flags.ignoreWarnings &&
+                diag.severity == Diagnostics::Severity::Warning) {
+                return;
+            }
             this->hooks.onDiagnostic(diag);
         }
     }

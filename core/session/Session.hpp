@@ -49,7 +49,9 @@ namespace Session {
         const File* file = nullptr;
         Stage completedStage = Stage::Unprocessed;
         FileVersion contentRevision = 0; // Synced against VFS file revision
-        bool hasErrors = false;
+
+        bool hasSyntaxErrors = false;
+        bool hasSemanticErrors = false;
 
         bool isEntryPoint = false;
         bool isReachable = false;
@@ -102,7 +104,7 @@ namespace Session {
 
             // (Inner) Management
             // NOTE: The Diagnostic is MOVED!
-            void emitDiagnostic(const Diagnostic &diag) ;
+            void emitDiagnostic(Diagnostic &diag) ;
 
             // Source & Dependency Registration (Called by JugDriver)
             void addEntryPoint(const File* file) ;
