@@ -8,9 +8,19 @@
 namespace Session {
     // (Inner) Management
     void Session::emitDiagnostic(Diagnostic &diag) {
+        // Upgrade warnings to errors!
+        if (this->env->build.flags.treatWarningsAsErrors &&
+                diag.severity == Diagnostics::Severity::Warning) {
+            diag.severity = Diagnostics::Severity::Error;
+        }
+        // Ignore warnings
+        if (this->env->build.flags.ignoreWarnings &&
+            diag.severity == Diagnostics::Severity::Warning) {
+            return;
+        }
+
         // Update internal stats
-        if (diag.severity == Diagnostics::Severity::Error ||
-            (this->env->build.flags.treatWarningsAsErrors && diag.severity == Diagnostics::Severity::Warning)) {
+        if (diag.severity == Diagnostics::Severity::Error) {
             this->hasErrors = true;
 
             if (diag.file != nullptr) {
@@ -36,14 +46,6 @@ namespace Session {
 
         // Trigger relevent events
         if (this->hooks.onDiagnostic != nullptr) {
-            if (this->env->build.flags.treatWarningsAsErrors &&
-                    diag.severity == Diagnostics::Severity::Warning) {
-                diag.severity = Diagnostics::Severity::Error;
-            }
-            if (this->env->build.flags.ignoreWarnings &&
-                diag.severity == Diagnostics::Severity::Warning) {
-                return;
-            }
             this->hooks.onDiagnostic(diag);
         }
     }
