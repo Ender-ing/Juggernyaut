@@ -13,7 +13,7 @@ namespace Capabilities {
             std::unique_ptr<Driver::DriverDebouncer> &debouncer, const std::string &configUri) {
             // Add update trigger
             endpoint.onWorkspaceDidChangeWatchedFiles(
-                [&endpoint, &driver, &debouncer](auto&& params) {
+                [&driver, &debouncer](auto&& params) {
                     for (const auto& change : params.changes) {
                         if (change.type == lsp::FileChangeType::Deleted) {
                             std::string emptyStr = "";

@@ -32,7 +32,7 @@ namespace Capabilities {
         }
 
         endpoint.onInitialize(
-            [&driver](auto&& params) -> lsp::InitializeResult {
+            [](auto&& params) -> lsp::InitializeResult {
                 //printMessage<lsp::requests::Initialize>(params);
                 logStdErr("Initialising the connection...");
 
