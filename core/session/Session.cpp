@@ -21,7 +21,11 @@ namespace Session {
                     switch (phaseCode) {
                     case 1: // Lexer
                     case 2: // Parser
+                    case 3: // Transformer
                         it->second.hasSyntaxErrors = true;
+                        break;
+                    case 4: // Semantic
+                        it->second.hasSemanticErrors = true;
                         break;
                     default:
                         break;

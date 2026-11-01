@@ -76,6 +76,8 @@ and it doesn't mess with the structure of the repository, it'd be gladly accepte
 - Temporary placeholder: 1
 - Lexer: 1xxxxx
 - Parser: 2xxxxx
+- Transformer: 3xxxxx
+- Semantic: 4xxxxx
 - Front-End Driver: 7xxxxx
 
 ## Plans
