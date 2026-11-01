@@ -82,7 +82,7 @@ int main(int argc, const char *argv[]) {
     Driver::JugDriver::JugDriver driver(host, configs);
 
     // Handle diagnostics
-    driver.configs.hooks.driver.onDiagnostic = [&driver](const Diagnostics::Diagnostic &diag){
+    driver.configs.hooks.driver.onDiagnostic = [](const Diagnostics::Diagnostic &diag){
         if (diag.file != nullptr) {
             // Get the position
             Console::IndividualReport::path = diag.file->canonical;
