@@ -21,7 +21,7 @@
 #include "base/config.hpp"
 #include "base/info.hpp"
 
-const Console::ReportType getReportType(Diagnostics::Severity severity) {
+Console::ReportType getReportType(Diagnostics::Severity severity) {
     switch (severity) {
     case Diagnostics::Severity::Error:
         return Console::CRITICAL_REPORT;
