@@ -94,7 +94,7 @@ namespace Capabilities {
                             // Load up the project
                             driver.addProject(configUri);
 
-                            // Watch the file for changes
+                            // Watch the file for changes (In case the file was never opened!)
                             Docs::registerConfigsWatcher(endpoint, driver, debouncer, configUri);
                         }
 

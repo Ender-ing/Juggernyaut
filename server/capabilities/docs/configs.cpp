@@ -27,17 +27,20 @@ namespace Capabilities {
                 }
             );
 
-            // Configure the File System Watcher
-            lsp::FileSystemWatcher watcher;
-            watcher.globPattern = configUri;
-
             // Push the watcher into the registration options
             //lsp::DidChangeWatchedFilesRegistrationOptions options;
             //options.watchers.push_back(watcher);
-            lsp::json::Object watcherObj;
-            watcherObj.insert("globPattern", "/*.txt");
+            //lsp::json::Object watcherObj;
+
+            lsp::json::Object jugFilesWatcher, configFilesWatcher, configUriWatcher;
+            jugFilesWatcher.insert("globPattern", "**/*.jug");
+            configFilesWatcher.insert("globPattern", "**/jug.toml");
+            configUriWatcher.insert("globPattern", configUri);
+
             lsp::json::Array watchersArray;
-            watchersArray.push_back(watcherObj);
+            watchersArray.push_back(std::move(jugFilesWatcher));
+            watchersArray.push_back(std::move(configFilesWatcher));
+            watchersArray.push_back(std::move(configUriWatcher)); // In case it lives outside the workspace!
             lsp::json::Object optionsObj;
             optionsObj.insert("watchers", std::move(watchersArray));
 
@@ -63,7 +66,7 @@ namespace Capabilities {
                     (void)endpoint.windowShowMessageRequest(
                         {
                             .type = lsp::MessageType::Warning,
-                            .message = "Your workspace Juggernyaut configuration file is not being watched for changes. You may need to reload your editor in order for changes to take effect!",
+                            .message = "Your workspace files are not being watched for changes. You may need to reload your editor in order for changes to take effect!",
                         }
                     );
                 }
