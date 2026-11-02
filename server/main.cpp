@@ -9,6 +9,9 @@
 #include <iostream>
 #include <variant>
 #include <charconv>
+#ifndef _WIN32
+#include <csignal>
+#endif
 
 // Common headers
 #include "common/headers.hpp"
@@ -51,6 +54,8 @@ int startServer(lsp::io::Stream& io) {
 
     // Start the communication
     endpoint.runMessageLoop();
+
+    logStdErr("The message loop has been closed!");
 
     return exit_code;
 }
@@ -110,6 +115,10 @@ std::optional<unsigned short> parsePortArg(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    #ifndef _WIN32
+        std::signal(SIGPIPE, SIG_IGN);
+    #endif
+
     try {
         if(const auto port = parsePortArg(argc, argv))
             return runSocketServer(*port);
