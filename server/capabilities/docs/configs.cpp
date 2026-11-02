@@ -60,7 +60,7 @@ namespace Capabilities {
                     // Watcher successfully registered by the client
                 },
                 [&endpoint](const lsp::ResponseError&) {
-                    endpoint.windowShowMessageRequest({
+                    (void)endpoint.windowShowMessageRequest({
                         .type = lsp::MessageType::Warning,
                         .message = "Your workspace files are not being watched for changes. You may need to reload your editor in order for changes to take effect!",
                     });
