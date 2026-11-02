@@ -38,6 +38,7 @@ namespace Capabilities {
             configUriWatcher.insert("globPattern", configUri);
 
             lsp::json::Array watchersArray;
+
             watchersArray.push_back(std::move(jugFilesWatcher));
             watchersArray.push_back(std::move(configFilesWatcher));
             watchersArray.push_back(std::move(configUriWatcher)); // In case it lives outside the workspace!
