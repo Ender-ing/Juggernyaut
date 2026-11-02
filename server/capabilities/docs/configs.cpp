@@ -18,12 +18,11 @@ namespace Capabilities {
                         if (change.type == lsp::FileChangeType::Deleted) {
                             std::string emptyStr = "";
                             driver.host.vfs->updateFile((std::string) change.uri.path(), emptyStr);
-                            debouncer->trigger();
-                        } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Changed) {
+                        } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Created) {
                             driver.host.vfs->reloadFile((std::string) change.uri.path());
-                            debouncer->trigger();
                         }
                     }
+                    debouncer->trigger();
                 }
             );
 
