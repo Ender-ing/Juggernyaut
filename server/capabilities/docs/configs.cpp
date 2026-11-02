@@ -54,22 +54,18 @@ namespace Capabilities {
             params.registrations.push_back(registration);
 
             // Send request to client
-            auto requestResult = endpoint.clientRegisterCapability(params);
-            std::thread([&endpoint, result = std::move(requestResult)]() mutable {
-                try {
-                    // .get() resolves the std::future or executes the TaskType
-                    (void)result.get(); 
-        
-                    // The client successfully registered the watcher
-                } catch (const std::exception&) {
-                    (void)endpoint.windowShowMessageRequest(
-                        {
-                            .type = lsp::MessageType::Warning,
-                            .message = "Your workspace files are not being watched for changes. You may need to reload your editor in order for changes to take effect!",
-                        }
-                    );
+            endpoint.clientRegisterCapability(
+                params,
+                [](auto&& /*result*/) {
+                    // Watcher successfully registered by the client
+                },
+                [&endpoint](const lsp::ResponseError&) {
+                    endpoint.windowShowMessageRequest({
+                        .type = lsp::MessageType::Warning,
+                        .message = "Your workspace files are not being watched for changes. You may need to reload your editor in order for changes to take effect!",
+                    });
                 }
-            }).detach();
+            );
         }
     }
 }

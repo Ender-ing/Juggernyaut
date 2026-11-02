@@ -82,35 +82,33 @@ namespace Capabilities {
             [&driver, &endpoint](auto&&) {
                 logStdErr("Initialising the workspace configs...");
 
-                std::thread([&driver, &endpoint]() {
-                    try {
-                        if (rootUri == "") {
-                            rootUri = driver.host.vfs->cwd();
-                        }
-
-                        configUri = driver.lookupProject(rootUri);
-
-                        if (configUri != "") {
-                            // Load up the project
-                            driver.addProject(configUri);
-
-                            // Watch the file for changes (In case the file was never opened!)
-                            Docs::registerConfigsWatcher(endpoint, driver, debouncer, configUri);
-                        }
-
-                        // Allow Session runs
-                        debouncer->allowRuns = true;
-                
-                        // Optional: trigger the first debounce run now that everything is loaded
-                        debouncer->trigger();
-                
-                    } catch (const std::exception& e) {
-                        // If TOML parsing or something else fails, log it instead of crashing the server
-                        std::cerr << "Initialization Error: " << e.what() << std::endl;
-                    } catch (...) {
-                        std::cerr << "Unknown Error during initialization thread." << std::endl;
+                try {
+                    if (rootUri == "") {
+                        rootUri = driver.host.vfs->cwd();
                     }
-                }).detach();
+
+                    configUri = driver.lookupProject(rootUri);
+
+                    if (configUri != "") {
+                        // Load up the project
+                        driver.addProject(configUri);
+
+                        // Watch the file for changes (In case the file was never opened!)
+                        Docs::registerConfigsWatcher(endpoint, driver, debouncer, configUri);
+                    }
+
+                    // Allow Session runs
+                    debouncer->allowRuns = true;
+
+                    // Optional: trigger the first debounce run now that everything is loaded
+                    debouncer->trigger();
+                
+                } catch (const std::exception& e) {
+                    // If something fails, log it instead of crashing the server
+                    std::cerr << "Initialization Error: " << e.what() << std::endl;
+                } catch (...) {
+                    std::cerr << "Unknown Error during initialization thread." << std::endl;
+                }
             }
         ).onShutdown(
             [&received_shutdown]() -> lsp::ShutdownResult {
