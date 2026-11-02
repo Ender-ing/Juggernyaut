@@ -179,6 +179,18 @@ namespace Capabilities {
                 // Refresh the session
                 debouncer->trigger();
             }
+        ).onWorkspaceDidChangeWatchedFiles(
+            [&driver](auto&& params) {
+                for (const auto& change : params.changes) {
+                    if (change.type == lsp::FileChangeType::Deleted) {
+                        std::string emptyStr = "";
+                        driver.host.vfs->updateFile((std::string) change.uri.path(), emptyStr);
+                    } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Created) {
+                        driver.host.vfs->reloadFile((std::string) change.uri.path());
+                    }
+                }
+                debouncer->trigger();
+            }
         );
     }
 }

@@ -11,21 +11,6 @@ namespace Capabilities {
     namespace Docs {
         void registerConfigsWatcher(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver,
             std::unique_ptr<Driver::DriverDebouncer> &debouncer, const std::string &configUri) {
-            // Add update trigger
-            endpoint.onWorkspaceDidChangeWatchedFiles(
-                [&driver, &debouncer](auto&& params) {
-                    for (const auto& change : params.changes) {
-                        if (change.type == lsp::FileChangeType::Deleted) {
-                            std::string emptyStr = "";
-                            driver.host.vfs->updateFile((std::string) change.uri.path(), emptyStr);
-                        } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Created) {
-                            driver.host.vfs->reloadFile((std::string) change.uri.path());
-                        }
-                    }
-                    debouncer->trigger();
-                }
-            );
-
             // Push the watcher into the registration options
             //lsp::DidChangeWatchedFilesRegistrationOptions options;
             //options.watchers.push_back(watcher);
