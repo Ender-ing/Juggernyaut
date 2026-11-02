@@ -19,7 +19,7 @@ namespace Capabilities {
                             std::string emptyStr = "";
                             driver.host.vfs->updateFile((std::string) change.uri.path(), emptyStr);
                             debouncer->trigger();
-                        } else if (change.type == lsp::FileChangeType::Changed) {
+                        } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Changed) {
                             driver.host.vfs->reloadFile((std::string) change.uri.path());
                             debouncer->trigger();
                         }
@@ -35,7 +35,7 @@ namespace Capabilities {
             lsp::json::Object jugFilesWatcher, configFilesWatcher, configUriWatcher;
             jugFilesWatcher.insert("globPattern", "**/*.jug");
             configFilesWatcher.insert("globPattern", "**/jug.toml");
-            configUriWatcher.insert("globPattern", configUri);
+            configUriWatcher.insert("globPattern", driver.host.vfs->canonical(configUri));
 
             lsp::json::Array watchersArray;
             watchersArray.push_back(std::move(jugFilesWatcher));
