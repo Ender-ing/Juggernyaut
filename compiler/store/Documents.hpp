@@ -21,7 +21,7 @@ namespace Store {
             bool _exists(const std::string& path) override;
             bool _isDirectory(const std::string& path) override;
             const std::string _canonical(const std::string& path) override; // Returns the canonical full path of a file
-            const Timestamp _lastModified(const std::string& path) override;
+            Timestamp _lastModified(const std::string& path) override;
             const std::string _cwd() override;
     };
 }

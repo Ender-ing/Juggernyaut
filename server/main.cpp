@@ -71,11 +71,11 @@ int runSocketServer(unsigned short port) {
             return EXIT_FAILURE;
 
         std::thread(
-            [socket = std::move(socket)]() mutable
+            [s = std::move(socket)]() mutable
             {
                 logStdErr("client connected");
 
-                startServer(socket); // The returned value is ignored!
+                startServer(s); // The returned value is ignored!
 
                 logStdErr("client disconnected");
             }).detach();

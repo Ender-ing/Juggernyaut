@@ -7,7 +7,18 @@
 
 namespace Session {
     // (Inner) Management
-    void Session::emitDiagnostic(const Diagnostic &diag) {
+    void Session::emitDiagnostic(Diagnostic &diag) {
+        // Upgrade warnings to errors!
+        if (this->env->build.flags.treatWarningsAsErrors &&
+                diag.severity == Diagnostics::Severity::Warning) {
+            diag.severity = Diagnostics::Severity::Error;
+        }
+        // Ignore warnings
+        if (this->env->build.flags.ignoreWarnings &&
+            diag.severity == Diagnostics::Severity::Warning) {
+            return;
+        }
+
         // Update internal stats
         if (diag.severity == Diagnostics::Severity::Error) {
             this->hasErrors = true;
@@ -15,7 +26,20 @@ namespace Session {
             if (diag.file != nullptr) {
                 auto it = this->units.find(diag.file->id);
                 if (it != this->units.end()) {
-                    it->second.hasErrors = true; // This is the only place where this value should be set to 'true'!
+                    // Check the type of the error
+                    const int phaseCode = std::abs(diag.code) / 100'000;
+                    switch (phaseCode) {
+                    case 1: // Lexer
+                    case 2: // Parser
+                    case 3: // Transformer
+                        it->second.hasSyntaxErrors = true;
+                        break;
+                    case 4: // Semantic
+                        it->second.hasSemanticErrors = true;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
         }
