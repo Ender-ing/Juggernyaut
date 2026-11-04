@@ -28,8 +28,13 @@
 
 
 namespace Diagnostics {
+    // Basic data types
     using File = Data::Host::File;
     using FileId = Data::Host::FileId;
+
+    // Event types
+    using GenericEvent = std::function<void()>;
+    using FileEvent = std::function<void(const Data::Host::File*)>;
 
     // Line/column data
     struct Position {

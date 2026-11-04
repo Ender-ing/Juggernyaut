@@ -10,34 +10,30 @@
 
 #include "../diagnostics/Diagnostic.hpp"
 
-#include "Unit.hpp"
-
 namespace Driver {
     using Diagnostic = Diagnostics::Diagnostic;
     using UnitSourceId = Data::Host::FileId;
 
-    using GenericEvent = std::function<void()>;
-    using FileEvent = std::function<void(const Data::Host::File*)>;
-    using UnitSourceEvent = std::function<void(const JugDriver::Unit*, const UnitSourceId&)>;
+    using GenericEvent = Diagnostics::GenericEvent;
+    using DriverEvent = Diagnostics::Event;
+    using FileEvent = Diagnostics::FileEvent;
     // using UnitSourceStringEvent = std::function<void(const Unit&, const std::string&)>;
     // using UnitSourceU8tStringEvent = std::function<void(const Unit&, const uint8_t&, const std::string&)>;
 
     // Unit's source-level hooks
     struct UnitSourceHooks {
         // Source stages
-        UnitSourceEvent onContextSkip = nullptr;
-        UnitSourceEvent onContextStart = nullptr;
-        UnitSourceEvent onLexerContextEnd = nullptr;
-        UnitSourceEvent onParserContextEnd = nullptr;
-        UnitSourceEvent onContextEnd = nullptr;
+        // UnitSourceEvent onContextSkip = nullptr;
+        FileEvent onContextStart = nullptr;
+        FileEvent onLexerContextEnd = nullptr;
+        FileEvent onParserContextEnd = nullptr;
+        FileEvent onContextEnd = nullptr;
     };
 
     // Unit-level hooks
     struct UnitHooks {
         // ...
     };
-
-    using DriverEvent = std::function<void(const Diagnostic&)>;
 
     // Driver-level hooks
     struct DriverHooks {

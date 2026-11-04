@@ -73,13 +73,7 @@ namespace Capabilities {
             io = &endpoint;
 
             diagManager = std::make_unique<Diagnostics::DiagnosticsManager<lsp::Diagnostic>>(
-                Diagnostics::ManagerHooks{
-                    .onDriverDiagnostic = &(driver.configs.hooks.driver.onDiagnostic),
-                    .onDriverRunFinished = &(driver.configs.hooks.driver.onRunFinished),
-                    .onEnvironmentLoad = &(driver.configs.hooks.driver.onEnvironmentLoad),
-                    .onEnvironmentChange = &(driver.configs.hooks.driver.onEnvironmentChange)
-                    ///onLexerContextEnd, onParserContextEnd, onContextEnd
-                },
+                driver.configs.hooks,
                 [](const Diagnostics::Diagnostic &diag) -> lsp::Diagnostic {
                     return internal_diagToLSP(diag);
                 },

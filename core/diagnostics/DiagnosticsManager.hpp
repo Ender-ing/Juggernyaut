@@ -10,10 +10,13 @@
 // Diagnostics
 #include "Diagnostic.hpp"
 
+// Driver (ONLY THE HOOKS!)
+#include "../driver/Hooks.hpp"
+
 namespace Diagnostics {
-    using GenericEvent = std::function<void()>;
-    using FileEvent = std::function<void(const Data::Host::File*)>;
-    struct ManagerHooks {
+    // Hooks
+    using FrontEndHooks = Driver::Hooks;
+    /*struct ManagerHooks {
         // Front-End Driver (General)
         Diagnostics::Event *onDriverDiagnostic = nullptr;
         GenericEvent *onDriverRunFinished = nullptr;
@@ -29,7 +32,7 @@ namespace Diagnostics {
 
         // Back-End Compiler
         // Not yet!
-    };
+    };*/
 
     // NOTE: Final stage flusing logic can change as more compilation phases are added!
     // WARNING: Your DiagnosticsManager should be accessed by one thread at a time!
@@ -86,13 +89,11 @@ namespace Diagnostics {
             }
 
             // Internal (Diagnostic dispatch logic)
-            void setupDiagnosticDispatch(const ManagerHooks &hooks) {
+            void setupDiagnosticDispatch(FrontEndHooks &frontEnd) {
                 // Handle incoming Diagnostics
-                if (hooks.onDriverDiagnostic != nullptr) {
-                    *(hooks.onDriverDiagnostic) = [this](const Diagnostic &diag) {
-                        this->push(diag);
-                    };
-                }
+                frontEnd.driver.onDiagnostic = [this](const Diagnostic &diag) {
+                    this->push(diag);
+                };
 
                 // Helper functions
                 FileEvent flushAndKeep = [this](const Data::Host::File *file) {
@@ -104,39 +105,28 @@ namespace Diagnostics {
                     if (file != nullptr) {
                         this->flushFile(file->canonical, true);
                     }
-                }; 
+                };
 
                 // Handle Diagnostics Retention logic
-                if (hooks.onEnvironmentLoad != nullptr) {
-                    *(hooks.onEnvironmentLoad) = flushAndDiscard;
-                }
-                if (hooks.onEnvironmentChange != nullptr) {
-                    *(hooks.onEnvironmentChange) = flushAndDiscard;
-                }
-                if (hooks.onLexerContextEnd != nullptr) {
-                    *(hooks.onLexerContextEnd) = flushAndKeep;
-                }
-                if (hooks.onParserContextEnd != nullptr) {
-                    *(hooks.onParserContextEnd) = flushAndKeep;
-                }
-                if (hooks.onContextEnd != nullptr) {
-                    *(hooks.onContextEnd) = flushAndDiscard; // TMP
-                }
-                if (hooks.onDriverRunFinished != nullptr) {
-                    *(hooks.onDriverRunFinished) = [this]() {
-                        this->manualFlushAll();
-                    };
-                }
+                frontEnd.driver.onEnvironmentLoad = flushAndDiscard;
+                frontEnd.driver.onEnvironmentChange = flushAndDiscard;
+                frontEnd.unitSources.onLexerContextEnd = flushAndKeep;
+                frontEnd.unitSources.onParserContextEnd = flushAndKeep;
+                //  TO-DO: RESET CONTEXT DIAGNOSTICS (using frontEnd.unitSources.onContextStart)
+                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
+                frontEnd.driver.onRunFinished = [this]() {
+                    this->manualFlushAll(); // TMP
+                };
             }
 
         public:
             // Constructor: overtakes `diagnosticHandle` and converts incoming diagnostics
-            DiagnosticsManager(const ManagerHooks &hooks, ConverterFn convertFn, ManagerCallbacks managerCallbacks)
+            DiagnosticsManager(FrontEndHooks &hooks, ConverterFn convertFn, ManagerCallbacks managerCallbacks)
                 : converter(std::move(convertFn)), callbacks(std::move(managerCallbacks))  {
                 setupDiagnosticDispatch(hooks);
             }
             // Overload when TargetDiag == Diagnostics::Diagnostic (no converter needed)
-            DiagnosticsManager(const ManagerHooks &hooks, ManagerCallbacks managerCallbacks)
+            DiagnosticsManager(FrontEndHooks &hooks, ManagerCallbacks managerCallbacks)
                 requires std::same_as<TargetDiag, Diagnostic>
                 : DiagnosticsManager(
                     hooks,
