@@ -12,13 +12,22 @@
 #include "../diagnostics/Diagnostic.hpp"
 
 namespace Session {
+    using FileEvent = Diagnostics::FileEvent;
     class JUG_SESSION_API Session;
     using StageCall = std::function<void(const Session*)>;
 
     struct Hooks {
-        // [StageCall]
+        // [Session Lifecycle]
         StageCall onRunFinished = nullptr; // The Session is done running!
 
+        // [Source Stage Lifecycle]
+        FileEvent onContextSkip = nullptr;
+        FileEvent onContextStart = nullptr;
+        FileEvent onLexerContextEnd = nullptr;
+        FileEvent onParserContextEnd = nullptr;
+        FileEvent onContextEnd = nullptr;
+
+        // [Diagnostics]
         Diagnostics::Event onDiagnostic = nullptr; // ALL session diagnostics go through here!
     };
 }
