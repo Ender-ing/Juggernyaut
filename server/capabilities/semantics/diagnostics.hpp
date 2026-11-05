@@ -9,10 +9,6 @@
 // Common headers
 #include "common/headers.hpp"
 
-// Parser
-#include "../../../core/parser/parser.hpp"
-//#include "../../../core/parser/listeners/DiagnosticListener.hpp"
-
 // Front-End Driver
 #include "./../../../core/driver/JugDriver.hpp"
 
