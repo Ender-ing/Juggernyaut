@@ -38,6 +38,11 @@ namespace Data {
             std::string publisher = "";
             std::string version = "";
         };
+        // (Internal )Debug
+        struct DebugConfigs {
+            bool reportAmbiguity = false;
+            bool reportANTLRData = false;
+        };
         // 'Environment' is derived from the 'jug.toml' configuration files!
         using EnvironmentId = uint32_t;
         using EnvironmentVersion = uint32_t;
@@ -49,6 +54,8 @@ namespace Data {
             BuildConfigs build;
             std::vector<LocalDependency> localDeps;
             std::vector<OnlineDependency> onlineDeps;
+            // (Internal)
+            DebugConfigs debug;
         };
     }
 }

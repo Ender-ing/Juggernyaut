@@ -25,6 +25,7 @@ namespace Driver {
         using BuildFlags = Data::Driver::BuildFlags;
         using LocalDependency = Data::Driver::LocalDependency;
         using OnlineDependency = Data::Driver::OnlineDependency;
+        using DebugConfigs = Data::Driver::DebugConfigs;
 
         using File = Data::Host::File;
         using FileId = Data::Host::FileId;

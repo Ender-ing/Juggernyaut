@@ -275,6 +275,27 @@ namespace Driver {
             }
         }
 
+        // [debug]
+        void processDebugSection(const Diagnostics::Event &emit, const File *file, const toml::table& tbl, DebugConfigs &debugConfigs) {
+            static const std::unordered_map<std::string_view, bool DebugConfigs::*> debugMapping = {
+                { "report-ambiguity", &DebugConfigs::reportAmbiguity },
+                { "report-antlr-data", &DebugConfigs::reportANTLRData }
+            };
+            for (const auto& [fKey, fVal] : tbl) {
+                std::string_view fk = fKey.str();
+                auto it = debugMapping.find(fk);
+                if (it == debugMapping.end()) {
+                    emitDiagnostic(emit, file, fVal.source(), Diagnostics::Severity::Warning, CODE_700006(std::string(fk), "[debug]"), 700006);
+                    continue;
+                }
+                if (auto b = fVal.value<bool>()) {
+                    debugConfigs.*(it->second) = *b; // Carry over the value
+                } else {
+                    emitDiagnostic(emit, file, fVal.source(), Diagnostics::Severity::Error, CODE_700005("expected '" + std::string(fk) + "' to be a boolean."), 700005);
+                }
+            }
+        }
+
         void refreshEnvironment(VFS *vfs, Environment* env, const Diagnostics::Event &emit) {
             if (env == nullptr) {
                 return;
@@ -324,6 +345,12 @@ namespace Driver {
                         processDependenciesSection(emit, file, *sub_tbl, env->localDeps, env->onlineDeps);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Diagnostics::Severity::Error, CODE_700005("expected 'dependencies' to be a section table."), 700005);
+                    }
+                } else if (sectionName == "debug") {
+                    if (const auto* sub_tbl = val.as_table()) {
+                        processDebugSection(emit, file, *sub_tbl, env->debug);
+                    } else {
+                        emitDiagnostic(emit, file, val.source(), Diagnostics::Severity::Error, CODE_700005("expected 'debug' to be a section table."), 700005);
                     }
                 } else {
                     // UNKNOWN TOP-LEVEL SECTION OR VARIABLE

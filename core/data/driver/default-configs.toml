@@ -30,3 +30,8 @@ export="lib.jug" # If you want to make a library, you need to specify one entry 
 #     and add the listed items into the trust list!
 # Note that All packages are shared: {JUG_TOOLCHAIN_PATH}/libs/...
 # Note that all GitHub requests would be made with a "User-Agent: jug-pck/{version}" value
+
+# internal debug configs
+[debug]
+report-ambiguity=false
+report-antlr-data=false
