@@ -78,6 +78,7 @@ and it doesn't mess with the structure of the repository, it'd be gladly accepte
 - Parser: 2xxxxx
 - Transformer: 3xxxxx
 - Semantic: 4xxxxx
+- Session: 6xxxxx
 - Front-End Driver: 7xxxxx
 
 ## Plans
