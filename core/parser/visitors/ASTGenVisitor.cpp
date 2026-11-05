@@ -31,7 +31,7 @@ namespace Parser::Visitors {
             req.isExternal = false;
 
             if (auto *token = pathCtx->LIT_STRING()) {
-                std::string raw = token->getText(); // ...maybe this should converted into canonical form?
+                std::string raw = token->getText(); // This will be processed later!
                 if (raw.size() >= 2) {
                     req.target = raw.substr(1, raw.size() - 2);
                 }

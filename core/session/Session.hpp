@@ -11,10 +11,10 @@
 // Host & Environment
 #include "../data/host/VFS.hpp"
 #include "../data/driver/Environment.hpp"
+#include "../data/parser/AST.hpp"
 
 // Pipeline Stages
-//#include "../parser/Hooks.hpp"
-//#include "../parser/Configs.hpp"
+#include "../parser/Parser.hpp"
 
 #include "Hooks.hpp"
 #include "Configs.hpp"
@@ -27,26 +27,16 @@
 namespace Session {
     using File = Data::Host::File;
     using FileVersion = Data::Host::FileVersion;
-    using SourceId = Data::Host::FileId; // Matches the original file's ID
+    using SourceId = Data::Host::FileId;
     using VFS = Data::Host::VFS;
     using Environment = Data::Driver::Environment;
 
     using Diagnostic = Diagnostics::Diagnostic;
+    using ASTNode = Data::Parser::ASTNode;
+    using SymbolTable = bool; // TO-DO
 
-    // TO-DO:
-    using ASTNode = bool;
-    using SymbolTable = bool;
-
-    // Tracks breaking config changes that force full stage invalidation
-    /*struct RevisionStates {
-        uint32_t parser      = 0;
-        uint32_t transformer = 0;
-        uint32_t semantic    = 0;
-    };*/
-
-    // Lightweight per-file state within THIS session (replaces heavy Source class)
     struct CompilationUnitState {
-        const File* file = nullptr;
+        const File *file = nullptr;
         Stage completedStage = Stage::Unprocessed;
         FileVersion contentRevision = 0; // Synced against VFS file revision
 
@@ -56,7 +46,7 @@ namespace Session {
         bool isEntryPoint = false;
         bool isReachable = false;
 
-        // (CompilationUnitState) usage tracking
+        // (CompilationUnitState) relation tracking
         std::vector<SourceId> dependencies;
         std::vector<SourceId> dependents;
     };
@@ -70,25 +60,21 @@ namespace Session {
             // Read-only views into completed dependency sessions (keyed by package/alias)
             std::unordered_map<std::string, const SymbolTable*> externalPackages;
 
-            // Session-Owned Compilation Artifacts
-            // Indexed by SourceId
+            // Session-Owned Compilation Artifacts (indexed by SourceId)
             std::unordered_map<SourceId, CompilationUnitState> units;
-            // std::unordered_map<SourceId, std::unique_ptr<ASTNode>> astTable;
-            // std::unordered_map<SourceId, std::unique_ptr<SymbolTable>> symbolTables;
+            std::unordered_map<SourceId, std::unique_ptr<ASTNode>> astTable;
             std::vector<SourceId> entryPoints;
 
-            // --- 3. Execution State ---
+            // Execution State
             Configs configs;
             Hooks hooks;
-            // RevisionStates revisions;
             bool isRunning = false;
             bool hasErrors = false;
 
-            // Internal stage runners
-            // bool runParserStage();
-            // bool runTransformerStage();
-            // bool runSemanticStage();
-            // bool runIaRCStage();
+            // Internal stage & dependency helpers
+            Parser::Parser createConfiguredParser() ;
+            void resolveUnitImports(const File *sourceFile, CompilationUnitState &unitState, const std::vector<Parser::ImportRequest> &imports, std::vector<SourceId> &worklist) ;
+            bool runParserStage() ;
 
         public:
             // NOTE: Session functions may operate on the assumption that 'hostVFS' and 'unitEnv' actually link to proper memory addresses!
@@ -102,27 +88,20 @@ namespace Session {
             Session(Session&&) noexcept = default;
             Session& operator=(Session&&) noexcept = default;
 
-            // (Inner) Management
+            // (Internal) Management
             // NOTE: The Diagnostic is MOVED!
             void emitDiagnostic(Diagnostic &diag) ;
 
             // Source & Dependency Registration (Called by JugDriver)
-            void addEntryPoint(const File* file) ;
+            void addEntryPoint(const File *file) ;
             void refreshEntryPoints() ;
-            // void invalidateSource(SourceId id) ;
-            // void linkExternalPackage(const std::string &alias, const SymbolTable *exportedSymbols);
 
             // Pipeline
-            // void refreshDependencies() ; // Refresh all compilation unit  dependencies
-            void run() ;
-
-            // Flushe caches (ANTLR DFA caches, dead units, ...)
-            // void rejuvenate();
+            void run();
+            void rejuvenate(); // ...maybe this should be removed?
 
             // Queries & Cross-Session Exports
-            bool succeeded() const noexcept { return !hasErrors; }
-            // const ASTNode* getAST(SourceId id) const;
-            // const SymbolTable* getExportedSymbols(SourceId id) const;
+            bool succeeded() const noexcept { return !this->hasErrors; }
     };
 }
 
