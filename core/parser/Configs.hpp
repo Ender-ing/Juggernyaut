@@ -12,7 +12,4 @@ namespace Parser {
     struct Configs {
         bool terminateAfterLexer = false;
     };
-    struct SharedConfigs {
-        // ...
-    };
 }
