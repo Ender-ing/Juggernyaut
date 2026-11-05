@@ -38,6 +38,11 @@ namespace Driver {
         UnitId JugDriver::createUnit(const Setup *setup) {
             UnitId id = static_cast<UnitId>(this->units.size());
             this->units.push_back(std::make_unique<Unit>(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
+                .onContextSkip = this->configs.hooks.unitSources.onContextSkip,
+                .onContextStart = this->configs.hooks.unitSources.onContextStart,
+                .onLexerContextEnd = this->configs.hooks.unitSources.onLexerContextEnd,
+                .onParserContextEnd = this->configs.hooks.unitSources.onParserContextEnd,
+                .onContextEnd = this->configs.hooks.unitSources.onContextEnd,
                 .onDiagnostic = [this](const Diagnostic &diag){
                     this->emitDiagnostic(diag);
                 }

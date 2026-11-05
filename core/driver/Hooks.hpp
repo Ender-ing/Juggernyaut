@@ -23,7 +23,7 @@ namespace Driver {
     // Unit's source-level hooks
     struct UnitSourceHooks {
         // Source stages
-        // UnitSourceEvent onContextSkip = nullptr;
+        FileEvent onContextSkip = nullptr;
         FileEvent onContextStart = nullptr;
         FileEvent onLexerContextEnd = nullptr;
         FileEvent onParserContextEnd = nullptr;
