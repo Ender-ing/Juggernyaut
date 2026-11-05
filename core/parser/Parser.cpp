@@ -55,7 +55,7 @@ namespace Parser {
         Listeners::ANTLRDiagnosticListener diagListener(
             file,
             this->hooks.onDiagnostic,
-            this->setup->debug.reportAmbiguity
+            this->env->debug.reportAmbiguity
         );
 
         // [STAGE 1] ANTLR4 Lexer
@@ -67,7 +67,7 @@ namespace Parser {
         antlr4::CommonTokenStream tokens(&lexer);
 
         tokens.fill();
-        if (this->setup->debug.reportANTLRData) {
+        if (this->env->debug.reportANTLRData) {
             std::string tokenStreamStr;
             for (const antlr4::Token *token : tokens.getTokens()) {
                 if (!tokenStreamStr.empty()) {
@@ -100,7 +100,7 @@ namespace Parser {
         antlr4::tree::ParseTree *tree = nullptr;
 
         // If ambiguity reporting is explicitly requested, go straight to LL
-        if (!(this->setup->debug.reportAmbiguity) && interpreter != nullptr) {
+        if (!(this->env->debug.reportAmbiguity) && interpreter != nullptr) {
             interpreter->setPredictionMode(antlr4::atn::PredictionMode::SLL);
             parser.setErrorHandler(std::make_shared<antlr4::BailErrorStrategy>());
 
@@ -125,7 +125,7 @@ namespace Parser {
             tree = parser.prog(); // Root
         }
 
-        if (this->setup->debug.reportANTLRData && tree != nullptr) {
+        if (this->env->debug.reportANTLRData && tree != nullptr) {
             this->reportAntlrData(file, tree->toStringTree(&parser));
         }
 

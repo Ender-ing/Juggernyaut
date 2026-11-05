@@ -28,7 +28,7 @@
 namespace Parser {
     using File = Data::Host::File;
     using Range = Diagnostics::Range;
-    using Setup = Data::Driver::Environment;
+    using Environment = Data::Driver::Environment;
     using ASTNode = Data::Parser::ASTNode;
 
     struct ImportRequest {
@@ -47,7 +47,7 @@ namespace Parser {
 
     class JUG_PARSER_API Parser {
         private:
-            const Setup *setup;
+            const Environment *env;
             Configs configs{};
             Hooks hooks{};
 
@@ -55,8 +55,8 @@ namespace Parser {
             void reportAntlrData(const File *file, std::string &&data) const;
 
         public:
-            Parser(const Setup *sharedSetup, Configs parserConfigs = {}, Hooks parserHooks = {})
-                : setup(sharedSetup), configs(std::move(parserConfigs)), hooks(std::move(parserHooks)) {}
+            Parser(const Environment *sharedEnvironment, Configs parserConfigs = {}, Hooks parserHooks = {})
+                : env(sharedEnvironment), configs(std::move(parserConfigs)), hooks(std::move(parserHooks)) {}
             ~Parser() = default;
 
             // Non-copyable, movable
