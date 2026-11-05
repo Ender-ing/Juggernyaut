@@ -21,7 +21,7 @@ namespace Parser::Visitors {
     class JUG_PARSER_API ASTGenVisitor final : public GeneratedParser::JuggernyautParserVisitor {
         private:
             const File *file = nullptr;
-            const Diagnostics::Event &onDiagnostic;
+            const Diagnostics::ModifiableEvent &onDiagnostic;
             ParseResult &result;
 
             void emitDiagnostic(Diagnostics::Diagnostic &diag) ;
@@ -30,7 +30,7 @@ namespace Parser::Visitors {
         public:
             ASTGenVisitor(
                 const File *targetFile,
-                const Diagnostics::Event &diagnosticCallback,
+                const Diagnostics::ModifiableEvent &diagnosticCallback,
                 ParseResult &parseResult
             ) : file(targetFile),
                 onDiagnostic(diagnosticCallback),

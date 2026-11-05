@@ -82,6 +82,7 @@ namespace Diagnostics {
         // std::vector<RelatedInformation> related;
     };
     using Event = std::function<void(const Diagnostic&)>;
+    using ModifiableEvent = std::function<void(Diagnostic&)>; // Only for internal manipulation
 
     /*struct FileDiagnostics {
         std::string uri;

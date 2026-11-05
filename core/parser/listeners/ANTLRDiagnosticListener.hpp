@@ -19,13 +19,13 @@ namespace Parser::Listeners {
     class JUG_PARSER_API ANTLRDiagnosticListener final : public antlr4::BaseErrorListener {
         private:
             const Data::Host::File *file = nullptr;
-            const Diagnostics::Event &onDiagnostic;
+            const Diagnostics::ModifiableEvent &onDiagnostic;
             bool reportAmbiguities = false;
 
             bool syntaxErrorsDetected = false;
             void emit(Diagnostics::Diagnostic &diag) ;
         public:
-            ANTLRDiagnosticListener(const Data::Host::File *targetFile, const Diagnostics::Event &diagnosticCallback, bool enableAmbiguityReports = false)
+            ANTLRDiagnosticListener(const Data::Host::File *targetFile, const Diagnostics::ModifiableEvent &diagnosticCallback, bool enableAmbiguityReports = false)
                 : file(targetFile), onDiagnostic(diagnosticCallback), reportAmbiguities(enableAmbiguityReports) {}
 
             ANTLRDiagnosticListener(const ANTLRDiagnosticListener&) = delete;

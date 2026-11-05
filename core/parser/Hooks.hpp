@@ -26,6 +26,6 @@ namespace Parser {
 
         // [Diagnostic Events]
         // Args: <diagnostics_obj> (Diagnostics::Diagnostic)
-        Diagnostics::Event onDiagnostic = nullptr;
+        Diagnostics::ModifiableEvent onDiagnostic = nullptr;
     };
 }
