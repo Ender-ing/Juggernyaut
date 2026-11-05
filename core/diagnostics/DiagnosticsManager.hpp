@@ -81,7 +81,9 @@ namespace Diagnostics {
                     if (clearAfter) {
                         this->fileDiagnostics.erase(it); // Free memory after final stage!
                     }
-                } else if (clearAfter && this->callbacks.onFileFlush != nullptr) {
+                } else if (this->callbacks.onFileFlush != nullptr) {
+                    // The diagnostics list isn't present!
+
                     // File finished its final stage with 0 diagnostics: send empty `[]` to clear any old squiggles in the editor!
                     static const std::vector<TargetDiag> emptyList;
                     this->callbacks.onFileFlush(uri, emptyList);
@@ -112,7 +114,9 @@ namespace Diagnostics {
                 frontEnd.driver.onEnvironmentChange = flushAndDiscard;
                 frontEnd.unitSources.onLexerContextEnd = flushAndKeep;
                 frontEnd.unitSources.onParserContextEnd = flushAndKeep;
-                //  TO-DO: RESET CONTEXT DIAGNOSTICS (using frontEnd.unitSources.onContextStart)
+                frontEnd.unitSources.onContextStart = [this, &flushAndKeep](const File *file) {
+                    this->fileDiagnostics[file->canonical].clear();
+                };
                 frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
                 frontEnd.driver.onRunFinished = [this]() {
                     this->manualFlushAll(); // TMP
