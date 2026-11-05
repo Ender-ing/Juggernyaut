@@ -52,6 +52,7 @@ namespace Parser {
             Hooks hooks{};
 
             void emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const;
+            void reportAntlrData(const File *file, std::string &&data) const;
 
         public:
             Parser(const Setup *sharedSetup, Configs parserConfigs = {}, Hooks parserHooks = {})

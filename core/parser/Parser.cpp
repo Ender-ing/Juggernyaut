@@ -28,6 +28,18 @@ namespace Parser {
             this->hooks.onDiagnostic(diag);
         }
     }
+    void Parser::reportAntlrData(const File *file, std::string &&data) const {
+        if (this->hooks.onDiagnostic == nullptr) {
+            return;
+        }
+
+        Diagnostics::Diagnostic diag = {.file = file};
+        diag.severity = Diagnostics::Severity::Info;
+        diag.code = 200011;
+        diag.message = std::move(data);
+
+        this->hooks.onDiagnostic(diag);
+    }
 
     ParseResult Parser::parse(const File *file) const {
         ParseResult result;
@@ -54,24 +66,16 @@ namespace Parser {
 
         antlr4::CommonTokenStream tokens(&lexer);
 
-        if (!(this->setup->debug.reportANTLRData) || this->hooks.onANTLRTokenDetected == nullptr) {
-            tokens.fill();
-        } else {
-            // Indicate the start of the stream
-            this->hooks.onANTLRTokenDetected(1, "");
-
-            antlr4::Token *token = nullptr;
-            do {
-                token = tokens.LT(1);
-                this->hooks.onANTLRTokenDetected(2, token->toString());
-                if (token->getType() != antlr4::Token::EOF) {
-                    tokens.consume();
+        tokens.fill();
+        if (this->setup->debug.reportANTLRData) {
+            std::string tokenStreamStr;
+            for (const antlr4::Token *token : tokens.getTokens()) {
+                if (!tokenStreamStr.empty()) {
+                    tokenStreamStr += '\n';
                 }
-            } while (token->getType() != antlr4::Token::EOF);
-            tokens.seek(0);
-
-            // Indicate the end of the stream
-            this->hooks.onANTLRTokenDetected(3, "");
+                tokenStreamStr += token->toString();
+            }
+            this->reportAntlrData(file, std::move(tokenStreamStr));
         }
 
         if (this->hooks.onLexerContextEnd != nullptr) {
@@ -121,8 +125,8 @@ namespace Parser {
             tree = parser.prog(); // Root
         }
 
-        if (this->setup->debug.reportANTLRData && this->hooks.onANTLRTreeGenerated != nullptr && tree != nullptr) {
-            this->hooks.onANTLRTreeGenerated(tree->toStringTree(&parser));
+        if (this->setup->debug.reportANTLRData && tree != nullptr) {
+            this->reportAntlrData(file, tree->toStringTree(&parser));
         }
 
         // [STAGE 3] AST & Import Extraction
@@ -137,8 +141,7 @@ namespace Parser {
             this->hooks.onParserContextEnd(file);
         }
 
-        // ...
-
+        // TMP (Move into the session manager)
         if (this->hooks.onContextEnd != nullptr) {
             this->hooks.onContextEnd(file);
         }

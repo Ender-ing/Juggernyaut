@@ -26,9 +26,7 @@ namespace Parser::Listeners {
     ) {
         this->syntaxErrorsDetected = true;
 
-        Diagnostics::Diagnostic diag = Diagnostics::antlrSyntaxErrorToDiagnostic(
-            recognizer, offendingSymbol, line, charPositionInLine, msg, e
-        );
+        Diagnostics::Diagnostic diag = Diagnostics::antlrSyntaxErrorToDiagnostic(offendingSymbol, line, charPositionInLine, msg, e);
         this->emit(diag);
     }
 
