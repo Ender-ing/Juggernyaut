@@ -26,6 +26,7 @@
         "lix64": "mkdir .build && npm run build-cmake-lix-64 && npm run build-binary",
         "lix32": "mkdir .build && npm run build-cmake-lix-32 && npm run build-binary",
         "update": "cmake --build .build --config Release",
-        "debug-update": "cmake --build .build --config Debug"
-    } 
+        "debug-update": "cmake --build .build --config Debug",
+        "docs": "cmake --build .build --target jug-api-docs"
+    }
 }

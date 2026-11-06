@@ -1,0 +1,38 @@
+# Project metadata
+PROJECT_NAME           = "Juggernyaut Toolchain APIs"
+PROJECT_NUMBER         = "@JUG_RELEASE_VERSION@"
+OUTPUT_DIRECTORY       = "@JUG_DOCS_XML_DIR@"
+
+# Data extraction only (XML for Doxybook2, no HTML/LaTeX)
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = YES
+
+# Input directories from Juggernyaut
+INPUT                  = "@JUG_MAIN_DIR@/core" \
+                         "@JUG_MAIN_DIR@/compiler" \
+                         "@JUG_MAIN_DIR@/server" \
+                         "@JUG_MAIN_DIR@/package-manager" \
+                         "@JUG_MAIN_DIR@/utility"
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.cpp
+
+# Exclude ANTLR grammar build artifacts or internal third-party folders if any
+EXCLUDE_PATTERNS       = */.antlr/* */antlr4cpp_generated_src/*
+
+# Extraction settings for modern C++23
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+MARKDOWN_SUPPORT       = YES
+JAVADOC_AUTOBRIEF      = NO
+QT_AUTOBRIEF           = NO
+
+# Preprocessor (helps Doxygen understand DLL export macros)
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO

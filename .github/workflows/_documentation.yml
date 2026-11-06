@@ -1,0 +1,64 @@
+name: Documentation
+on:
+  workflow_call:
+    inputs:
+      release_version:
+        required: false
+        type: string
+        default: 0.0.1-github_docs.000
+      upload_artifact:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-api-documentation:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup CMake 4.2+
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '4.2.x'
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v5
+        with:
+          java-version: '23'
+          distribution: 'temurin'
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Install system dependencies, Doxygen & doxygen2docusaurus
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --fix-missing build-essential zlib1g-dev libssl-dev doxygen
+          npm install -g @xpack/doxygen2docusaurus
+
+      - name: Make the ".build" directory
+        run: mkdir ${{github.workspace}}/.build
+
+      - name: Configure CMake
+        run: |
+          cmake .. -DCMAKE_BUILD_TYPE=Release \
+            -DJUG_RELEASE_VERSION="${{inputs.release_version}}" \
+            -DJUG_BUILD_TESTS=OFF
+        working-directory: .build
+
+      - name: Generate API Documentation
+        run: cmake --build . --target jug-api-docs --verbose
+        working-directory: .build
+
+      - name: Upload Documentation Artifact (optional)
+        if: inputs.upload_artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Juggernyaut-API-Docs-v${{inputs.release_version}}
+          path: ${{github.workspace}}/.out/docs/

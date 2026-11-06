@@ -64,8 +64,8 @@ dx [VariableName]
 
 ## Pull Requests
 
-As long as a pull request follows the [style guide](https://ender.ing/docs/category/style-guides),
-and it doesn't mess with the structure of the repository, it'd be gladly accepted!
+As long as a pull request follows both [style guide](https://ender.ing/docs/category/style-guides)
+and the [Code Documentation Guide](./CODE_DOCUMENTATION.md), it'd be gladly accepted!
 
 > [!WARNING]
 > If a contribution requires the addition of a new dependency or resource, it won't be accepted

@@ -56,3 +56,6 @@ option(JUG_BUILD_TESTS "Build the test suite" OFF)
 if(JUG_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
+# Codebase Docs
+include(${JUG_CMAKE_DIR}/docs.cmake)
