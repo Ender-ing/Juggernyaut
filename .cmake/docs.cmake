@@ -20,10 +20,12 @@ if(DOXYGEN_FOUND AND NPX_EXECUTABLE)
     configure_file("${DOXY2DOCU_IN}" "${DOXY2DOCU_OUT}" @ONLY)
 
     add_custom_target(jug-api-docs
+        COMMAND "${CMAKE_COMMAND}" -E rm -rf "${JUG_DOCS_XML_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${JUG_DOCS_XML_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E rm -rf "${JUG_DOCS_BASE_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${JUG_DOCS_OUTPUT_DIR}"
         COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_OUT}"
+        COMMAND "${Python3_EXECUTABLE}" "${JUG_CMAKE_DIR}/docs/filter.py" "${JUG_DOCS_XML_DIR}/xml"
         COMMAND "${CMAKE_COMMAND}" -E env "${NPX_EXECUTABLE}" --yes @xpack/doxygen2docusaurus
         WORKING_DIRECTORY "${JUG_BUILD_DIR}"
         COMMENT "[DOCS] Extracting C++ XML via Doxygen and generating Docusaurus Markdown via @xpack/doxygen2docusaurus..."
