@@ -3,6 +3,23 @@ import sys
 import xml.etree.ElementTree as ET
 
 
+MERMAID_KEYWORDS = (
+    "flowchart ",
+    "graph ",
+    "sequenceDiagram",
+    "classDiagram",
+    "stateDiagram",
+    "stateDiagram-v2",
+    "erDiagram",
+    "gantt",
+    "pie",
+    "mindmap",
+    "timeline",
+    "gitGraph",
+    "C4Context",
+)
+
+
 def has_brief(elem: ET.Element) -> bool:
     brief = elem.find("briefdescription")
     return brief is not None and "".join(brief.itertext()).strip() != ""
@@ -15,6 +32,23 @@ def get_location(elem: ET.Element) -> str:
         line = loc.get("line", "1")
         return f"{file_path}:{line}"
     return "<unknown>:1"
+
+
+def tag_mermaid_listings(elem: ET.Element) -> None:
+    """Ensure <programlisting> blocks containing Mermaid syntax get filename='.mermaid'."""
+    for listing in elem.findall(".//programlisting"):
+        filename = listing.get("filename", "")
+        if filename in ("mermaid", ".mermaid"):
+            listing.set("filename", ".mermaid")
+            continue
+        # Check the first non-empty codeline for a Mermaid diagram keyword
+        for codeline in listing.findall("codeline"):
+            line_text = "".join(codeline.itertext()).strip()
+            if not line_text:
+                continue
+            if line_text.startswith(MERMAID_KEYWORDS):
+                listing.set("filename", ".mermaid")
+            break
 
 
 def filter_doxygen_xml(xml_dir: str) -> None:
@@ -111,6 +145,9 @@ def filter_doxygen_xml(xml_dir: str) -> None:
                     section.remove(member)
             if len(section.findall("memberdef")) == 0:
                 cdef.remove(section)
+
+        # Ensure Mermaid code blocks preserve their ```mermaid fence
+        tag_mermaid_listings(cdef)
 
         ctree.write(cpath, encoding="utf-8", xml_declaration=True)
         verified_refids.add(refid)
