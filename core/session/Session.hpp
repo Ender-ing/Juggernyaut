@@ -43,16 +43,23 @@ namespace Session {
         bool hasSyntaxErrors = false;
         bool hasSemanticErrors = false;
 
+        bool isManual = false; // Set to 'true' by using direct methods to add the file!
         bool isEntryPoint = false;
         bool isReachable = false;
+        uint8_t detachedGenerations = 0;
 
         // (CompilationUnitState) relation tracking
         std::vector<SourceId> dependencies;
         std::vector<SourceId> dependents;
+
+        // Data
+        std::unique_ptr<ASTNode> astTable = nullptr;
     };
 
     class JUG_SESSION_API Session {
         private:
+            const uint8_t MAX_DETACHED_GRACE = 10;
+
             // Basic context objects
             VFS *vfs = nullptr;
             const Environment *env = nullptr; // Rules from jug.toml
@@ -62,7 +69,6 @@ namespace Session {
 
             // Session-Owned Compilation Artifacts (indexed by SourceId)
             std::unordered_map<SourceId, CompilationUnitState> units;
-            std::unordered_map<SourceId, std::unique_ptr<ASTNode>> astTable;
             std::vector<SourceId> entryPoints;
 
             // Execution State
@@ -91,7 +97,6 @@ namespace Session {
             // (Internal) Management
             // NOTE: The Diagnostic is MOVED!
             void emitDiagnostic(Diagnostic &diag) ;
-            void checkDetachedSources() ;
 
             // Source & Dependency Registration (Called by JugDriver)
             void addEntryPoint(const File *file) ;

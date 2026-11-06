@@ -54,18 +54,6 @@ namespace Session {
             this->hooks.onDiagnostic(diag);
         }
     }
-    void Session::checkDetachedSources() {
-        if (this->isRunning || this->hooks.onContextDetached == nullptr) {
-            return;
-        }
-
-        // Look for detached sources!
-        for (const auto &[id, state] : this->units) {
-            if (!state.isReachable && !state.isEntryPoint) {
-                this->hooks.onContextDetached(state.file);
-            }
-        }
-    }
 
     // Source & Dependency Registration (Called by JugDriver)
     void Session::addEntryPoint(const File *file) {
@@ -85,11 +73,15 @@ namespace Session {
     }
     void Session::refreshEntryPoints() {
         // Reset entry points
-        for (auto &[id, unit] : this->units) {
-            unit.isEntryPoint = false;
-            unit.isReachable = false;
-        }
         this->entryPoints.clear();
+        for (auto &[id, unit] : this->units) {
+            if (!unit.isManual) {
+                unit.isEntryPoint = false;
+                unit.isReachable = false;
+            } else {
+                this->entryPoints.push_back(id);
+            }
+        }
 
         if (this->configs.inheritEnvironmentBuildInputs && this->env != nullptr && this->vfs != nullptr) {
             for (const std::string &uri : this->env->build.inputPaths) {
@@ -257,11 +249,11 @@ namespace Session {
             unit.completedStage = targetStage;
 
             if (targetStage >= Stage::Parser) {
-                this->astTable[currentId] = std::move(result.ast);
+                this->units[currentId].astTable = std::move(result.ast);
                 this->resolveUnitImports(file, unit, result.imports, worklist);
             }
 
-            // Trigger relevant events
+            // Trigger relevant events (a special case!)
             if (parser.hooks.onContextEnd != nullptr) {
                 parser.hooks.onContextEnd(file);
             }
@@ -272,7 +264,7 @@ namespace Session {
 
     // Pipeline
     void Session::run() {
-        if (this->isRunning) {
+        if (this->isRunning || this->configs.terminateAfter == Stage::Unprocessed) {
             return;
         }
         this->isRunning = true;
@@ -287,15 +279,10 @@ namespace Session {
                 /*if (self->hooks.onRunFinished != nullptr) {
                     self->hooks.onRunFinished(self);
                 }*/
-                // Trigger relevant events
-                self->checkDetachedSources();
 
+                self->rejuvenate();
             }
         } cleanup{this};
-
-        if (this->configs.terminateAfter == Stage::Unprocessed) {
-            return;
-        }
 
         // Refresh entry points
         this->refreshEntryPoints();
@@ -327,13 +314,21 @@ namespace Session {
         }
 
         // Prune unreachable compilation units and their data!
-        std::erase_if(this->units, [this](const auto &item) {
-            const auto &[id, state] = item;
+        std::erase_if(this->units, [this](auto &item) {
+            auto &[id, state] = item;
             if (!state.isReachable && !state.isEntryPoint) {
-                // Cleanup!
-                this->astTable.erase(id);
+                // Trigger relevant events
+                if (this->hooks.onContextDetached != nullptr && state.detachedGenerations == 0) {
+                    this->hooks.onContextDetached(state.file);
+                }
 
-                return true;
+                if (++(state.detachedGenerations) >= this->MAX_DETACHED_GRACE) {
+
+                    // TO-DO: Handling entry deletion
+                    // return true;
+                }
+            } else {
+                state.detachedGenerations = 0;
             }
 
             return false;

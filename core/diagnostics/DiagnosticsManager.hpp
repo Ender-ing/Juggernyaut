@@ -128,21 +128,29 @@ namespace Diagnostics {
                 };
 
                 // Handle Diagnostics Retention logic
+                // [jug.toml]
                 frontEnd.driver.onEnvironmentLoad = flushAndDiscard;
                 frontEnd.driver.onEnvironmentChange = flushAndDiscard;
-                frontEnd.unitSources.onLexerContextEnd = flushAndKeep;
-                frontEnd.unitSources.onParserContextEnd = flushAndKeep;
+                // [*.jug]
                 frontEnd.unitSources.onContextStart = [this](const File *file) {
+                    // Update state
+                    if (this->isFileDetached[file->canonical]) {
+                        this->isFileDetached[file->canonical] = false;
+                    }
+
+                    // Reset diagnostics (unchanged client state!)
                     this->fileDiagnostics[file->canonical].clear();
                 };
+                //frontEnd.unitSources.onLexerContextEnd = flushAndKeep; // Too much?
+                frontEnd.unitSources.onParserContextEnd = flushAndKeep;
+                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
                 frontEnd.unitSources.onContextSkip = [this](const File *file) {
-                    // Refresh detached files
-                    if (this->isFileDetached[file->canonical] || true) {
+                    // Refresh detached files (in case no edits were made!)
+                    if (this->isFileDetached[file->canonical]) {
                         this->isFileDetached[file->canonical] = false;
                         flushAndKeep(file);
                     }
                 };
-                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
                 frontEnd.unitSources.onContextDetached = [this](const File *file) {
                     this->isFileDetached[file->canonical] = true;
                     this->emptyFlush(file->canonical);
