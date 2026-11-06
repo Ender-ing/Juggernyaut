@@ -1,6 +1,7 @@
 message(STATUS "[DEPENDENCIES] Checking dependencies...")
 
 include(FetchContent)
+include(${JUG_CMAKE_DIR}/shared-cmake.cmake)
 
 # VERSION CONTROL
 # Manage the versions for used dependencies
@@ -175,6 +176,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(MI_OVERRIDE ON CACHE BOOL "Override standard allocations" FORCE)
         set(MI_NO_OPT_ARCH ON CACHE BOOL "No architecture optimisation" FORCE)
         FetchContent_MakeAvailable(mimalloc)
+        ignore_external_directory_warnings("${mimalloc_BINARY_DIR}")
         set_target_properties(mimalloc PROPERTIES
             CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
         )

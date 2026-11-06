@@ -2,6 +2,7 @@
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Recommended for modern C++
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 # Make symbols hidden by default
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -310,15 +311,22 @@ macro(ignore_external_target_warnings TARGET)
     get_target_property(_target_type ${TARGET} TYPE)
     if(NOT _target_type STREQUAL "INTERFACE_LIBRARY" AND NOT _target_type STREQUAL "UTILITY")
         if(MSVC)
-            # /w disables all compiler warnings
-            target_compile_options(${TARGET} PRIVATE /w)
+            # Remove any existing /W1..4 or -W1..4 on the target so MSVC doesn't emit D9025
+            foreach(_prop COMPILE_OPTIONS COMPILE_FLAGS)
+                get_target_property(_opts ${TARGET} ${_prop})
+                if(_opts)
+                    string(REGEX REPLACE "(^|[ ;])[-/]W[0-4](<$|[ ;]>)" "\\1\\2" _opts "${_opts}")
+                    set_target_properties(${TARGET} PROPERTIES ${_prop} "${_opts}")
+                endif()
+            endforeach()
+            # Use /W0 (not /w) so Visual Studio's .vcxproj generator sets <WarningLevel>TurnOffAllWarnings</WarningLevel>
+            target_compile_options(${TARGET} PRIVATE /W0)
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             # -w inhibits all warning messages
             target_compile_options(${TARGET} PRIVATE -w)
         endif()
-        # Suppress all warnings (passes -isystem on GCC/Clang/AppleClang and /external:I on MSVC)
         set_target_properties(${TARGET} PROPERTIES COMPILE_WARNING_AS_ERROR OFF)
-        # Supress all warnings (passes -isystem on GCC/Clang/AppleClang and /external:I on MSVC)
+        # Suppress all warnings from headers (passes -isystem on GCC/Clang/AppleClang and /external:I on MSVC)
         set_target_properties(${TARGET} PROPERTIES SYSTEM TRUE)
     endif()
 endmacro()

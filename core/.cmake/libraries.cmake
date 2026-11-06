@@ -52,6 +52,17 @@ if(MSVC)
     # 4251: non-exported member variable
     target_compile_options(JuggernyautParserLibrary PRIVATE /wd4275 /wd4251)
 endif()
+# Ignore ANTLR4 warnings
+if(MSVC)
+    set(_antlr_gen_suppress_flag "/W0")
+else()
+    set(_antlr_gen_suppress_flag "-w")
+endif()
+set_source_files_properties(
+    ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS}
+    ${ANTLR_JuggernyautGrammarParser_CXX_OUTPUTS}
+    PROPERTIES COMPILE_OPTIONS "${_antlr_gen_suppress_flag}"
+)
 
 # Create a library from /session
 add_library(JuggernyautSessionLibrary SHARED)
