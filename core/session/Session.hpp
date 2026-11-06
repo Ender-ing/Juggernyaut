@@ -58,7 +58,7 @@ namespace Session {
 
     class JUG_SESSION_API Session {
         private:
-            const uint8_t MAX_DETACHED_GRACE = 10;
+            static constexpr uint8_t MAX_DETACHED_GRACE = 10;
 
             // Basic context objects
             VFS *vfs = nullptr;
