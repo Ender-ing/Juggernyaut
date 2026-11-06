@@ -28,6 +28,7 @@ namespace Driver {
         FileEvent onLexerContextEnd = nullptr;
         FileEvent onParserContextEnd = nullptr;
         FileEvent onContextEnd = nullptr;
+        FileEvent onContextDetached = nullptr;
     };
 
     // Unit-level hooks

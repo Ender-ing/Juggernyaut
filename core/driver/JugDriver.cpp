@@ -43,6 +43,7 @@ namespace Driver {
                 .onLexerContextEnd = this->configs.hooks.unitSources.onLexerContextEnd,
                 .onParserContextEnd = this->configs.hooks.unitSources.onParserContextEnd,
                 .onContextEnd = this->configs.hooks.unitSources.onContextEnd,
+                .onContextDetached = this->configs.hooks.unitSources.onContextDetached,
                 .onDiagnostic = [this](const Diagnostic &diag){
                     this->emitDiagnostic(diag);
                 }

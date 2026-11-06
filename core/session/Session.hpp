@@ -91,6 +91,7 @@ namespace Session {
             // (Internal) Management
             // NOTE: The Diagnostic is MOVED!
             void emitDiagnostic(Diagnostic &diag) ;
+            void checkDetachedSources() ;
 
             // Source & Dependency Registration (Called by JugDriver)
             void addEntryPoint(const File *file) ;

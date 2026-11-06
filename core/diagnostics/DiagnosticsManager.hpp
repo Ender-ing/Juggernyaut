@@ -48,7 +48,9 @@ namespace Diagnostics {
             };
 
         private:
+            std::mutex hookMtx;
             std::unordered_map<std::string, std::vector<TargetDiag>> fileDiagnostics;
+            std::unordered_map<std::string, bool> isFileDetached;
             std::vector<TargetDiag> componentDiagnostics; // diag.file == nullptr
             const ConverterFn converter;
             const ManagerCallbacks callbacks;
@@ -59,13 +61,16 @@ namespace Diagnostics {
                 if (this->converter == nullptr) {
                     return;
                 }
+                TargetDiag convertedDiag = this->converter(diag);
+
+                std::lock_guard<std::mutex> lock(this->hookMtx);
 
                 if (diag.file != nullptr) {
                     // Copy relevent data immediately!
                     const std::string uri = diag.file->canonical;
-                    this->fileDiagnostics[uri].push_back(this->converter(diag));
+                    this->fileDiagnostics[uri].push_back(convertedDiag);
                 } else {
-                    this->componentDiagnostics.push_back(this->converter(diag));
+                    this->componentDiagnostics.push_back(convertedDiag);
                 }
             }
 
@@ -73,21 +78,34 @@ namespace Diagnostics {
             // - clearAfter == false (for Intermediate stages)
             // - clearAfter == true (for the Final stage)
             void flushFile(const std::string &uri, bool clearAfter = false) {
+                if (this->callbacks.onFileFlush == nullptr) {
+                    return;
+                }
+                std::lock_guard<std::mutex> lock(this->hookMtx);
+
                 auto it = this->fileDiagnostics.find(uri);
                 if (it != this->fileDiagnostics.end()) {
-                    if (this->callbacks.onFileFlush != nullptr) {
-                        this->callbacks.onFileFlush(uri, it->second);
-                    }
+                    this->callbacks.onFileFlush(uri, it->second);
+
                     if (clearAfter) {
                         this->fileDiagnostics.erase(it); // Free memory after final stage!
                     }
-                } else if (this->callbacks.onFileFlush != nullptr) {
+                } else {
                     // The diagnostics list isn't present!
 
                     // File finished its final stage with 0 diagnostics: send empty `[]` to clear any old squiggles in the editor!
                     static const std::vector<TargetDiag> emptyList;
                     this->callbacks.onFileFlush(uri, emptyList);
                 }
+            }
+            void emptyFlush(const std::string &uri) {
+                if (this->callbacks.onFileFlush == nullptr) {
+                    return;
+                }
+                std::lock_guard<std::mutex> lock(this->hookMtx);
+
+                static const std::vector<TargetDiag> emptyList;
+                this->callbacks.onFileFlush(uri, emptyList);
             }
 
             // Internal (Diagnostic dispatch logic)
@@ -98,12 +116,12 @@ namespace Diagnostics {
                 };
 
                 // Helper functions
-                FileEvent flushAndKeep = [this](const Data::Host::File *file) {
+                static FileEvent flushAndKeep = [this](const Data::Host::File *file) {
                     if (file != nullptr) {
                         this->flushFile(file->canonical, false);
                     }
                 };
-                FileEvent flushAndDiscard = [this](const Data::Host::File *file) {
+                static FileEvent flushAndDiscard = [this](const Data::Host::File *file) {
                     if (file != nullptr) {
                         this->flushFile(file->canonical, true);
                     }
@@ -114,19 +132,30 @@ namespace Diagnostics {
                 frontEnd.driver.onEnvironmentChange = flushAndDiscard;
                 frontEnd.unitSources.onLexerContextEnd = flushAndKeep;
                 frontEnd.unitSources.onParserContextEnd = flushAndKeep;
-                frontEnd.unitSources.onContextStart = [this, &flushAndKeep](const File *file) {
+                frontEnd.unitSources.onContextStart = [this](const File *file) {
                     this->fileDiagnostics[file->canonical].clear();
                 };
-                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
-                frontEnd.driver.onRunFinished = [this]() {
-                    this->manualFlushAll(); // TMP
+                frontEnd.unitSources.onContextSkip = [this](const File *file) {
+                    // Refresh detached files
+                    if (this->isFileDetached[file->canonical] || true) {
+                        this->isFileDetached[file->canonical] = false;
+                        flushAndKeep(file);
+                    }
                 };
+                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
+                frontEnd.unitSources.onContextDetached = [this](const File *file) {
+                    this->isFileDetached[file->canonical] = true;
+                    this->emptyFlush(file->canonical);
+                };
+                /*frontEnd.driver.onRunFinished = [this]() { // This runs before 'onContextDetached'!
+                    // this->manualFlushAll(false);
+                };*/
             }
 
         public:
             // Constructor: overtakes `diagnosticHandle` and converts incoming diagnostics
             DiagnosticsManager(FrontEndHooks &hooks, ConverterFn convertFn, ManagerCallbacks managerCallbacks)
-                : converter(std::move(convertFn)), callbacks(std::move(managerCallbacks))  {
+                : converter(std::move(convertFn)), callbacks(std::move(managerCallbacks)) {
                 setupDiagnosticDispatch(hooks);
             }
             // Overload when TargetDiag == Diagnostics::Diagnostic (no converter needed)
@@ -148,6 +177,8 @@ namespace Diagnostics {
             // Prepare for a new run: clear vectors, but KEEP keys that had errors on the last run
             // so if they have 0 errors on this run, `flush()` sends an empty `[]` to clear the editor!
             void clearAllDiagnostics() {
+                std::lock_guard<std::mutex> lock(this->hookMtx);
+
                 for (auto &[uri, list] : this->fileDiagnostics) {
                     list.clear();
                 }
@@ -155,20 +186,24 @@ namespace Diagnostics {
             }
 
             // Flush all grouped file diagnostics and component diagnostics
-            // NOTE: manual flushes erase all diagnostics!
-            void manualFlushAll() {
+            void manualFlushAll(bool clearAll = true) {
+                std::lock_guard<std::mutex> lock(this->hookMtx);
+
                 if (this->callbacks.onFileFlush != nullptr) {
                     for (const auto &[uri, list] : this->fileDiagnostics) {
                         this->callbacks.onFileFlush(uri, list);
                     }
                 }
-                this->fileDiagnostics.clear();
                 if (this->callbacks.onComponentFlush != nullptr) {
                     for (const auto &compDiag : this->componentDiagnostics) {
                         this->callbacks.onComponentFlush(compDiag);
                     }
                 }
-                this->componentDiagnostics.clear();
+
+                if (clearAll) {
+                    this->fileDiagnostics.clear();
+                    this->componentDiagnostics.clear();
+                }
             }
     };
 }

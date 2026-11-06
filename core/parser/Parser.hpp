@@ -46,17 +46,18 @@ namespace Parser {
     };
 
     class JUG_PARSER_API Parser {
-        private:
-            const Environment *env;
+        public:
             Configs configs{};
             Hooks hooks{};
+        private:
+            const Environment *env;
 
             void emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const;
             void reportAntlrData(const File *file, std::string &&data) const;
 
         public:
-            Parser(const Environment *sharedEnvironment, Configs parserConfigs = {}, Hooks parserHooks = {})
-                : env(sharedEnvironment), configs(std::move(parserConfigs)), hooks(std::move(parserHooks)) {}
+            Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = {})
+                : configs(std::move(parserConfigs)), hooks(std::move(parserHooks)), env(sharedEnvironment) {}
             ~Parser() = default;
 
             // Non-copyable, movable

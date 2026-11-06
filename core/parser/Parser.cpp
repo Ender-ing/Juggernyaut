@@ -85,10 +85,6 @@ namespace Parser {
         // Respect early termination
         if (this->configs.terminateAfterLexer) {
             result.hasSyntaxErrors = diagListener.hasErrors();
-
-            if (this->hooks.onContextEnd != nullptr) {
-                this->hooks.onContextEnd(file);
-            }
             return result;
         }
 
@@ -139,11 +135,6 @@ namespace Parser {
 
         if (this->hooks.onParserContextEnd != nullptr) {
             this->hooks.onParserContextEnd(file);
-        }
-
-        // TMP (Move into the session manager)
-        if (this->hooks.onContextEnd != nullptr) {
-            this->hooks.onContextEnd(file);
         }
 
         return result;

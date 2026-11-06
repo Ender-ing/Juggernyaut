@@ -18,7 +18,7 @@ namespace Session {
 
     struct Hooks {
         // [Session Lifecycle]
-        StageCall onRunFinished = nullptr; // The Session is done running!
+        //StageCall onRunFinished = nullptr; // The Session is done running! (not needed?)
 
         // [Source Stage Lifecycle]
         FileEvent onContextSkip = nullptr;
@@ -26,6 +26,7 @@ namespace Session {
         FileEvent onLexerContextEnd = nullptr;
         FileEvent onParserContextEnd = nullptr;
         FileEvent onContextEnd = nullptr;
+        FileEvent onContextDetached = nullptr;
 
         // [Diagnostics]
         Diagnostics::Event onDiagnostic = nullptr; // ALL session diagnostics go through here!

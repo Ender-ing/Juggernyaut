@@ -54,6 +54,18 @@ namespace Session {
             this->hooks.onDiagnostic(diag);
         }
     }
+    void Session::checkDetachedSources() {
+        if (this->isRunning || this->hooks.onContextDetached == nullptr) {
+            return;
+        }
+
+        // Look for detached sources!
+        for (const auto &[id, state] : this->units) {
+            if (!state.isReachable && !state.isEntryPoint) {
+                this->hooks.onContextDetached(state.file);
+            }
+        }
+    }
 
     // Source & Dependency Registration (Called by JugDriver)
     void Session::addEntryPoint(const File *file) {
@@ -104,7 +116,7 @@ namespace Session {
             }
         };
 
-        return Parser::Parser(this->env, std::move(parserConfigs), std::move(parserHooks));
+        return Parser::Parser(std::move(parserConfigs), std::move(parserHooks), this->env);
     }
     void Session::resolveUnitImports(const File *sourceFile, CompilationUnitState &unitState,
         const std::vector<Parser::ImportRequest> &imports, std::vector<SourceId> &worklist) {
@@ -248,6 +260,11 @@ namespace Session {
                 this->astTable[currentId] = std::move(result.ast);
                 this->resolveUnitImports(file, unit, result.imports, worklist);
             }
+
+            // Trigger relevant events
+            if (parser.hooks.onContextEnd != nullptr) {
+                parser.hooks.onContextEnd(file);
+            }
         }
 
         return !this->hasErrors;
@@ -265,9 +282,14 @@ namespace Session {
             Session *self;
             ~RunCleanup() {
                 self->isRunning = false;
-                if (self->hooks.onRunFinished != nullptr) {
+
+                // Trigger relevant events
+                /*if (self->hooks.onRunFinished != nullptr) {
                     self->hooks.onRunFinished(self);
-                }
+                }*/
+                // Trigger relevant events
+                self->checkDetachedSources();
+
             }
         } cleanup{this};
 
@@ -308,6 +330,7 @@ namespace Session {
         std::erase_if(this->units, [this](const auto &item) {
             const auto &[id, state] = item;
             if (!state.isReachable && !state.isEntryPoint) {
+                // Cleanup!
                 this->astTable.erase(id);
 
                 return true;
@@ -316,6 +339,6 @@ namespace Session {
             return false;
         });
 
-        Parser::Parser::cleanup();
+        // Parser::Parser::cleanup(); // Dangerous to run here!
     }
 }
