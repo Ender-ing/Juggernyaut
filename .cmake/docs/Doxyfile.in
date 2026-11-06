@@ -8,7 +8,13 @@ GENERATE_HTML          = NO
 GENERATE_LATEX         = NO
 GENERATE_XML           = YES
 XML_OUTPUT             = xml
-XML_PROGRAMLISTING     = YES
+XML_PROGRAMLISTING     = NO # Only documented components are to be present!
+
+# Strip the repository root path and use short compound names so
+# @xpack/doxygen2docusaurus doesn't repeat cumulative paths in filenames
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = "@JUG_MAIN_DIR@"
+STRIP_FROM_INC_PATH    = "@JUG_MAIN_DIR@"
 
 # Input directories from Juggernyaut
 INPUT                  = "@JUG_MAIN_DIR@/core" \
@@ -22,10 +28,14 @@ FILE_PATTERNS          = *.hpp *.cpp
 # Exclude ANTLR grammar build artifacts or internal third-party folders if any
 EXCLUDE_PATTERNS       = */.antlr/* */antlr4cpp_generated_src/*
 
-# Extraction settings for modern C++23
-EXTRACT_ALL            = YES
+# Only extract files, classes, and members that actually have /// documentation
+EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
-EXTRACT_STATIC         = YES
+EXTRACT_STATIC         = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+WARN_IF_UNDOCUMENTED   = NO
+# Extraction settings for modern C++23
 AUTOLINK_SUPPORT       = YES
 BUILTIN_STL_SUPPORT    = YES
 MARKDOWN_SUPPORT       = YES
