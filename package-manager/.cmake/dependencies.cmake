@@ -15,6 +15,7 @@ else()
     # Manage configs
     set(USE_NSEC OFF CACHE BOOL "" FORCE)
     set(USE_XDIFF ON CACHE BOOL "" FORCE)
+    set(REGEX_BACKEND "builtin" CACHE STRING "" FORCE)
     # Download libgit2
     message(STATUS "[DEPENDENCIES] Fetching libgit2...")
     set(JUG_DEP_GIT2_LIB_PATH ${JUG_DEPENDENCIES_DIR}/libgit2)
