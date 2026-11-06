@@ -76,7 +76,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture armhf
         sudo apt-get update -o Acquire::Retries=3
-        sudo apt-get install -y --fix-missing gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf qemu-user-static zlib1g-dev:armhf libssl-dev:armhf
+        sudo apt-get install -y --fix-missing gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf qemu-user-static libstdc++6:armhf libgcc-s1:armhf zlib1g-dev:armhf libssl-dev:armhf
 
     - name: Install dependencies dependency (ARM64)
       if: inputs.build_platform_name == 'arm64'
