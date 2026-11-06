@@ -87,10 +87,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     add_non_debug_c_cxx_flag("-ffunction-sections")         # Place each function into its own section for linker dead-code stripping [matches MSVC /Gy]
     add_non_debug_c_cxx_flag("-fdata-sections")             # Place each global/static variable into its own section for linker dead-data stripping [matches MSVC /Gw]
     add_non_debug_c_cxx_flag("-fmerge-all-constants")       # Merge identical constants and read-only arrays across translation units [matches MSVC /GF string/constant pooling]
-    add_non_debug_c_cxx_flag("-fno-semantic-interposition") # Assume symbols cannot be interposed via LD_PRELOAD; allows inlining even with -fPIC [matches MSVC DLL symbol behavior]
 
     # Linux-specific compile optimizations (not supported on macOS Mach-O)
     if(NOT APPLE)
+        add_non_debug_c_cxx_flag("-fno-semantic-interposition") # Assume symbols cannot be interposed via LD_PRELOAD; allows inlining even with -fPIC [matches MSVC DLL symbol behavior]
         add_non_debug_c_cxx_flag("-fno-plt")                # Avoid Procedure Linkage Table (PLT) indirection for external function calls
     endif()
 
