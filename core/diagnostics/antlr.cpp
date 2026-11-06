@@ -1,7 +1,9 @@
-/**
- * @brief
- * Handle diagnostic for shared contexts
-**/
+/// @file
+/// @ingroup CoreDiagnostics
+/// @brief Implements ANTLR4 syntax error and ambiguity conversion into #Diagnostics::Diagnostic reports.
+///
+/// @see antlr.hpp
+/// @see Diagnostics::Diagnostic
 
 #include "antlr.hpp"
 

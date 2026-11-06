@@ -1,7 +1,9 @@
-/**
- * @brief
- * Handle diagnostic grouping (For LSP-like scenarios)
-**/
+/// @file
+/// @ingroup CoreDiagnostics
+/// @brief Defines #Diagnostics::DiagnosticsManager for grouping, converting, and flushing diagnostics by file or component.
+///
+/// @see Diagnostics::Diagnostic
+/// @see Driver::Hooks
 
 #pragma once
 
@@ -14,7 +16,13 @@
 #include "../driver/Hooks.hpp"
 
 namespace Diagnostics {
+
+    /// @addtogroup CoreDiagnostics
+    /// @{
+
     // Hooks
+    /// @brief Alias for the front-end driver hook table (`Driver::Hooks`) wired by #DiagnosticsManager.
+    /// @see DiagnosticsManager
     using FrontEndHooks = Driver::Hooks;
     /*struct ManagerHooks {
         // Front-End Driver (General)
@@ -36,15 +44,44 @@ namespace Diagnostics {
 
     // NOTE: Final stage flusing logic can change as more compilation phases are added!
     // WARNING: Your DiagnosticsManager should be accessed by one thread at a time!
+    /// @brief Aggregates, converts, and flushes per-file and component-level #Diagnostic instances across compilation stages.
+    ///
+    /// `#DiagnosticsManager` attaches itself to a #FrontEndHooks instance, converting incoming
+    /// #Diagnostic reports into `TargetDiag` immediately (to avoid duplicating memory when targeting
+    /// external frameworks such as `lsp-framework`) and dispatching grouped batches through
+    /// #ManagerCallbacks when files complete stages or detach.
+    ///
+    /// @note Final stage flushing logic can change as more compilation phases are added.
+    /// @warning Internal state is synchronized via a mutex during hook callbacks, but external control methods should be invoked by one thread at a time.
+    ///
+    /// @tparam TargetDiag Destination diagnostic representation type (defaults to #Diagnostics::Diagnostic).
+    ///
+    /// @see Diagnostic
+    /// @see ManagerCallbacks
+    /// @see FrontEndHooks
     template <typename TargetDiag = Diagnostic>
     class DiagnosticsManager {
         public:
+            /// @brief Function signature that converts a core #Diagnostic into a `TargetDiag` instance.
+            /// @see Diagnostic
             using ConverterFn = std::function<TargetDiag(const Diagnostic&)>; // This is done to prevent data duplication in memory as much as possible when dealing with different frameworks!
+
+            /// @brief Callback signature invoked when all accumulated diagnostics for a single file URI are flushed.
+            /// @see ManagerCallbacks
             using FileFlushCallback = std::function<void(const std::string &uri, const std::vector<TargetDiag> &diagnostics)>;
+
+            /// @brief Callback signature invoked when a non-file component diagnostic (`diag.file == nullptr`) is flushed.
+            /// @see ManagerCallbacks
             using ComponentFlushCallback = std::function<void(const TargetDiag &diagnostic)>;
+
+            /// @brief Sink callbacks invoked by #DiagnosticsManager when flushing file-scoped or component-scoped diagnostics.
+            ///
+            /// @see DiagnosticsManager
+            /// @see FileFlushCallback
+            /// @see ComponentFlushCallback
             struct ManagerCallbacks {
-                FileFlushCallback onFileFlush = nullptr;
-                ComponentFlushCallback onComponentFlush = nullptr;
+                FileFlushCallback onFileFlush = nullptr;           ///< @brief Invoked with a canonical file URI and its current list of `TargetDiag` items.
+                ComponentFlushCallback onComponentFlush = nullptr; ///< @brief Invoked for each component-wide `TargetDiag` not tied to a source file.
             };
 
         private:
@@ -162,11 +199,26 @@ namespace Diagnostics {
 
         public:
             // Constructor: overtakes `diagnosticHandle` and converts incoming diagnostics
+            /// @brief Constructs a #DiagnosticsManager with a custom #ConverterFn and binds to @p hooks.
+            ///
+            /// @param[in,out] hooks            Front-end driver hooks whose diagnostic and context callbacks will be bound to this manager.
+            /// @param[in]     convertFn        Function used to convert each incoming #Diagnostic into `TargetDiag`.
+            /// @param[in]     managerCallbacks Flush callbacks invoked when file or component diagnostics are ready.
+            ///
+            /// @see ManagerCallbacks
+            /// @see ConverterFn
             DiagnosticsManager(FrontEndHooks &hooks, ConverterFn convertFn, ManagerCallbacks managerCallbacks)
                 : converter(std::move(convertFn)), callbacks(std::move(managerCallbacks)) {
                 setupDiagnosticDispatch(hooks);
             }
+
             // Overload when TargetDiag == Diagnostics::Diagnostic (no converter needed)
+            /// @brief Constructs a #DiagnosticsManager using an identity converter when `TargetDiag` is #Diagnostics::Diagnostic.
+            ///
+            /// @param[in,out] hooks            Front-end driver hooks whose diagnostic and context callbacks will be bound to this manager.
+            /// @param[in]     managerCallbacks Flush callbacks invoked when file or component diagnostics are ready.
+            ///
+            /// @see ManagerCallbacks
             DiagnosticsManager(FrontEndHooks &hooks, ManagerCallbacks managerCallbacks)
                 requires std::same_as<TargetDiag, Diagnostic>
                 : DiagnosticsManager(
@@ -174,16 +226,31 @@ namespace Diagnostics {
                     [](const Diagnostic &d) -> Diagnostic { return d; },
                     std::move(managerCallbacks)
                 ) {}
+
+            /// @brief Destroys the #DiagnosticsManager instance.
             ~DiagnosticsManager() = default;
 
             // Non-copyable (since the bound lambda captures `this`)
+            /// @brief Deleted copy constructor (bound hook lambdas capture `this`).
             DiagnosticsManager(const DiagnosticsManager&) = delete;
+
+            /// @brief Deleted copy-assignment operator (bound hook lambdas capture `this`).
             DiagnosticsManager& operator=(const DiagnosticsManager&) = delete;
+
+            /// @brief Deleted move constructor (bound hook lambdas capture `this`).
             DiagnosticsManager(DiagnosticsManager&&) = delete;
+
+            /// @brief Deleted move-assignment operator (bound hook lambdas capture `this`).
             DiagnosticsManager& operator=(DiagnosticsManager&&) = delete;
 
             // Prepare for a new run: clear vectors, but KEEP keys that had errors on the last run
             // so if they have 0 errors on this run, `flush()` sends an empty `[]` to clear the editor!
+            /// @brief Clears accumulated diagnostic vectors for a new run while retaining file URI keys.
+            ///
+            /// Preserving existing keys in the map ensures that if a file had errors on the previous run
+            /// and finishes the next run with 0 errors, flushing sends an empty `[]` batch to clear stale editor squiggles.
+            ///
+            /// @see manualFlushAll
             void clearAllDiagnostics() {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
@@ -194,6 +261,12 @@ namespace Diagnostics {
             }
 
             // Flush all grouped file diagnostics and component diagnostics
+            /// @brief Immediately invokes #ManagerCallbacks for all buffered file and component diagnostics.
+            ///
+            /// @param[in] clearAll If `true` (default), erases all buffered file and component diagnostics after flushing.
+            ///
+            /// @see clearAllDiagnostics
+            /// @see ManagerCallbacks
             void manualFlushAll(bool clearAll = true) {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
@@ -214,4 +287,6 @@ namespace Diagnostics {
                 }
             }
     };
+
+    /// @}
 }

@@ -1,7 +1,8 @@
-/**
- * @brief
- * Handle diagnostic for shared contexts
-**/
+/// @file
+/// @ingroup CoreDiagnostics
+/// @brief Translation unit for core #Diagnostics::Diagnostic utilities.
+///
+/// @see Diagnostics::Diagnostic
 
 #include "Diagnostic.hpp"
 
