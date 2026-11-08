@@ -32,11 +32,11 @@ namespace Parser {
     using ASTNode = Data::Parser::ASTNode;
 
     struct ImportRequest {
-        bool isExternal = false; // 'true' only when importing libraries!
         std::string target = "";
         std::string alias = "";
         std::vector<std::string> symbols;
         Range range{};
+        bool isExternal = false; // 'true' only when importing libraries!
     };
 
     struct ParseResult {
@@ -50,13 +50,13 @@ namespace Parser {
             Configs configs{};
             Hooks hooks{};
         private:
-            const Environment *env;
+            const Environment *env = nullptr;
 
             void emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const;
             void reportAntlrData(const File *file, std::string &&data) const;
 
         public:
-            Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = {})
+            Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr)
                 : configs(std::move(parserConfigs)), hooks(std::move(parserHooks)), env(sharedEnvironment) {}
             ~Parser() = default;
 
