@@ -135,9 +135,6 @@ namespace Session {
         }
         unitState.dependencies.clear();
 
-        // Reserve capacity upfront so adding dependencies cannot reallocate `this->units` and invalidate `unitState`
-        this->units.reserve(this->units.size() + imports.size());
-
         // URIs are relative to the directory of the source file!
         const std::string parentDir = this->vfs->getParentDirectory(sourceFile->canonical);
 
@@ -193,7 +190,7 @@ namespace Session {
                 continue;
             }
 
-            // Register dependency unit
+            // Register dependency unit (capacity was pre-reserved in runParserStage)
             CompilationUnitState &depUnit = getOrCreateUnit(this->units, depFile);
 
             // Keep relations up-to-date!
@@ -265,8 +262,11 @@ namespace Session {
             unit.completedStage = targetStage;
 
             if (targetStage >= Stage::Parser) {
-                unit.astTable = std::move(result.ast);
-                this->resolveUnitImports(file, unit, result.imports, worklist);
+                // Reserve capacity BEFORE taking `currentUnit` reference so `this->units` cannot reallocate inside `resolveUnitImports`
+                this->units.reserve(this->units.size() + result.imports.size());
+                CompilationUnitState &currentUnit = getOrCreateUnit(this->units, file);
+                currentUnit.astTable = std::move(result.ast);
+                this->resolveUnitImports(file, currentUnit, result.imports, worklist);
             }
 
             // Trigger relevant events (a special case!)
