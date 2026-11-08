@@ -56,9 +56,14 @@ jobs:
         run: cmake --build . --target jug-api-docs --verbose
         working-directory: .build
 
+      - name: Package Documentation (optional)
+        if: inputs.upload_artifact
+        run: zip -r "${{github.workspace}}/.out/Juggernyaut-API-Docs-v${{inputs.release_version}}.zip" .
+        working-directory: ${{github.workspace}}/.out/docs
+
       - name: Upload Documentation Artifact (optional)
         if: inputs.upload_artifact
         uses: actions/upload-artifact@v7
         with:
           name: Juggernyaut-API-Docs-v${{inputs.release_version}}
-          path: ${{github.workspace}}/.out/docs/
+          path: ${{github.workspace}}/.out/Juggernyaut-API-Docs-v${{inputs.release_version}}.zip
