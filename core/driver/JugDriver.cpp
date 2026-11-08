@@ -37,7 +37,7 @@ namespace Driver {
         }
         UnitId JugDriver::createUnit(const Setup *setup) {
             UnitId id = static_cast<UnitId>(this->units.size());
-            this->units.push_back(std::make_unique<Unit>(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
+            this->units.emplace_back(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
                 .onContextSkip = this->configs.hooks.unitSources.onContextSkip,
                 .onContextStart = this->configs.hooks.unitSources.onContextStart,
                 .onLexerContextEnd = this->configs.hooks.unitSources.onLexerContextEnd,
@@ -47,7 +47,7 @@ namespace Driver {
                 .onDiagnostic = [this](const Diagnostic &diag){
                     this->emitDiagnostic(diag);
                 }
-            }));
+            });
             return id;
         }
         void JugDriver::loadProject(const std::string &path) {
@@ -61,30 +61,33 @@ namespace Driver {
                 return;
             }
 
-            // Load new environments
-            auto it = this->setups.find(file->id);
-            if (it == this->setups.end()) {
-                // Load a new environment
-                this->setups[file->id] = std::make_unique<Setup>(Environment::fetchEnvironment(vfs, this->diagnosticEmitter, path));
-
-                // Fire relevant events
-                if (driverHooks.onEnvironmentLoad != nullptr) {
-                    driverHooks.onEnvironmentLoad(vfs->readFile(path));
+            // Skip if environment is already loaded
+            for (const auto &existing : this->setups) {
+                if (existing != nullptr && existing->file == file) {
+                    return;
                 }
-
-                // Create a unit!
-                Setup *setup = this->setups[file->id].get();
-                this->entryPoints.push_back(createUnit(setup));
-
-                // Declare the project to the user!
-                SET_CODE(diag, Info, 700018, path);
-                this->emitDiagnostic(diag);
             }
+
+            // Load a new environment
+            this->setups.push_back(std::make_unique<Setup>(Environment::fetchEnvironment(vfs, this->diagnosticEmitter, path)));
+            Setup *setup = this->setups.back().get();
+
+            // Fire relevant events
+            if (driverHooks.onEnvironmentLoad != nullptr) {
+                driverHooks.onEnvironmentLoad(file);
+            }
+
+            // Create a unit!
+            this->entryPoints.push_back(createUnit(setup));
+
+            // Declare the project to the user!
+            SET_CODE(diag, Info, 700018, path);
+            this->emitDiagnostic(diag);
         }
 
         // Lifetime Management (Internal)
         void JugDriver::refreshSetups() {
-            for (std::unique_ptr<Setup>& setup : std::views::values(this->setups)) {
+            for (std::unique_ptr<Setup> &setup : this->setups) {
                 if (setup->file != nullptr && setup->file->version > setup->version) {
                     Environment::refreshEnvironment(this->host.vfs, setup.get(), this->diagnosticEmitter);
 
@@ -125,10 +128,7 @@ namespace Driver {
 
                 // Handle single jobs without spawning a thread
                 if (wave.size() == 1) {
-                    Unit *unit = this->units[wave[0]].get();
-                    if (unit != nullptr) {
-                        unit->run();
-                    }
+                    this->units[wave[0]].run();
                     continue;
                 }
 
@@ -145,10 +145,7 @@ namespace Driver {
                             if (idx >= waveSize) {
                                 break;
                             }
-                            Unit *unit = this->units[wave[idx]].get();
-                            if (unit != nullptr) {
-                                unit->run();
-                            }
+                            this->units[wave[idx]].run();
                         }
                     });
                 }
@@ -212,7 +209,7 @@ namespace Driver {
             }
             this->processPendingPaths();
 
-            for (auto path: paths) {
+            for (const std::string &path : paths) {
                 if (vfs->isDirectory(path) || vfs->filename(path) == "jug.toml") {
                     this->addProject(path);
                 } else {

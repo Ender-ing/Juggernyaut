@@ -25,7 +25,6 @@
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types
 #endif
 
-// TO-DO: Replace unnecessary unordered maps with vectors!
 // TO-DO: Enforce file ownership to the closest jug.toml environment!
 
 namespace Driver {
@@ -53,8 +52,8 @@ namespace Driver {
                 const Diagnostics::Event diagnosticEmitter = [this](const Diagnostic& d) { this->emitDiagnostic(d); };
             private:
                 // Internal variables
-                std::unordered_map<SetupId, std::unique_ptr<Setup>> setups;
-                std::vector<std::unique_ptr<Unit>> units;
+                std::vector<std::unique_ptr<Setup>> setups;
+                std::vector<Unit> units;
                 std::vector<std::vector<UnitId>> executionWaves;
                 std::vector<UnitId> entryPoints;
 
@@ -74,7 +73,7 @@ namespace Driver {
                 void runUnits() ;
             public:
                 // NOTE: When the driver is busy(), never change the state of the inputed variables or their children!
-                JugDriver(HostConfigs hostConfigs, DriverConfigs driverConfigs) : host(hostConfigs), configs(driverConfigs) {};
+                JugDriver(HostConfigs hostConfigs, DriverConfigs driverConfigs) : host(hostConfigs), configs(std::move(driverConfigs)) {};
                 virtual ~JugDriver() = default;
 
                 // Explicitly delete copy constructor and assignment!
