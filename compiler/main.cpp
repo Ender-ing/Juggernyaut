@@ -79,6 +79,7 @@ int main(int argc, const char *argv[]) {
     Driver::JugDriver::HostConfigs host;
     host.vfs = docs.get();
     Driver::JugDriver::DriverConfigs configs;
+    Driver::JugDriver::JugDriver driver(host, configs);
 
     // Handle diagnostics
     driver.configs.hooks.driver.onDiagnostic = [](const Diagnostics::Diagnostic &diag){
@@ -106,9 +107,6 @@ int main(int argc, const char *argv[]) {
         }
         REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
     };
-
-    // Driver setup!
-    Driver::JugDriver::JugDriver driver(host, configs);
 
     // Stats
     uint32_t sourceVisits = 0;
