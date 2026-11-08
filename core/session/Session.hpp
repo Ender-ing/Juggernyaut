@@ -35,25 +35,31 @@ namespace Session {
     using ASTNode = Data::Parser::ASTNode;
     using SymbolTable = bool; // TO-DO
 
+    struct ExternalPackage {
+        std::string alias;
+        const SymbolTable *symbols = nullptr;
+    };
+
     struct CompilationUnitState {
         const File *file = nullptr;
-        Stage completedStage = Stage::Unprocessed;
-        FileVersion contentRevision = 0; // Synced against VFS file revision
 
-        bool hasSyntaxErrors = false;
-        bool hasSemanticErrors = false;
-
-        bool isManual = false; // Set to 'true' by using direct methods to add the file!
-        bool isEntryPoint = false;
-        bool isReachable = false;
-        uint8_t detachedGenerations = 0;
+        // Data
+        std::unique_ptr<ASTNode> astTable = nullptr;
 
         // (CompilationUnitState) relation tracking
         std::vector<SourceId> dependencies;
         std::vector<SourceId> dependents;
 
-        // Data
-        std::unique_ptr<ASTNode> astTable = nullptr;
+        FileVersion contentRevision = 0; // Synced against VFS file revision
+        Stage completedStage = Stage::Unprocessed;
+        uint8_t detachedGenerations = 0;
+
+        bool hasSyntaxErrors : 1 = false;
+        bool hasSemanticErrors : 1 = false;
+        bool isManual : 1 = false; // Set to 'true' by using direct methods to add the file!
+        bool isEntryPoint : 1 = false;
+        bool isReachable : 1 = false;
+        bool isVisited : 1 = false;
     };
 
     class JUG_SESSION_API Session {
@@ -65,17 +71,17 @@ namespace Session {
             const Environment *env = nullptr; // Rules from jug.toml
 
             // Read-only views into completed dependency sessions (keyed by package/alias)
-            std::unordered_map<std::string, const SymbolTable*> externalPackages;
+            std::vector<ExternalPackage> externalPackages;
 
-            // Session-Owned Compilation Artifacts (indexed by SourceId)
-            std::unordered_map<SourceId, CompilationUnitState> units;
+            // Session-Owned Compilation Artifacts
+            std::vector<CompilationUnitState> units;
             std::vector<SourceId> entryPoints;
 
             // Execution State
-            Configs configs;
             Hooks hooks;
-            bool isRunning = false;
-            bool hasErrors = false;
+            Configs configs;
+            bool isRunning : 1 = false;
+            bool hasErrors : 1 = false;
 
             // Internal stage & dependency helpers
             Parser::Parser createConfiguredParser() ;
@@ -85,7 +91,7 @@ namespace Session {
         public:
             // NOTE: Session functions may operate on the assumption that 'hostVFS' and 'unitEnv' actually link to proper memory addresses!
             Session(VFS *hostVFS, const Environment *unitEnv, Configs sessionConfigs = {}, Hooks sessionHooks = {})
-                : vfs(hostVFS), env(unitEnv), configs(std::move(sessionConfigs)), hooks(std::move(sessionHooks)) {}
+                : vfs(hostVFS), env(unitEnv), hooks(std::move(sessionHooks)), configs(std::move(sessionConfigs)) {}
             ~Session() = default;
 
             // Non-copyable, movable

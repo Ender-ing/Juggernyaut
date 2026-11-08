@@ -6,9 +6,24 @@
 #include "Session.hpp"
 #include "common/utility.hpp"
 
-#include <unordered_set>
-
 namespace Session {
+    // (Internal) flat-vector lookup helpers
+    static CompilationUnitState* findUnit(std::vector<CompilationUnitState> &units, SourceId id) noexcept {
+        for (CompilationUnitState &unit : units) {
+            if (unit.file != nullptr && unit.file->id == id) {
+                return &unit;
+            }
+        }
+        return nullptr;
+    }
+    static CompilationUnitState& getOrCreateUnit(std::vector<CompilationUnitState> &units, const File *file) {
+        if (CompilationUnitState *existing = findUnit(units, file->id)) {
+            return *existing;
+        }
+        units.push_back(CompilationUnitState{.file = file});
+        return units.back();
+    }
+
     // (Internal) Management
     void Session::emitDiagnostic(Diagnostic &diag) {
         if (this->env != nullptr) {
@@ -29,18 +44,17 @@ namespace Session {
             this->hasErrors = true;
 
             if (diag.file != nullptr) {
-                auto it = this->units.find(diag.file->id);
-                if (it != this->units.end()) {
+                if (CompilationUnitState *unit = findUnit(this->units, diag.file->id)) {
                     // Check the type of the error
                     const int phaseCode = std::abs(diag.code) / 100'000;
                     switch (phaseCode) {
                     case 1: // Lexer
                     case 2: // Parser
                     case 3: // Transformer
-                        it->second.hasSyntaxErrors = true;
+                        unit->hasSyntaxErrors = true;
                         break;
                     case 4: // Semantic
-                        it->second.hasSemanticErrors = true;
+                        unit->hasSemanticErrors = true;
                         break;
                     default:
                         break;
@@ -67,19 +81,20 @@ namespace Session {
         }
 
         // Update entry status
-        auto [it, inserted] = this->units.try_emplace(file->id, CompilationUnitState{.file = file});
-        it->second.file = file;
-        it->second.isEntryPoint = true;
+        CompilationUnitState &unit = getOrCreateUnit(this->units, file);
+        unit.file = file;
+        unit.isEntryPoint = true;
     }
     void Session::refreshEntryPoints() {
         // Reset entry points
         this->entryPoints.clear();
-        for (auto &[id, unit] : this->units) {
+        for (CompilationUnitState &unit : this->units) {
+            unit.isVisited = false;
             if (!unit.isManual) {
                 unit.isEntryPoint = false;
                 unit.isReachable = false;
-            } else {
-                this->entryPoints.push_back(id);
+            } else if (unit.file != nullptr) {
+                this->entryPoints.push_back(unit.file->id);
             }
         }
 
@@ -114,12 +129,14 @@ namespace Session {
         const std::vector<Parser::ImportRequest> &imports, std::vector<SourceId> &worklist) {
         // Clear old outgoing dependency edges
         for (SourceId oldDepId : unitState.dependencies) {
-            auto depIt = this->units.find(oldDepId);
-            if (depIt != this->units.end()) {
-                Common::Utility::fastVectorRemove(depIt->second.dependents, sourceFile->id);
+            if (CompilationUnitState *depUnit = findUnit(this->units, oldDepId)) {
+                Common::Utility::fastVectorRemove(depUnit->dependents, sourceFile->id);
             }
         }
         unitState.dependencies.clear();
+
+        // Reserve capacity upfront so adding dependencies cannot reallocate `this->units` and invalidate `unitState`
+        this->units.reserve(this->units.size() + imports.size());
 
         // URIs are relative to the directory of the source file!
         const std::string parentDir = this->vfs->getParentDirectory(sourceFile->canonical);
@@ -177,14 +194,14 @@ namespace Session {
             }
 
             // Register dependency unit
-            auto [depIt, inserted] = this->units.try_emplace(depFile->id, CompilationUnitState{.file = depFile});
+            CompilationUnitState &depUnit = getOrCreateUnit(this->units, depFile);
 
             // Keep relations up-to-date!
             if (!Common::Utility::isInVector(unitState.dependencies, depFile->id)) {
                 unitState.dependencies.push_back(depFile->id);
             }
-            if (!Common::Utility::isInVector(depIt->second.dependents, sourceFile->id)) {
-                depIt->second.dependents.push_back(sourceFile->id);
+            if (!Common::Utility::isInVector(depUnit.dependents, sourceFile->id)) {
+                depUnit.dependents.push_back(sourceFile->id);
             }
 
             worklist.push_back(depFile->id);
@@ -201,16 +218,10 @@ namespace Session {
             : Stage::Parser;
 
         std::vector<SourceId> worklist = this->entryPoints; // Copy entry points!
-        std::unordered_set<SourceId> visitedInRun;
 
         while (!worklist.empty()) {
             const SourceId currentId = worklist.back();
             worklist.pop_back();
-
-            // Check if the source has been processed already!
-            if (!visitedInRun.insert(currentId).second) {
-                continue;
-            }
 
             // Get the current file
             const File *file = this->vfs->readFile(currentId);
@@ -218,9 +229,14 @@ namespace Session {
                 continue; // Maybe a warning should be issued?
             }
 
-            // Create a unit
-            auto [unitIt, inserted] = this->units.try_emplace(currentId, CompilationUnitState{.file = file});
-            CompilationUnitState &unit = unitIt->second;
+            // Create or retrieve the unit
+            CompilationUnitState &unit = getOrCreateUnit(this->units, file);
+
+            // Check if the source has been processed already in this run!
+            if (unit.isVisited) {
+                continue;
+            }
+            unit.isVisited = true;
             unit.isReachable = true;
 
             // Skip parsing if the file revision and stage are already up-to-date
@@ -249,7 +265,7 @@ namespace Session {
             unit.completedStage = targetStage;
 
             if (targetStage >= Stage::Parser) {
-                this->units[currentId].astTable = std::move(result.ast);
+                unit.astTable = std::move(result.ast);
                 this->resolveUnitImports(file, unit, result.imports, worklist);
             }
 
@@ -314,8 +330,7 @@ namespace Session {
         }
 
         // Prune unreachable compilation units and their data!
-        std::erase_if(this->units, [this](auto &item) {
-            auto &[id, state] = item;
+        std::erase_if(this->units, [this](CompilationUnitState &state) {
             if (!state.isReachable && !state.isEntryPoint) {
                 // Trigger relevant events
                 if (this->hooks.onContextDetached != nullptr && state.detachedGenerations == 0) {
