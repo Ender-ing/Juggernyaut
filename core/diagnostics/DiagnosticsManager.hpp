@@ -85,9 +85,13 @@ namespace Diagnostics {
             };
 
         private:
+            struct FileDiagState {
+                std::vector<TargetDiag> diagnostics;
+                bool isDetached = false;
+            };
+
             std::mutex hookMtx;
-            std::unordered_map<std::string, std::vector<TargetDiag>> fileDiagnostics;
-            std::unordered_map<std::string, bool> isFileDetached;
+            std::unordered_map<std::string, FileDiagState> fileDiagnostics;
             std::vector<TargetDiag> componentDiagnostics; // diag.file == nullptr
             const ConverterFn converter;
             const ManagerCallbacks callbacks;
@@ -103,11 +107,9 @@ namespace Diagnostics {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
                 if (diag.file != nullptr) {
-                    // Copy relevent data immediately!
-                    const std::string uri = diag.file->canonical;
-                    this->fileDiagnostics[uri].push_back(convertedDiag);
+                    this->fileDiagnostics[diag.file->canonical].diagnostics.push_back(std::move(convertedDiag));
                 } else {
-                    this->componentDiagnostics.push_back(convertedDiag);
+                    this->componentDiagnostics.push_back(std::move(convertedDiag));
                 }
             }
 
@@ -122,7 +124,7 @@ namespace Diagnostics {
 
                 auto it = this->fileDiagnostics.find(uri);
                 if (it != this->fileDiagnostics.end()) {
-                    this->callbacks.onFileFlush(uri, it->second);
+                    this->callbacks.onFileFlush(uri, it->second.diagnostics);
 
                     if (clearAfter) {
                         this->fileDiagnostics.erase(it); // Free memory after final stage!
@@ -153,12 +155,12 @@ namespace Diagnostics {
                 };
 
                 // Helper functions
-                static FileEvent flushAndKeep = [this](const Data::Host::File *file) {
+                FileEvent flushAndKeep = [this](const Data::Host::File *file) {
                     if (file != nullptr) {
                         this->flushFile(file->canonical, false);
                     }
                 };
-                static FileEvent flushAndDiscard = [this](const Data::Host::File *file) {
+                FileEvent flushAndDiscard = [this](const Data::Host::File *file) {
                     if (file != nullptr) {
                         this->flushFile(file->canonical, true);
                     }
@@ -170,26 +172,45 @@ namespace Diagnostics {
                 frontEnd.driver.onEnvironmentChange = flushAndDiscard;
                 // [*.jug]
                 frontEnd.unitSources.onContextStart = [this](const File *file) {
-                    // Update state
-                    if (this->isFileDetached[file->canonical]) {
-                        this->isFileDetached[file->canonical] = false;
+                    if (file == nullptr) {
+                        return;
                     }
+                    std::lock_guard<std::mutex> lock(this->hookMtx);
 
-                    // Reset diagnostics (unchanged client state!)
-                    this->fileDiagnostics[file->canonical].clear();
+                    // Update state and reset diagnostics (unchanged client state!)
+                    FileDiagState &state = this->fileDiagnostics[file->canonical];
+                    state.isDetached = false;
+                    state.diagnostics.clear();
                 };
                 //frontEnd.unitSources.onLexerContextEnd = flushAndKeep; // Too much?
                 frontEnd.unitSources.onParserContextEnd = flushAndKeep;
                 frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
                 frontEnd.unitSources.onContextSkip = [this](const File *file) {
+                    if (file == nullptr) {
+                        return;
+                    }
                     // Refresh detached files (in case no edits were made!)
-                    if (this->isFileDetached[file->canonical]) {
-                        this->isFileDetached[file->canonical] = false;
-                        flushAndKeep(file);
+                    bool shouldFlush = false;
+                    {
+                        std::lock_guard<std::mutex> lock(this->hookMtx);
+                        if (auto it = this->fileDiagnostics.find(file->canonical);
+                            it != this->fileDiagnostics.end() && it->second.isDetached) {
+                            it->second.isDetached = false;
+                            shouldFlush = true;
+                        }
+                    }
+                    if (shouldFlush) {
+                        this->flushFile(file->canonical, false);
                     }
                 };
                 frontEnd.unitSources.onContextDetached = [this](const File *file) {
-                    this->isFileDetached[file->canonical] = true;
+                    if (file == nullptr) {
+                        return;
+                    }
+                    {
+                        std::lock_guard<std::mutex> lock(this->hookMtx);
+                        this->fileDiagnostics[file->canonical].isDetached = true;
+                    }
                     this->emptyFlush(file->canonical);
                 };
                 /*frontEnd.driver.onRunFinished = [this]() { // This runs before 'onContextDetached'!
@@ -254,8 +275,8 @@ namespace Diagnostics {
             void clearAllDiagnostics() {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
-                for (auto &[uri, list] : this->fileDiagnostics) {
-                    list.clear();
+                for (auto &[uri, state] : this->fileDiagnostics) {
+                    state.diagnostics.clear();
                 }
                 this->componentDiagnostics.clear();
             }
@@ -271,8 +292,8 @@ namespace Diagnostics {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
                 if (this->callbacks.onFileFlush != nullptr) {
-                    for (const auto &[uri, list] : this->fileDiagnostics) {
-                        this->callbacks.onFileFlush(uri, list);
+                    for (const auto &[uri, state] : this->fileDiagnostics) {
+                        this->callbacks.onFileFlush(uri, state.diagnostics);
                     }
                 }
                 if (this->callbacks.onComponentFlush != nullptr) {
