@@ -1,6 +1,9 @@
 # Code Documentation Guide
 
-This document defines the standards and conventions for documenting C++ source files across the **Juggernyaut** toolchain.
+This document defines the standards and conventions for documenting C++ header files (`.hpp`) across the **Juggernyaut** toolchain.
+
+> [!IMPORTANT]
+> **Only Document `.hpp` Header Files:** Doxygen API documentation belongs exclusively in `.hpp` header files, which define the public and internal API contracts. Implementation files (`.cpp`) are the implementation itself—not the API—and **must not** contain Doxygen documentation blocks (`///`, `@file`, `@brief`, etc.). Use regular `//` comments inside `.cpp` files only when explaining non-obvious implementation mechanics.
 
 Our documentation pipeline uses **Doxygen** strictly as an XML AST/comment extractor (`GENERATE_XML = YES`, `GENERATE_HTML = NO`), **`@xpack/doxygen2docusaurus`** to transform that XML graph into cross-linked Markdown, and **Docusaurus v3** to render the final API reference (including live **Mermaid.js** diagrams and **KaTeX** math).
 
@@ -10,7 +13,7 @@ To generate the documentation locally into `.out/docs/api/`, run:
 cmake --build .build --target jug-api-docs
 ```
 
-> [!IMPORTANT]
+> [!NOTE]
 > **Explicit Briefs Are Required:** Auto-brief (`JAVADOC_AUTOBRIEF` and `QT_AUTOBRIEF`) is disabled in our Doxygen configuration. Every documented symbol **must** explicitly start its summary with `@brief`. Comments without `@brief` are treated strictly as detailed descriptions and will leave the symbol's summary blank in index tables.
 
 ---
@@ -19,7 +22,7 @@ cmake --build .build --target jug-api-docs
 
 ### 1.1 Comment Style
 
-Always use triple-slash (`///`) blocks above declarations, and trailing (`///<`) comments for inline fields or enum constants. Do not use `/* ... */` C-style doc blocks.
+In `.hpp` files, always use triple-slash (`///`) blocks above declarations, and trailing (`///<`) comments for inline fields or enum constants. Do not use `/* ... */` C-style doc blocks, and do not place Doxygen comments on definitions inside `.cpp` files.
 
 ```cpp
 /// @brief Short one-paragraph summary of the symbol.
@@ -35,7 +38,7 @@ Always use triple-slash (`///`) blocks above declarations, and trailing (`///<`)
 
 ### 1.2 File Headers (`@file`)
 
-Every header (`.hpp`) and non-trivial implementation file (`.cpp`) must begin with a `@file` block attached to its folder group (see [Section 3](#3-grouping-components-by-folder)):
+Every header file (`.hpp`) must begin with a `@file` block attached to its folder group (see [Section 3](#3-grouping-components-by-folder)). Do not add `@file` blocks to `.cpp` implementation files:
 
 ```cpp
 /// @file
@@ -92,7 +95,7 @@ struct SourceSpan {
 
 ### 1.4 Functions and Methods
 
-Every non-trivial function or method should document its template parameters, inputs/outputs, return values, preconditions/postconditions, and exceptions:
+Every non-trivial function or method declaration in a `.hpp` file should document its template parameters, inputs/outputs, return values, preconditions/postconditions, and exceptions:
 
 | Tag | Purpose |
 | :--- | :--- |
@@ -260,7 +263,7 @@ public:
 
 ## 3. Grouping Components by Folder
 
-All components inside a directory **must** be grouped together using Doxygen topic groups (`@defgroup`, `@addtogroup`, and `@ingroup`) that mirror the repository's folder hierarchy. `@xpack/doxygen2docusaurus` turns these groups into the **Topics** navigation tree in Docusaurus.
+All `.hpp` headers and components inside a directory **must** be grouped together using Doxygen topic groups (`@defgroup`, `@addtogroup`, and `@ingroup`) that mirror the repository's folder hierarchy. `@xpack/doxygen2docusaurus` turns these groups into the **Topics** navigation tree in Docusaurus.
 
 ### 3.1 Folder-to-Group Mapping
 
@@ -298,7 +301,7 @@ Each folder defines its group **once** in that folder's primary `.hpp` umbrella 
 
 ### 3.3 Assigning Folder Components to Their Group
 
-Every file, class, struct, enum, concept, and free function inside a folder **must** belong to that folder's group. You can do this in either of two ways:
+Every `.hpp` header file, class, struct, enum, concept, and free function inside a folder **must** belong to that folder's group. You can do this in either of two ways:
 
 #### Option A: Wrap the Header's Declarations in `@addtogroup <FolderGroup> @{ ... @}` (Recommended)
 
@@ -339,7 +342,7 @@ public:
 
 #### Option B: Tag Individual Symbols with `@ingroup <FolderGroup>`
 
-Alternatively, place `@ingroup <FolderGroup>` directly on the doc block of each file, class, struct, or free function:
+Alternatively, place `@ingroup <FolderGroup>` directly on the doc block of each `.hpp` file, class, struct, or free function:
 
 ```cpp
 /// @ingroup CoreData

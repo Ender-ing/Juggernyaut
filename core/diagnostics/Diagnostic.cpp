@@ -1,8 +1,7 @@
-/// @file
-/// @ingroup CoreDiagnostics
-/// @brief Translation unit for core #Diagnostics::Diagnostic utilities.
-///
-/// @see Diagnostics::Diagnostic
+/**
+ * @brief
+ * Translation unit for core #Diagnostics::Diagnostic utilities.
+ */
 
 #include "Diagnostic.hpp"
 
