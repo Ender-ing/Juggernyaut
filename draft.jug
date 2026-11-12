@@ -192,7 +192,7 @@ mySmallInt-- == 3; // Evaluates to a 'true' boolean value!
 --mySmallInt == 1; // Evaluates to a 'ture' boolean value!
 
 // [Other Functional operators]
-// '+', '-', '*', '/', '%', '&', '|', '^', '~', '<<', '>>', '**', '^^', '%%', '//', '~~'
+// '+', '-', '*', '/', '%', '&', '|', '^', '~', '<<', '>>', '**', '^^', '%%', '//', '~~', '..'
 
 // [Note] that appending an '=' to the end of any of the functional operators
 // will result in the value of a variable to be changed to the output of the operation applied
