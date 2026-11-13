@@ -39,11 +39,12 @@ namespace Parser::Visitors {
         } else if (auto *libCtx = context->import_library()) {
             req.isExternal = true;
 
-            const auto identifiers = libCtx->IDENTIFIER();
-            if (identifiers.size() == 1) {
-                req.target = identifiers[0]->getText();
-            } else if (identifiers.size() >= 2) {
-                req.target = identifiers[0]->getText() + "." + identifiers[1]->getText();
+            const auto identifiers = libCtx->identifier();
+            for (size_t i = 0; i < identifiers.size(); ++i) {
+                if (i > 0) {
+                    req.target += ".";
+                }
+                req.target += identifiers[i]->getText();
             }
         }
 
@@ -74,8 +75,8 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitImport_encapsulate(ANTLRParser::Import_encapsulateContext *context) {
         ImportRequest req = this->extractImportSource(context->import_source());
 
-        if (auto *aliasToken = context->IDENTIFIER()) {
-            req.alias = aliasToken->getText();
+        if (auto *aliasCtx = context->identifier()) {
+            req.alias = aliasCtx->getText();
         }
 
         if (!req.target.empty()) {
@@ -94,4 +95,24 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitPrim(ANTLRParser::PrimContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitIdentifier(ANTLRParser::IdentifierContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitLit_string(ANTLRParser::Lit_stringContext *context) DEFAULT_VISIT
+
+    std::any ASTGenVisitor::visitGlobal(ANTLRParser::GlobalContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitDeclaration(ANTLRParser::DeclarationContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitDecl_data(ANTLRParser::Decl_dataContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitDecl_function(ANTLRParser::Decl_functionContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitFunction_argument(ANTLRParser::Function_argumentContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitArgument_state(ANTLRParser::Argument_stateContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitData_storage(ANTLRParser::Data_storageContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_export(ANTLRParser::Stat_exportContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExport_discrete(ANTLRParser::Export_discreteContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitLit_char(ANTLRParser::Lit_charContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitLit_number(ANTLRParser::Lit_numberContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitLit_boolean(ANTLRParser::Lit_booleanContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitGeneric_block(ANTLRParser::Generic_blockContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitGeneric_content(ANTLRParser::Generic_contentContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitRoot_statement(ANTLRParser::Root_statementContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_silly(ANTLRParser::Stat_sillyContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitData_item(ANTLRParser::Data_itemContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitData_details(ANTLRParser::Data_detailsContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitFunction_details(ANTLRParser::Function_detailsContext *context) DEFAULT_VISIT
 }

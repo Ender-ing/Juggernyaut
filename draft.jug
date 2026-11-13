@@ -1,4 +1,4 @@
-// DRAFT
+// @!DRAFT
 
 // [Notice]
 // The language should be designed with as little runtime overhead as possible.
@@ -11,11 +11,11 @@
 
 // [Imports and Exports]
 
-import { Type, vari, func } from "path/to/file.jug"; // Local file import
+import { Type, vari, fn } from "path/to/file.jug"; // Local file import
 
 import "path/to/file.jug" as handle; // Local file import (SHOULD THIS BE ALLOWED?)
 
-import { Type, vari, func } from std.types; // Library import (looks for libs/std/types/import.jug)
+import { Type, vari, fn } from std.types; // Library import (looks for libs/std/types/import.jug)
 import std.types as handle;
 // Note that libraries are resolved by the [dependencies] section in the jug.toml configuration file!
 
@@ -64,6 +64,8 @@ let var_1:int = 0, // Matches the compilation target arch
 // assigned a proper value on defintion.
 let myEmptyVar:int;
 myEmptyVar == 0; // This would evalute as a 'true' boolean value!
+
+// NOTE: Array types need a rework, this is too restrictive...
 
 // [Arrays]
 let myArray:[int, 5] = [0, 1, 2, 3, 4]; // A fixed array of 5 integers!

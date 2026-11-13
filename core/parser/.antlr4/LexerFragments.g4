@@ -20,24 +20,23 @@ fragment WHITESPACE_
 
 // Strings & Chars
 fragment ESCAPES_
-    : [\r\n"\\]
-    ; /* Escape characters */
+    : [nrt0"'bfv\\]
+    ; /* Valid escape characters after '\': \n, \r, \t, \0, \", \', \b, \f, \v, \\ */
 fragment NEG_ESCAPES_
-    : ~[\r\n"\\]
-    ; /* Escape characters */
+    : ~[nrt0"'bfv\\\r\n]
+    ; /* Invalid escape characters after '\' */
 fragment IMP_CHAR_
     : '\\' ESCAPES_
-    | '\\\n' // newline escape
-    | '\\\r\n' // newline escape
-    ; /* Char member of a string */
+    | '\\' '\r'? '\n' // line continuation escape
+    ;
 fragment CHAIN_CHAR_
     : ~["\\\r\n]
     | IMP_CHAR_
-    ; /* Char member of a string */
+    ;
 fragment LONE_CHAR_
     : ~['\\\r\n]
     | IMP_CHAR_
-    ; /* Char member of a character */
+    ;
 
 fragment STANDARD_IDENTIFIER_CHARS
     : [a-zA-Z0-9_]

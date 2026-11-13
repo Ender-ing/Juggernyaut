@@ -20,16 +20,42 @@ options {
 //// Parser Rules
 
 prog
-    : statement* EOF
+    : global* EOF
     ; /* This is the initial scope in a file! */
+
+// Globals
+global
+    : root_statement
+    | KWD_EXPORT? declaration
+    ;
+
+// Zoned
+generic_block
+    : SYM_CURLY_BRACKET_LEFT generic_content* SYM_CURLY_BRACKET_RIGHT
+    ;
+generic_content
+    : statement
+    | declaration
+    | generic_block // Allow nested scopes!
+    ;
 
 // Statements
 statement
-    : stat_empty
+    : stat_empty // Just avoiding annoying bugs
     | stat_expr
+    | stat_silly
+    ;
+root_statement
+    : stat_empty // Just avoiding annoying bugs
     | stat_import
-    | TMP SYM_SEMICOLON
-    | TMP2 SYM_SEMICOLON
+    | stat_export
+    | stat_silly
+    ;
+
+// Declarations
+declaration
+    : decl_data
+    | decl_function
     ;
 
 // Import statement
@@ -43,7 +69,7 @@ import_discrete
         KWD_FROM import_source SYM_SEMICOLON
     ;
 import_encapsulate
-    : KWD_IMPORT import_source KWD_AS IDENTIFIER
+    : KWD_IMPORT import_source KWD_AS identifier SYM_SEMICOLON
     ;
 import_list
     : identifier (SYM_COMMA identifier)*
@@ -56,7 +82,17 @@ import_path
     : LIT_STRING
     ;
 import_library
-    : IDENTIFIER (SYM_DOT IDENTIFIER)?
+    : identifier (SYM_DOT identifier)?
+    ;
+
+// Export statement
+stat_export
+    : export_discrete
+    ;
+export_discrete
+    : KWD_EXPORT
+        identifier (SYM_COMMA identifier)*
+        SYM_SEMICOLON
     ;
 
 // Expression statement
@@ -69,6 +105,48 @@ stat_empty
     : SYM_SEMICOLON
     ;
 
+// Silly statements
+stat_silly
+    : CAT SYM_SEMICOLON
+    | KITTY SYM_SEMICOLON
+    | MEOW SYM_SEMICOLON
+    | BAD_CODE SYM_SEMICOLON
+    ;
+
+// Data declaration
+decl_data
+    : data_storage data_item (SYM_COMMA data_item)* SYM_SEMICOLON
+    ;
+data_item
+    : data_details (SYM_EQUAL expr)?
+    ;
+data_details
+    :  name=identifier (SYM_COLON type=identifier)
+    ;
+data_storage
+    : KWD_LET
+    | KWD_CONST
+    | KWD_REF
+    ;
+// Function declaration
+decl_function
+    : function_details generic_block
+    ;
+function_details
+    : KWD_FUNC name=identifier
+        SYM_PARENTHESES_LEFT
+            (function_argument (SYM_COMMA function_argument)*)?
+        SYM_PARENTHESES_RIGHT
+        (SYM_ARROW_RIGHT returnType=identifier)?
+    ;
+function_argument
+    : argument_state? data_details
+    ;
+argument_state
+    : KWD_CONST
+    | KWD_REF
+    ;
+
 // NOTE: from here on, no semicolons are allowed within rules
 
 // Expressions
@@ -79,16 +157,30 @@ expr
 
 // Primary data
 prim
-    : lit_string
+    : lit_boolean
+    | lit_number
+    | lit_char
+    | lit_string
     ;
 
 // Identifiers
 identifier
     : IDENTIFIER
-    | TYPE_IDENTIFIER
     ;
 
 // Literals
+lit_boolean
+    : LIT_TRUE
+    | LIT_FALSE
+    ;
+lit_number
+    : LIT_FLOAT
+    | LIT_INT
+    | LIT_NUM_REP
+    ;
+lit_char
+    : LIT_CHAR
+    ;
 lit_string
     : LIT_STRING
     ;
