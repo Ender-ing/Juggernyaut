@@ -57,7 +57,6 @@ namespace Parser::Visitors {
             std::any visitFunction_argument(ANTLRParser::Function_argumentContext *context) override;
             std::any visitArgument_state(ANTLRParser::Argument_stateContext *context) override;
             std::any visitData_storage(ANTLRParser::Data_storageContext *context) override;
-            std::any visitExpr(ANTLRParser::ExprContext *context) override;
             std::any visitPrim(ANTLRParser::PrimContext *context) override;
             std::any visitIdentifier(ANTLRParser::IdentifierContext *context) override;
             std::any visitLit_string(ANTLRParser::Lit_stringContext *context) override;
@@ -76,5 +75,30 @@ namespace Parser::Visitors {
             std::any visitStat_bind(ANTLRParser::Stat_bindContext *context) override;
             std::any visitBind_block(ANTLRParser::Bind_blockContext *context) override;
             std::any visitBind_item(ANTLRParser::Bind_itemContext *context) override;
+            std::any visitStat_return(ANTLRParser::Stat_returnContext *context) override;
+            std::any visitExprGrouped(ANTLRParser::ExprGroupedContext *context) override;
+            std::any visitExprMember(ANTLRParser::ExprMemberContext *context) override;
+            std::any visitExprCall(ANTLRParser::ExprCallContext *context) override;
+            std::any visitExprPostfix(ANTLRParser::ExprPostfixContext *context) override;
+            std::any visitExprPrefix(ANTLRParser::ExprPrefixContext *context) override;
+            std::any visitExprPriorityHigh(ANTLRParser::ExprPriorityHighContext *context) override;
+            std::any visitExprMultiplicative(ANTLRParser::ExprMultiplicativeContext *context) override;
+            std::any visitExprAdditive(ANTLRParser::ExprAdditiveContext *context) override;
+            std::any visitExprPriorityLow(ANTLRParser::ExprPriorityLowContext *context) override;
+            std::any visitExprComparison(ANTLRParser::ExprComparisonContext *context) override;
+            std::any visitExprLogical(ANTLRParser::ExprLogicalContext *context) override;
+            std::any visitExprAssign(ANTLRParser::ExprAssignContext *context) override;
+            std::any visitExprPrimary(ANTLRParser::ExprPrimaryContext *context) override;
+            std::any visitExpr_list(ANTLRParser::Expr_listContext *context) override;
+            std::any visitOp_postfix(ANTLRParser::Op_postfixContext *context) override;
+            std::any visitOp_prefix(ANTLRParser::Op_prefixContext *context) override;
+            std::any visitOp_priority_high(ANTLRParser::Op_priority_highContext *context) override;
+            std::any visitOp_multiplicative(ANTLRParser::Op_multiplicativeContext *context) override;
+            std::any visitOp_additive(ANTLRParser::Op_additiveContext *context) override;
+            std::any visitOp_priority_low(ANTLRParser::Op_priority_lowContext *context) override;
+            std::any visitOp_comparison(ANTLRParser::Op_comparisonContext *context) override;
+            std::any visitOp_logical(ANTLRParser::Op_logicalContext *context) override;
+            std::any visitOp_assign(ANTLRParser::Op_assignContext *context) override;
+            std::any visitLit(ANTLRParser::LitContext *context) override;
     };
 }

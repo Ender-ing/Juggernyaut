@@ -106,8 +106,8 @@ bind_block
     ;
 bind_item
     : (function_details | (data_storage data_details))
-    ((KWD_FROM originalName=lit_string)?)
-    SYM_SEMICOLON
+        (KWD_FROM originalName=lit_string)?
+        SYM_SEMICOLON
     ;
 
 // Expression statement
@@ -138,7 +138,7 @@ decl_data
     : data_storage data_item (SYM_COMMA data_item)* SYM_SEMICOLON
     ;
 data_item
-    : data_details (SYM_EQUAL expr)?
+    : details=data_details (SYM_EQUAL value=expr)?
     ;
 data_details
     :  name=identifier (SYM_COLON type=identifier)
@@ -149,11 +149,8 @@ data_storage
     | KWD_REF
     ;
 // Function declaration
-call_function
-    : callee=identifier SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT
-    ;
 decl_function
-    : function_details generic_block
+    : details=function_details body=generic_block
     ;
 function_details
     : KWD_FUNC name=identifier
@@ -163,7 +160,7 @@ function_details
         (SYM_ARROW_RIGHT returnType=identifier)?
     ;
 function_argument
-    : argument_state? data_details
+    : state=argument_state? details=data_details (SYM_EQUAL defaultValue=expr)?
     ;
 argument_state
     : KWD_CONST
@@ -179,9 +176,10 @@ expr
     | callee=expr SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT # ExprCall
     | operand=expr op=op_postfix                                        # ExprPostfix
     | <assoc=right> op=op_prefix operand=expr                           # ExprPrefix
-    | <assoc=right> left=expr op=op_power right=expr                    # ExprPower
+    | <assoc=right> left=expr op=op_priority_high right=expr            # ExprPriorityHigh
     | left=expr op=op_multiplicative right=expr                         # ExprMultiplicative
     | left=expr op=op_additive right=expr                               # ExprAdditive
+    | left=expr op=op_priority_low right=expr                           # ExprPriorityLow
     | left=expr op=op_comparison right=expr                             # ExprComparison
     | left=expr op=op_logical right=expr                                # ExprLogical
     | <assoc=right> left=expr op=op_assign right=expr                   # ExprAssign
@@ -206,8 +204,9 @@ op_prefix
     | SYM_NOT             // !
     | SYM_TILDE           // ~
     ;
-op_power
+op_priority_high
     : SYM_STAR_STAR       // **
+    | SYM_TILDE_TILDE     // ~~
     ;
 op_multiplicative
     : SYM_STAR                  // *
@@ -222,7 +221,6 @@ op_multiplicative
 op_additive
     : SYM_PLUS                  // +
     | SYM_MINUS                 // -
-    | SYM_DOT_DOT               // ..
     | SYM_AND                   // &
     | SYM_OR                    // |
     | SYM_CARET                 // ^
@@ -230,6 +228,10 @@ op_additive
     | SYM_SHIFT_RIGHT           // >>
     | SYM_HASH                  // #
     | SYM_HASH_HASH             // ##
+    ;
+op_priority_low
+    : SYM_DOT_DOT         // ..
+    | SYM_TILDE           // ~
     ;
 op_comparison
     : SYM_EQUAL_EQUAL     // ==
@@ -264,15 +266,14 @@ op_assign
     | SYM_AT_AT_EQUAL                   // @@=
     | SYM_HASH_EQUAL                    // #=
     | SYM_HASH_HASH_EQUAL               // ##=
+    | SYM_TILDE_EQUAL                   // ~=
+    | SYM_TILDE_TILDE_EQUAL             // ~~=
     ;
 
 // Primary data
 prim
     : identifier
-    | lit_boolean
-    | lit_number
-    | lit_char
-    | lit_string
+    | lit
     ;
 
 // Identifiers
@@ -281,6 +282,12 @@ identifier
     ;
 
 // Literals
+lit
+    : lit_boolean
+    | lit_number
+    | lit_char
+    | lit_string
+    ;
 lit_boolean
     : LIT_TRUE
     | LIT_FALSE

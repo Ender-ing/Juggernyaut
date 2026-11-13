@@ -106,6 +106,9 @@ SYM_HASH
 SYM_HASH_HASH
     : '##'
     ;
+SYM_TILDE_TILDE
+    : '~~'
+    ;
 
 // Assignment
 SYM_EQUAL
@@ -164,6 +167,12 @@ SYM_HASH_EQUAL
     ;
 SYM_HASH_HASH_EQUAL
     : '##='
+    ;
+SYM_TILDE_EQUAL
+    : '~='
+    ;
+SYM_TILDE_TILDE_EQUAL
+    : '~~='
     ;
 
 // Comparison

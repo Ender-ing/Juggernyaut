@@ -91,7 +91,6 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitImport_library(ANTLRParser::Import_libraryContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitStat_expr(ANTLRParser::Stat_exprContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitStat_empty(ANTLRParser::Stat_emptyContext *context) DEFAULT_VISIT
-    std::any ASTGenVisitor::visitExpr(ANTLRParser::ExprContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitPrim(ANTLRParser::PrimContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitIdentifier(ANTLRParser::IdentifierContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitLit_string(ANTLRParser::Lit_stringContext *context) DEFAULT_VISIT
@@ -118,4 +117,29 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitStat_bind(ANTLRParser::Stat_bindContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitBind_block(ANTLRParser::Bind_blockContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitBind_item(ANTLRParser::Bind_itemContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_return(ANTLRParser::Stat_returnContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprGrouped(ANTLRParser::ExprGroupedContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprMember(ANTLRParser::ExprMemberContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprCall(ANTLRParser::ExprCallContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprPostfix(ANTLRParser::ExprPostfixContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprPrefix(ANTLRParser::ExprPrefixContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprPriorityHigh(ANTLRParser::ExprPriorityHighContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprMultiplicative(ANTLRParser::ExprMultiplicativeContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprAdditive(ANTLRParser::ExprAdditiveContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprPriorityLow(ANTLRParser::ExprPriorityLowContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprComparison(ANTLRParser::ExprComparisonContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprLogical(ANTLRParser::ExprLogicalContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprAssign(ANTLRParser::ExprAssignContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprPrimary(ANTLRParser::ExprPrimaryContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExpr_list(ANTLRParser::Expr_listContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_postfix(ANTLRParser::Op_postfixContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_prefix(ANTLRParser::Op_prefixContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_priority_high(ANTLRParser::Op_priority_highContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_multiplicative(ANTLRParser::Op_multiplicativeContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_additive(ANTLRParser::Op_additiveContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_priority_low(ANTLRParser::Op_priority_lowContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_comparison(ANTLRParser::Op_comparisonContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_logical(ANTLRParser::Op_logicalContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitOp_assign(ANTLRParser::Op_assignContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitLit(ANTLRParser::LitContext *context) DEFAULT_VISIT
 }
