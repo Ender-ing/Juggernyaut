@@ -50,15 +50,18 @@ let var_1:int = 0, // Matches the compilation target arch
     var_12:uint128 = 0,
     // [Decimals]
     var_13:float = 0.1,  // Matches the compilation target arch
-    var_14:float16 = 0.1,
-    var_15:float32 = 0.1,
-    var_16:float64 = 0.1,
-    var_17:float128 = 0.1,
+    var_14:float16 = 0.1, // IEEE 754
+    var_15:float32 = 0.1, // IEEE 754
+    var_16:float64 = 0.1, // IEEE 754
+    var_17:float128 = 0.1, // IEEE 754
+    var_18:bfloat = 0.1, // Brain Floating Point
     // [Booleans]
-    var_18:bool = true, // or 'false'
+    var_19:bool = true, // or 'false'
     // [Characters and strings]
-    var_19:char = 'A',
-    var_20:string = "Hello!"; // [Note] Strings are a special case! They are also a built-in type!
+    var_20:char = 'A',
+    var_21:string = "Hello!", // [Note] Strings are a special case! They are also a built-in type!
+    // [C-interfacing]
+    var_22:float80; // (x86_fp80) [Issue] ...maybe this should not be allowed in normal contexts??
 
 // [Note] Notice that all built-in compiler types hold a "default" value when not
 // assigned a proper value on defintion.
@@ -68,7 +71,7 @@ myEmptyVar == 0; // This would evalute as a 'true' boolean value!
 // [NOTE] You can "bind" external functions/variables to your program!
 bind "C" func externalFunc(); // You can specify a mode!
 bind func libFunc() from "__lib_func__";
-bind "C" {
+bind {
     func newName() -> int from "_original_func_name";
     let val:int128 from "heavy_number"; // [NOTE] WATCH OUT, THIS WILL COPY THE VALUE!
     ref val2:bool from "is_valid_state";
