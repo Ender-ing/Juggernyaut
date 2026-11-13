@@ -69,7 +69,7 @@ myEmptyVar == 0; // This would evalute as a 'true' boolean value!
 bind "C" func externalFunc(); // You can specify a mode!
 bind func libFunc() from "__lib_func__";
 bind "C" {
-    func newName() from "_original_func_name";
+    func newName() -> int from "_original_func_name";
     let val:int128 from "heavy_number"; // [NOTE] WATCH OUT, THIS WILL COPY THE VALUE!
     ref val2:bool from "is_valid_state";
 }
