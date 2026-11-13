@@ -135,7 +135,7 @@
         },
         {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(from|as)\\b"
+          "match": "\\b(from|as|return)\\b"
         },
         {
           "name": "keyword.control.logic.juggernyaut",

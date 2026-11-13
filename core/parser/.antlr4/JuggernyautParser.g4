@@ -36,6 +36,7 @@ generic_block
 generic_content
     : statement
     | declaration
+    | stat_return
     | generic_block // Allow nested scopes!
     ;
 
@@ -127,6 +128,11 @@ stat_silly
     | BAD_CODE SYM_SEMICOLON
     ;
 
+// Functional statements
+stat_return
+    : KWD_RETURN (value=expr?) SYM_SEMICOLON
+    ;
+
 // Data declaration
 decl_data
     : data_storage data_item (SYM_COMMA data_item)* SYM_SEMICOLON
@@ -143,6 +149,9 @@ data_storage
     | KWD_REF
     ;
 // Function declaration
+call_function
+    : callee=identifier SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT
+    ;
 decl_function
     : function_details generic_block
     ;
@@ -172,7 +181,8 @@ expr
 
 // Primary data
 prim
-    : lit_boolean
+    : identifier
+    | lit_boolean
     | lit_number
     | lit_char
     | lit_string

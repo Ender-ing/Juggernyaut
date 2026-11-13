@@ -45,6 +45,9 @@ KWD_FROM
 KWD_AS
     : 'as'
     ;
+KWD_RETURN
+    : 'return'
+    ;
 
 // Silly
 CAT
