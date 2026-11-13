@@ -48,6 +48,24 @@ KWD_AS
 KWD_RETURN
     : 'return'
     ;
+KWD_IF
+    : 'if'
+    ;
+KWD_ELSE
+    : 'else'
+    ;
+KWD_WHILE
+    : 'while'
+    ;
+KWD_DO
+    : 'do'
+    ;
+KWD_END
+    : 'end'
+    ;
+KWD_SKIP
+    : 'skip'
+    ;
 
 // Silly
 CAT

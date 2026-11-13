@@ -37,6 +37,10 @@ generic_content
     : statement
     | declaration
     | stat_return
+    | stat_end
+    | stat_skip
+    | stat_if
+    | stat_iteration
     | generic_block // Allow nested scopes!
     ;
 
@@ -110,6 +114,28 @@ bind_item
         SYM_SEMICOLON
     ;
 
+// Functional/loop statements
+stat_return
+    : KWD_RETURN (value=expr?) SYM_SEMICOLON
+    ;
+stat_end
+    : KWD_END SYM_SEMICOLON
+    ;
+stat_skip
+    : KWD_SKIP SYM_SEMICOLON
+    ;
+
+// Logical statements
+stat_if
+    : KWD_IF SYM_PARENTHESES_LEFT condition=expr SYM_PARENTHESES_RIGHT body=generic_block
+        (KWD_ELSE (elseBody=generic_block | chainedFlow=stat_if))?
+    ;
+stat_iteration
+    : KWD_WHILE SYM_PARENTHESES_LEFT condition=expr SYM_PARENTHESES_RIGHT body=generic_block
+    | KWD_DO body=generic_block
+        KWD_WHILE SYM_PARENTHESES_LEFT condition=expr SYM_PARENTHESES_RIGHT SYM_SEMICOLON
+    ;
+
 // Expression statement
 stat_expr
     : expr SYM_SEMICOLON
@@ -126,11 +152,6 @@ stat_silly
     | KITTY SYM_SEMICOLON
     | MEOW SYM_SEMICOLON
     | BAD_CODE SYM_SEMICOLON
-    ;
-
-// Functional statements
-stat_return
-    : KWD_RETURN (value=expr?) SYM_SEMICOLON
     ;
 
 // Data declaration

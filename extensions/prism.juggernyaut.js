@@ -12,7 +12,7 @@ Prism.languages.juggernyaut = {
     ],
 
     // Keywords
-    'keyword': /\b(?:cat|kitty|meow|bad_code|import|export|bind|let|ref|const|as|from|return)\b/,
+    'keyword': /\b(?:cat|kitty|meow|bad_code|import|export|bind|let|ref|const|as|from|return|if|else|while|do|end|skip)\b/,
 
     // Literals
     'string': {
