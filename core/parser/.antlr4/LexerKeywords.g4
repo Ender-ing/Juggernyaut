@@ -57,6 +57,9 @@ KWD_ELSE
 KWD_WHILE
     : 'while'
     ;
+KWD_FOR
+    : 'for'
+    ;
 KWD_DO
     : 'do'
     ;
@@ -65,6 +68,18 @@ KWD_END
     ;
 KWD_SKIP
     : 'skip'
+    ;
+KWD_IN
+    : 'in'
+    ;
+KWD_SWITCH
+    : 'switch'
+    ;
+KWD_CASE
+    : 'case'
+    ;
+KWD_FALL
+    : 'fall'
     ;
 
 // Silly

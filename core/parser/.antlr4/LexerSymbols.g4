@@ -213,6 +213,12 @@ SYM_CURLY_BRACKET_LEFT
 SYM_CURLY_BRACKET_RIGHT
     : '}'
     ;
+SYM_SQUARE_BRACKET_LEFT
+    : '['
+    ;
+SYM_SQUARE_BRACKET_RIGHT
+    : ']'
+    ;
 SYM_PARENTHESES_LEFT
     : '('
     ;

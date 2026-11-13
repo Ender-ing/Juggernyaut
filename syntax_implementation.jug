@@ -1,0 +1,83 @@
+/**
+ * @note this document needs to be synced with the parser rules!
+**/
+
+// The empty statement
+;
+
+// Silly statements
+cat;
+kitty;
+meow;
+bad_code;
+
+// Declarations
+let a:int = 1,
+    b:string = "MyString",
+    c:int; // This has a default value!
+ref aRef:int = a; // (Any changed made to aRef apply to a!)
+const d:float = 0.1; // Constants can never be changed!
+func myFunc(arg1:int, ref arg2:string, const arg3:int = 1) {
+    arg1; // This is a copy of the soruce
+    arg2; // Changes here apply to the source!
+    arg3; // This is a reference to your original source!
+    return; // You can choose to return to the caller early!
+    // Code bellow this won't run!
+
+    // You can define variables here too!
+    let myVar:bool = true;
+
+    // Conditions
+    if (true) {
+        // This will run!
+        0;
+    } else if (arg1 >= arg3) {
+        // You can use if statements as you would in other languages!
+    } else {
+        ; // None of the conditions evaluated tp 'true'? This will run!
+    }
+
+    // Iteration
+    while (true) {
+        // ...
+        // You can skip the current loop iteration
+        skip;
+        // Or, you can end the loop!
+        end; // You can end the loop completely!
+        // These two keywords apply to all iteration statements!
+    }
+    do {
+        // You can start 'while' loops before checking the condition!
+    } while(true);
+    for (let a:int = 1; a < 10; a++) {
+        // Do something...
+    }
+    const myArray:int[] = [0, 1, 2, 3, 4];
+    for (ref a:int in myArray) {
+        // ...
+    }
+
+    // Switch selection
+    switch (arg1) {
+        case 1 {
+            // ...do some stuff
+            // If case 1 matches, then nothing else runs!
+        }
+        case 2, 3 {
+            // ... do some other stuff
+            fall; // This allows the execution to "fallthrough" into the next block, even if its case doesn't match!
+            // Fair warning! 'fall' may allow you to continue executing code from the next block, but the moment it's encountered, any remaining code within the current block is abandoned!
+            // ...anything here won't run!
+            ;
+        }
+        case 4 {
+            // No matter how you got here, since there's no "fall" statement here, execition ends here!
+        }
+        else {
+            //
+        }
+    }
+}
+
+
+// You can append

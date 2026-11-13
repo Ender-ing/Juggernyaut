@@ -142,4 +142,14 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitOp_logical(ANTLRParser::Op_logicalContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitOp_assign(ANTLRParser::Op_assignContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitLit(ANTLRParser::LitContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_end(ANTLRParser::Stat_endContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_skip(ANTLRParser::Stat_skipContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_if(ANTLRParser::Stat_ifContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_iteration(ANTLRParser::Stat_iterationContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitExprIndex(ANTLRParser::ExprIndexContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitType_spec(ANTLRParser::Type_specContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitLit_array(ANTLRParser::Lit_arrayContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_switch(ANTLRParser::Stat_switchContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitSwitch_arm(ANTLRParser::Switch_armContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_fall(ANTLRParser::Stat_fallContext *context) DEFAULT_VISIT
 }

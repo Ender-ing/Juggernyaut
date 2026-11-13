@@ -100,5 +100,15 @@ namespace Parser::Visitors {
             std::any visitOp_logical(ANTLRParser::Op_logicalContext *context) override;
             std::any visitOp_assign(ANTLRParser::Op_assignContext *context) override;
             std::any visitLit(ANTLRParser::LitContext *context) override;
+            std::any visitStat_end(ANTLRParser::Stat_endContext *context) override;
+            std::any visitStat_skip(ANTLRParser::Stat_skipContext *context) override;
+            std::any visitStat_if(ANTLRParser::Stat_ifContext *context) override;
+            std::any visitStat_iteration(ANTLRParser::Stat_iterationContext *context) override;
+            std::any visitExprIndex(ANTLRParser::ExprIndexContext *context) override;
+            std::any visitType_spec(ANTLRParser::Type_specContext *context) override;
+            std::any visitLit_array(ANTLRParser::Lit_arrayContext *context) override;
+            std::any visitStat_switch(ANTLRParser::Stat_switchContext *context) override;
+            std::any visitSwitch_arm(ANTLRParser::Switch_armContext *context) override;
+            std::any visitStat_fall(ANTLRParser::Stat_fallContext *context) override;
     };
 }

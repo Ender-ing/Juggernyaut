@@ -35,12 +35,7 @@ generic_block
     ;
 generic_content
     : statement
-    | declaration
-    | stat_return
-    | stat_end
-    | stat_skip
-    | stat_if
-    | stat_iteration
+    | decl_data
     | generic_block // Allow nested scopes!
     ;
 
@@ -48,6 +43,13 @@ generic_content
 statement
     : stat_empty // Just avoiding annoying bugs
     | stat_expr
+    | stat_return
+    | stat_end
+    | stat_skip
+    | stat_fall
+    | stat_if
+    | stat_iteration
+    | stat_switch
     | stat_silly
     ;
 root_statement
@@ -124,6 +126,9 @@ stat_end
 stat_skip
     : KWD_SKIP SYM_SEMICOLON
     ;
+stat_fall
+    : KWD_FALL SYM_SEMICOLON
+    ;
 
 // Logical statements
 stat_if
@@ -134,6 +139,24 @@ stat_iteration
     : KWD_WHILE SYM_PARENTHESES_LEFT condition=expr SYM_PARENTHESES_RIGHT body=generic_block
     | KWD_DO body=generic_block
         KWD_WHILE SYM_PARENTHESES_LEFT condition=expr SYM_PARENTHESES_RIGHT SYM_SEMICOLON
+    | KWD_FOR
+        SYM_PARENTHESES_LEFT
+            initState=data_storage init=data_item SYM_SEMICOLON
+            condition=expr SYM_SEMICOLON
+            action=expr
+        SYM_PARENTHESES_RIGHT body=generic_block
+    | KWD_FOR
+        SYM_PARENTHESES_LEFT
+            itemStorage=data_storage item=data_details KWD_IN iterable=identifier
+        SYM_PARENTHESES_RIGHT body=generic_block
+    ;
+stat_switch
+    : KWD_SWITCH SYM_PARENTHESES_LEFT target=expr SYM_PARENTHESES_RIGHT
+        SYM_CURLY_BRACKET_LEFT switch_arm* SYM_CURLY_BRACKET_RIGHT
+    ;
+switch_arm
+    : KWD_CASE patterns=expr_list body=generic_block
+    | KWD_ELSE body=generic_block
     ;
 
 // Expression statement
@@ -156,13 +179,13 @@ stat_silly
 
 // Data declaration
 decl_data
-    : data_storage data_item (SYM_COMMA data_item)* SYM_SEMICOLON
+    : state=data_storage data_item (SYM_COMMA data_item)* SYM_SEMICOLON
     ;
 data_item
     : details=data_details (SYM_EQUAL value=expr)?
     ;
 data_details
-    :  name=identifier (SYM_COLON type=identifier)
+    :  name=identifier (SYM_COLON type=type_spec)
     ;
 data_storage
     : KWD_LET
@@ -178,7 +201,7 @@ function_details
         SYM_PARENTHESES_LEFT
             (function_argument (SYM_COMMA function_argument)*)?
         SYM_PARENTHESES_RIGHT
-        (SYM_ARROW_RIGHT returnType=identifier)?
+        (SYM_ARROW_RIGHT returnType=type_spec)?
     ;
 function_argument
     : state=argument_state? details=data_details (SYM_EQUAL defaultValue=expr)?
@@ -192,19 +215,20 @@ argument_state
 
 // Expressions (Ordered from HIGHEST precedence at top to LOWEST at bottom)
 expr
-    : SYM_PARENTHESES_LEFT expr SYM_PARENTHESES_RIGHT                   # ExprGrouped
-    | target=expr SYM_DOT member=identifier                             # ExprMember
-    | callee=expr SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT # ExprCall
-    | operand=expr op=op_postfix                                        # ExprPostfix
-    | <assoc=right> op=op_prefix operand=expr                           # ExprPrefix
-    | <assoc=right> left=expr op=op_priority_high right=expr            # ExprPriorityHigh
-    | left=expr op=op_multiplicative right=expr                         # ExprMultiplicative
-    | left=expr op=op_additive right=expr                               # ExprAdditive
-    | left=expr op=op_priority_low right=expr                           # ExprPriorityLow
-    | left=expr op=op_comparison right=expr                             # ExprComparison
-    | left=expr op=op_logical right=expr                                # ExprLogical
-    | <assoc=right> left=expr op=op_assign right=expr                   # ExprAssign
-    | prim                                                              # ExprPrimary
+    : SYM_PARENTHESES_LEFT expr SYM_PARENTHESES_RIGHT                                   # ExprGrouped
+    | target=expr SYM_DOT member=identifier                                             # ExprMember
+    | callee=expr SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT                 # ExprCall
+    | target=expr SYM_SQUARE_BRACKET_LEFT indices=expr_list SYM_SQUARE_BRACKET_RIGHT    # ExprIndex
+    | operand=expr op=op_postfix                                                        # ExprPostfix
+    | <assoc=right> op=op_prefix operand=expr                                           # ExprPrefix
+    | <assoc=right> left=expr op=op_priority_high right=expr                            # ExprPriorityHigh
+    | left=expr op=op_multiplicative right=expr                                         # ExprMultiplicative
+    | left=expr op=op_additive right=expr                                               # ExprAdditive
+    | left=expr op=op_priority_low right=expr                                           # ExprPriorityLow
+    | left=expr op=op_comparison right=expr                                             # ExprComparison
+    | left=expr op=op_logical right=expr                                                # ExprLogical
+    | <assoc=right> left=expr op=op_assign right=expr                                   # ExprAssign
+    | prim                                                                              # ExprPrimary
     ;
 
 expr_list
@@ -291,6 +315,11 @@ op_assign
     | SYM_TILDE_TILDE_EQUAL             // ~~=
     ;
 
+// Types
+type_spec
+    : base=identifier (SYM_SQUARE_BRACKET_LEFT dims=expr_list? SYM_SQUARE_BRACKET_RIGHT)*
+    ;
+
 // Primary data
 prim
     : identifier
@@ -308,6 +337,7 @@ lit
     | lit_number
     | lit_char
     | lit_string
+    | lit_array
     ;
 lit_boolean
     : LIT_TRUE
@@ -323,4 +353,7 @@ lit_char
     ;
 lit_string
     : LIT_STRING
+    ;
+lit_array
+    : SYM_SQUARE_BRACKET_LEFT elements=expr_list? SYM_SQUARE_BRACKET_RIGHT
     ;

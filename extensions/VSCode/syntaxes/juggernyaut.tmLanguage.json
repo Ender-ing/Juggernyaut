@@ -135,7 +135,7 @@
         },
         {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(from|as|return|if|else|while|do|end|skip)\\b"
+          "match": "\\b(from|as|return|if|else|while|do|end|skip|for|in|switch|case|fall)\\b"
         },
         {
           "name": "keyword.control.logic.juggernyaut",
