@@ -73,5 +73,8 @@ namespace Parser::Visitors {
             std::any visitData_item(ANTLRParser::Data_itemContext *context) override;
             std::any visitData_details(ANTLRParser::Data_detailsContext *context) override;
             std::any visitFunction_details(ANTLRParser::Function_detailsContext *context) override;
+            std::any visitStat_bind(ANTLRParser::Stat_bindContext *context) override;
+            std::any visitBind_block(ANTLRParser::Bind_blockContext *context) override;
+            std::any visitBind_item(ANTLRParser::Bind_itemContext *context) override;
     };
 }

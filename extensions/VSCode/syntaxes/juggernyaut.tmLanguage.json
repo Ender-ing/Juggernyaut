@@ -123,7 +123,7 @@
       "patterns": [
         {
           "name": "keyword.control.import.juggernyaut",
-          "match": "\\b(import|export)\\b"
+          "match": "\\b(import|export|bind)\\b"
         },
         {
           "name": "storage.type.juggernyaut",
@@ -131,11 +131,15 @@
         },
         {
           "name": "storage.modifier.juggernyaut",
-          "match": "\\b(const|ref|bind)\\b"
+          "match": "\\b(const|ref)\\b"
         },
         {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(cat|kitty|meow|bad_code|from|as)\\b"
+          "match": "\\b(from|as)\\b"
+        },
+        {
+          "name": "keyword.control.logic.juggernyaut",
+          "match": "\\b(cat|kitty|meow|bad_code)\\b"
         }
       ]
     },

@@ -115,4 +115,7 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitData_item(ANTLRParser::Data_itemContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitData_details(ANTLRParser::Data_detailsContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitFunction_details(ANTLRParser::Function_detailsContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitStat_bind(ANTLRParser::Stat_bindContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitBind_block(ANTLRParser::Bind_blockContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitBind_item(ANTLRParser::Bind_itemContext *context) DEFAULT_VISIT
 }

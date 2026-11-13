@@ -16,5 +16,5 @@ options {
 import LexerFragments;
 
 IDENTIFIER
-    : [a-zA-Z_] (STANDARD_IDENTIFIER_CHARS)*
+    : [a-zA-Z_] (STANDARD_IDENTIFIER_CHARS*)
     ; // general identifiers

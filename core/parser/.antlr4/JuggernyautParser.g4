@@ -49,6 +49,7 @@ root_statement
     : stat_empty // Just avoiding annoying bugs
     | stat_import
     | stat_export
+    | stat_bind
     | stat_silly
     ;
 
@@ -93,6 +94,19 @@ export_discrete
     : KWD_EXPORT
         identifier (SYM_COMMA identifier)*
         SYM_SEMICOLON
+    ;
+
+// Bind statement
+stat_bind
+    : KWD_EXPORT? KWD_BIND (bindMode=lit_string?) (bind_item | bind_block)
+    ;
+bind_block
+    : SYM_CURLY_BRACKET_LEFT (bind_item*) SYM_CURLY_BRACKET_RIGHT
+    ;
+bind_item
+    : (function_details | (data_storage data_details))
+    ((KWD_FROM originalName=lit_string)?)
+    SYM_SEMICOLON
     ;
 
 // Expression statement
@@ -153,6 +167,7 @@ argument_state
 expr
     : /*expr SYM_DOT IDENTIFIER  // Member call
     |*/ prim
+    | SYM_PARENTHESES_LEFT expr SYM_PARENTHESES_RIGHT
     ;
 
 // Primary data
