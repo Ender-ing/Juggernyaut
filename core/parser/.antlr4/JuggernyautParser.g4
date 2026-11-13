@@ -177,11 +177,13 @@ expr
     : SYM_PARENTHESES_LEFT expr SYM_PARENTHESES_RIGHT                   # ExprGrouped
     | target=expr SYM_DOT member=identifier                             # ExprMember
     | callee=expr SYM_PARENTHESES_LEFT expr_list? SYM_PARENTHESES_RIGHT # ExprCall
-    | operand=expr op=(SYM_PLUS_PLUS | SYM_MINUS_MINUS)                 # ExprPostfix
+    | operand=expr op=op_postfix                                        # ExprPostfix
     | <assoc=right> op=op_prefix operand=expr                           # ExprPrefix
-    | <assoc=right> left=expr op=op_binary_right right=expr             # ExprBinary
-    | left=expr op=op_binary_left right=expr                            # ExprBinary
+    | <assoc=right> left=expr op=op_power right=expr                    # ExprPower
+    | left=expr op=op_multiplicative right=expr                         # ExprMultiplicative
+    | left=expr op=op_additive right=expr                               # ExprAdditive
     | left=expr op=op_comparison right=expr                             # ExprComparison
+    | left=expr op=op_logical right=expr                                # ExprLogical
     | <assoc=right> left=expr op=op_assign right=expr                   # ExprAssign
     | prim                                                              # ExprPrimary
     ;
@@ -204,46 +206,26 @@ op_prefix
     | SYM_NOT             // !
     | SYM_TILDE           // ~
     ;
-op_binary_left
-    // Arithmetic & Custom Functional
-    : SYM_PLUS                  // +
-    | SYM_MINUS                 // -
-    | SYM_DOT_DOT               // ..
-    // Bitwise
-    | SYM_AND             // &
-    | SYM_OR              // |
-    | SYM_CARET           // ^
-    | SYM_CARET_CARET     // ^^
-    | SYM_SHIFT_LEFT      // <<
-    | SYM_SHIFT_RIGHT     // >>
+op_power
+    : SYM_STAR_STAR       // **
     ;
-op_binary_right
-    // Arithmetic & Custom Functional
+op_multiplicative
     : SYM_STAR                  // *
-    | SYM_STAR_STAR             // **
     | SYM_SLASH                 // /
-    | SYM_BACKSLASH             // \ 
+    | SYM_BACKSLASH             // \
     | SYM_BACKSLASH_BACKSLASH   // \\
     | SYM_PERCENT               // %
     | SYM_PERCENT_PERCENT       // %%
     ;
-op_assign
-    : SYM_EQUAL                         // =
-    | SYM_PLUS_EQUAL                    // +=
-    | SYM_MINUS_EQUAL                   // -=
-    | SYM_STAR_EQUAL                    // *=
-    | SYM_STAR_STAR_EQUAL               // **=
-    | SYM_SLASH_EQUAL                   // /=
-    | SYM_BACKSLASH_EQUAL               // \ 
-    | SYM_BACKSLASH_BACKSLASH_EQUAL     // \\
-    | SYM_PERCENT_EQUAL                 // %=
-    | SYM_PERCENT_EQUAL                 // %%=
-    | SYM_AND_EQUAL                     // &=
-    | SYM_OR_EQUAL                      // |=
-    | SYM_CARET_EQUAL                   // ^=
-    | SYM_CARET_CARET_EQUAL             // ^^=
-    | SYM_SHIFT_LEFT_EQUAL              // <<=
-    | SYM_SHIFT_RIGHT_EQUAL             // >>=
+op_additive
+    : SYM_PLUS                  // +
+    | SYM_MINUS                 // -
+    | SYM_DOT_DOT               // ..
+    | SYM_AND                   // &
+    | SYM_OR                    // |
+    | SYM_CARET                 // ^
+    | SYM_SHIFT_LEFT            // <<
+    | SYM_SHIFT_RIGHT           // >>
     ;
 op_comparison
     : SYM_EQUAL_EQUAL     // ==
@@ -252,8 +234,28 @@ op_comparison
     | SYM_LESS_EQUAL      // <=
     | SYM_GREATER         // >
     | SYM_GREATER_EQUAL   // >=
-    | SYM_AND_AND         // &&
+    ;
+op_logical
+    : SYM_AND_AND         // &&
     | SYM_OR_OR           // ||
+    | SYM_CARET_CARET     // ^^
+    ;
+op_assign
+    : SYM_EQUAL                         // =
+    | SYM_PLUS_EQUAL                    // +=
+    | SYM_MINUS_EQUAL                   // -=
+    | SYM_STAR_EQUAL                    // *=
+    | SYM_STAR_STAR_EQUAL               // **=
+    | SYM_SLASH_EQUAL                   // /=
+    | SYM_BACKSLASH_EQUAL               // \=
+    | SYM_BACKSLASH_BACKSLASH_EQUAL     // \\=
+    | SYM_PERCENT_EQUAL                 // %=
+    | SYM_PERCENT_PERCENT_EQUAL         // %%=
+    | SYM_AND_EQUAL                     // &=
+    | SYM_OR_EQUAL                      // |=
+    | SYM_CARET_EQUAL                   // ^=
+    | SYM_SHIFT_LEFT_EQUAL              // <<=
+    | SYM_SHIFT_RIGHT_EQUAL             // >>=
     ;
 
 // Primary data
