@@ -94,8 +94,17 @@ SYM_SHIFT_RIGHT
 SYM_CARET
     : '^'
     ;
-SYM_CARET_CARET
-    : '^^'
+SYM_AT
+    : '@'
+    ;
+SYM_AT_AT
+    : '@@'
+    ;
+SYM_HASH
+    : '#'
+    ;
+SYM_HASH_HASH
+    : '##'
     ;
 
 // Assignment
@@ -138,14 +147,23 @@ SYM_OR_EQUAL
 SYM_CARET_EQUAL
     : '^='
     ;
-SYM_CARET_CARET_EQUAL
-    : '^^='
-    ;
 SYM_SHIFT_LEFT_EQUAL
     : '<<='
     ;
 SYM_SHIFT_RIGHT_EQUAL
     : '>>='
+    ;
+SYM_AT_EQUAL
+    : '@='
+    ;
+SYM_AT_AT_EQUAL
+    : '@@='
+    ;
+SYM_HASH_EQUAL
+    : '#='
+    ;
+SYM_HASH_HASH_EQUAL
+    : '##='
     ;
 
 // Comparison
@@ -167,11 +185,16 @@ SYM_GREATER
 SYM_GREATER_EQUAL
     : '>='
     ;
+
+// Logical
 SYM_AND_AND
     : '&&'
     ;
 SYM_OR_OR
     : '||'
+    ;
+SYM_CARET_CARET
+    : '^^'
     ;
 
 // Grouping

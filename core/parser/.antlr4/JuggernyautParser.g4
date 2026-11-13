@@ -216,6 +216,8 @@ op_multiplicative
     | SYM_BACKSLASH_BACKSLASH   // \\
     | SYM_PERCENT               // %
     | SYM_PERCENT_PERCENT       // %%
+    | SYM_AT                    // @
+    | SYM_AT_AT                 // @@
     ;
 op_additive
     : SYM_PLUS                  // +
@@ -226,6 +228,8 @@ op_additive
     | SYM_CARET                 // ^
     | SYM_SHIFT_LEFT            // <<
     | SYM_SHIFT_RIGHT           // >>
+    | SYM_HASH                  // #
+    | SYM_HASH_HASH             // ##
     ;
 op_comparison
     : SYM_EQUAL_EQUAL     // ==
@@ -256,6 +260,10 @@ op_assign
     | SYM_CARET_EQUAL                   // ^=
     | SYM_SHIFT_LEFT_EQUAL              // <<=
     | SYM_SHIFT_RIGHT_EQUAL             // >>=
+    | SYM_AT_EQUAL                      // @=
+    | SYM_AT_AT_EQUAL                   // @@=
+    | SYM_HASH_EQUAL                    // #=
+    | SYM_HASH_HASH_EQUAL               // ##=
     ;
 
 // Primary data
