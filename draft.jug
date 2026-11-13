@@ -65,6 +65,15 @@ let var_1:int = 0, // Matches the compilation target arch
 let myEmptyVar:int;
 myEmptyVar == 0; // This would evalute as a 'true' boolean value!
 
+// [NOTE] You can "bind" external functions/variables to your program!
+bind "C" func externalFunc(); // You can specify a mode!
+bind func libFunc() from "__lib_func__";
+bind "C" {
+    func newName() from "_original_func_name";
+    let val:int128 from "heavy_number"; // [NOTE] WATCH OUT, THIS WILL COPY THE VALUE!
+    ref val2:bool from "is_valid_state";
+}
+
 // NOTE: Array types need a rework, this is too restrictive...
 
 // [Arrays]
