@@ -18,10 +18,11 @@ let a:int = 1,
 let array1:int[], // This is an int dynamic array!
     array2:int[5], // This is a fixed int array!
     array3:int[5][3], // This is a fixed 5x3 array!
-    array4:int[3][], // This is a dynamic array of fixed int arrays!
-    array5:int[][3]; // This is a fixed array of dynamic arrays!
+    array4:int[][3], // This is a dynamic array of fixed int arrays!
+    array5:int[3][]; // This is a fixed array of dynamic arrays!
 
 ref aRef:int = a; // (Any changed made to aRef apply to a!)
+// [Issue] Reference rules need a revision in order to prevent dangling pointer references!
 const d:float = 0.1; // Constants can never be changed!
 func myFunc(arg1:int, ref arg2:string, const arg3:int = 1) {
     arg1; // This is a copy of the soruce
@@ -106,16 +107,16 @@ import { libFunc } from someLib; // You can import files from libraries specifie
 ref _externalVar:int = otherFile.externalVar; // This works too!
 
 // Notice that you can bind external library data/functions too!
-bind "C" func compiledLibFunc(myInt:__i32__) -> __i1__; // This is defined somewhere in a binary!
-bind "C" func compiledLibFunc2(myInt:int32) -> bool from "compiledLibFunc"(:__i32__) -> __i1__; // Notice that you can bind external functions whilst also renaming it internally and matching them to your defined types!
+bind "C" func compiledLibFunc(myInt:__i32__) -> __i8__; // This is defined somewhere in a binary!
+bind "C" func compiledLibFunc2(myInt:int32) -> bool from "compiledLibFunc"(:__i32__) -> __i8__; // Notice that you can bind external functions whilst also renaming it internally and matching them to your defined types!
 // ^ Notice that you can also use any special defined-type in the function's signature as long as it has a valid casting implementation! (Notice that casting behaviour is affected by the state of the input)
 
-// [Issue] memory safety is not guaranteed when passing references to external libraries...something similar to the 'unsafe' keyword in rust in needed, with restrictions on reference passing non-unsafe variables inside binds!
+// [Issue] memory safety is not guaranteed when passing references to/from external libraries...something similar to the 'unsafe' keyword in rust in needed, with restrictions on reference passing non-unsafe variables inside binds!
 
 // Notice that you can also bind multiple components at the same time!
 bind "C" {
     let meeow:int from "meow":__i32__; // Notice that this is a copy!
-    func meowMeow() -> bool from "meow_meow"() -> __i1__;
+    func meowMeow() -> bool from "meow_meow"() -> __i8__;
 }
 
 // Note that these are the internal compiler types that are planned to be exposed:
