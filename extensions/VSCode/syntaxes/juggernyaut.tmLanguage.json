@@ -122,8 +122,24 @@
     "keywords": {
       "patterns": [
         {
+          "name": "keyword.control.import.juggernyaut",
+          "match": "\\b(import|export|bind)\\b"
+        },
+        {
+          "name": "storage.type.juggernyaut",
+          "match": "\\b(let|func)\\b"
+        },
+        {
+          "name": "storage.modifier.juggernyaut",
+          "match": "\\b(const|ref)\\b"
+        },
+        {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(import|from|as|TMP|TMP2)\\b"
+          "match": "\\b(from|as|return|if|else|while|do|end|skip|for|in|switch|case|fall|type|abstract)\\b"
+        },
+        {
+          "name": "keyword.control.logic.juggernyaut",
+          "match": "\\b(cat|kitty|meow|bad_code)\\b"
         }
       ]
     },

@@ -9,21 +9,14 @@
 // Common headers
 #include "common/headers.hpp"
 
-// Parser
-#include "../../../core/parser/parser.hpp"
-#include "../../../core/parser/listeners/DiagnosticListener.hpp"
-
-// Session
-#include "../../../core/session/session.hpp"
+// Front-End Driver
+#include "./../../../core/driver/JugDriver.hpp"
 
 // lsp-framework
 #include "../../lspFramework.hpp"
 
 namespace Capabilities {
     namespace Semantics {
-        extern void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Session::Session &session) ;
-
-        extern void resetSourceDiagnostics(const std::string &uri) ;
-        extern void sendSourceDiagnosticsByURI(const std::vector<Diagnostics::Diagnostic> &diags, const std::string &uri) ;
+        extern void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver) ;
     }
 }

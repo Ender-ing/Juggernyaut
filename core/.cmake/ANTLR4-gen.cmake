@@ -37,3 +37,9 @@ antlr_target(JuggernyautGrammarParser ${JUG_ANTLR4_PARSER_PATH} PARSER
 # include generated files in project environment
 include_directories(${ANTLR_JuggernyautGrammarLexer_OUTPUT_DIR})
 include_directories(${ANTLR_JuggernyautGrammarParser_OUTPUT_DIR})
+
+# watch lexer files for changes
+file(GLOB JUG_LEXER_IMPORTS "${JUG_ANTLR4_LEXER_FILES}")
+antlr_target(JuggernyautGrammarLexer ${JUG_ANTLR4_LEXER_PATH} LEXER
+            PACKAGE GeneratedLexer
+            DEPENDS ${JUG_LEXER_IMPORTS})

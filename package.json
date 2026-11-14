@@ -10,6 +10,7 @@
         "debug-build-cmake-lix-64": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../.cmake/target-configs/linux-x86_64-on-x86_64.cmake",
         "debug-t-build-cmake-lix-64": "cd .build && cmake .. -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug -DJUG_BUILD_TESTS=ON -DCMAKE_TOOLCHAIN_FILE=../.cmake/target-configs/linux-x86_64-on-x86_64.cmake",
         "debug-build-binary": "cd .build && cmake --build . --config Debug --parallel 4 --verbose",
+        "build-docs":"cd .build && cmake .. -DCMAKE_BUILD_TYPE=Release -DJUG_BUILD_TESTS=OFF",
         "win-clean": "rd /s /q \".build\" && rd /s /q \".out\" && rd /s /q \".dist\"",
         "lix-clean": "rm -f -r \".build\" && rm -f -r \".out\" && rm -f -r \".dist\"",
         "install": "cd .build && cmake --install . --config Release",
@@ -26,6 +27,8 @@
         "lix64": "mkdir .build && npm run build-cmake-lix-64 && npm run build-binary",
         "lix32": "mkdir .build && npm run build-cmake-lix-32 && npm run build-binary",
         "update": "cmake --build .build --config Release",
-        "debug-update": "cmake --build .build --config Debug"
-    } 
+        "debug-update": "cmake --build .build --config Debug",
+        "docs": "cmake --build .build --target jug-api-docs",
+        "docs-only": "mkdir .build && npm run build-docs && npm run docs"
+    }
 }

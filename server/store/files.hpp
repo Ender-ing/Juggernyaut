@@ -20,4 +20,5 @@ namespace Store {
     extern std::string getParentPath(const std::string &filePath) ;
     extern std::string joinPaths(const std::string &base, const std::string path) ;
     extern bool getFileContent(const std::string &filePath, std::string &store) ;
+    extern std::string getWorkingDir() ;
 }

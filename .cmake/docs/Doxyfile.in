@@ -1,0 +1,55 @@
+# Project metadata
+PROJECT_NAME           = "Juggernyaut Toolchain APIs"
+PROJECT_NUMBER         = "@JUG_RELEASE_VERSION@"
+OUTPUT_DIRECTORY       = "@JUG_DOCS_XML_DIR@"
+
+# Data extraction only (XML for Doxybook2, no HTML/LaTeX)
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = NO # Only documented components are to be present!
+
+# Strip the repository root path and use short compound names so
+# @xpack/doxygen2docusaurus doesn't repeat cumulative paths in filenames
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = "@JUG_MAIN_DIR@"
+STRIP_FROM_INC_PATH    = "@JUG_MAIN_DIR@"
+
+# Input directories from Juggernyaut
+INPUT                  = "@JUG_MAIN_DIR@/core" \
+                         "@JUG_MAIN_DIR@/compiler" \
+                         "@JUG_MAIN_DIR@/server" \
+                         "@JUG_MAIN_DIR@/package-manager" \
+                         "@JUG_MAIN_DIR@/utility"
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.cpp
+
+#ALIASES                = "mermaid=\code{.mermaid}" \
+#                         "endmermaid=\endcode"
+
+# Exclude ANTLR grammar build artifacts or internal third-party folders if any
+EXCLUDE_PATTERNS       = */.antlr/* */antlr4cpp_generated_src/* */.build/* */.out/* */.dist/*
+
+# Only extract files, classes, and members that actually have /// documentation
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+# Show warnings
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+# Extraction settings for modern C++23
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+MARKDOWN_SUPPORT       = YES
+JAVADOC_AUTOBRIEF      = NO
+QT_AUTOBRIEF           = NO
+
+# Preprocessor (helps Doxygen understand DLL export macros)
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO

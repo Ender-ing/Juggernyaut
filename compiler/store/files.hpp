@@ -23,4 +23,5 @@ namespace Store {
     extern std::string joinPaths(const std::string &base, const std::string path) ;
     // Get the current process executable directory
     extern bool getExecutableDir(std::string &store) ;
+    extern std::string getWorkingDir() ;
 }

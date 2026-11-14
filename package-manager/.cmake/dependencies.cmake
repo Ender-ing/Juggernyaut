@@ -15,6 +15,7 @@ else()
     # Manage configs
     set(USE_NSEC OFF CACHE BOOL "" FORCE)
     set(USE_XDIFF ON CACHE BOOL "" FORCE)
+    set(REGEX_BACKEND "builtin" CACHE STRING "" FORCE)
     # Download libgit2
     message(STATUS "[DEPENDENCIES] Fetching libgit2...")
     set(JUG_DEP_GIT2_LIB_PATH ${JUG_DEPENDENCIES_DIR}/libgit2)
@@ -34,5 +35,8 @@ else()
 
     if(TARGET libgit2package)
         ignore_external_target_warnings(libgit2package)
+    endif()
+    if(DEFINED libgit2_BINARY_DIR)
+        ignore_external_directory_warnings("${libgit2_BINARY_DIR}")
     endif()
 endif()

@@ -1,0 +1,8 @@
+{
+  "doxygenXmlInputFolderPath": "@JUG_DOCS_XML_DIR@/xml",
+  "docsFolderPath": "@JUG_DOCS_BASE_DIR@",
+  "apiFolderPath": "api",
+  "apiBaseUrl": "api",
+  "sidebarCategoryFilePath": "@JUG_DOCS_BASE_DIR@/sidebar-category-doxygen.json",
+  "navbarFilePath": "@JUG_DOCS_BASE_DIR@/docusaurus-config-navbar-doxygen.json"
+}

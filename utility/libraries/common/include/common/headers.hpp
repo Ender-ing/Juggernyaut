@@ -22,6 +22,9 @@
 #include <functional>
 #include <unordered_map>
 #include <memory>
+#include <ranges>
+#include <mutex>
+#include <atomic>
 
 // TMP
 #define BAD_CODE_OR_MEMORY_LEAKS "\nPossible memory leaks/bad code. Please contact the developers!"

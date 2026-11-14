@@ -9,7 +9,7 @@ An experimental general-purpose programming language with *no particular purpose
 
 - `/compiler`:
   The CLI wrapper and the bridge between the front-end and the back-end.
-- `/configs`: (*refactoring...*)
+- `/configs`: (*deprecated!*)
   Processing `jug.toml` config files
 - `/core`:
   Includes the core components of the compilation process! (e.g. lexer, parser, etc.)  
@@ -21,7 +21,7 @@ An experimental general-purpose programming language with *no particular purpose
     Generates a parser AST and links processing contexts.
   - `session`
     Kick starts the entire workflow of the language's front-end within one project! (recommended for isolated language debugging)
-  - `manager` (*refactoring...*)
+  - `driver`: (__*current focus!*__)
     Kick starts concurrent sessions across multiple projects. (recommended for normal use)
 - `/extensions`:
   Includes extensions for well-known code editors.
@@ -64,8 +64,8 @@ dx [VariableName]
 
 ## Pull Requests
 
-As long as a pull request follows the [style guide](https://ender.ing/docs/category/style-guides),
-and it doesn't mess with the structure of the repository, it'd be gladly accepted!
+As long as a pull request follows both [style guide](https://ender.ing/docs/category/style-guides)
+and the [Code Documentation Guide](./CODE_DOCUMENTATION.md), it'd be gladly accepted!
 
 > [!WARNING]
 > If a contribution requires the addition of a new dependency or resource, it won't be accepted
@@ -76,7 +76,10 @@ and it doesn't mess with the structure of the repository, it'd be gladly accepte
 - Temporary placeholder: 1
 - Lexer: 1xxxxx
 - Parser: 2xxxxx
-- Configs: 6xxxxx
+- Transformer: 3xxxxx
+- Semantic: 4xxxxx
+- Session: 6xxxxx
+- Front-End Driver: 7xxxxx
 
 ## Plans
 

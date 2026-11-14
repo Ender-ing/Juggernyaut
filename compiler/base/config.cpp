@@ -22,9 +22,7 @@ namespace Base {
 
         // Source files
         namespace Input {
-            std::vector<std::string> importDirs;
             std::vector<std::string> entryPaths;
-            std::string config;
         }
 
         // Debug-related
@@ -137,19 +135,6 @@ namespace Base {
 
             // Success!
             return true;
-        }
-        void configsFallback() {
-            const std::string cwd = std::filesystem::current_path().string();
-
-            const std::string defaultPath = Store::joinPaths(cwd, "jug.toml");
-            if (Store::isFileAccessible(defaultPath)) {
-
-                REPORT(Console::START_REPORT,
-                    Console::ACTION_REPORT,
-                    "jug.toml file detected in the current working directory.",
-                    Console::END_REPORT);
-                Base::InitialConfigs::Input::config = defaultPath;
-            }
         }
     }
 }

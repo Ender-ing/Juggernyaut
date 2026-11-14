@@ -9,6 +9,9 @@
 #include <iostream>
 #include <variant>
 #include <charconv>
+#ifndef _WIN32
+#include <csignal>
+#endif
 
 // Common headers
 #include "common/headers.hpp"
@@ -23,11 +26,11 @@
 #include "capabilities/basic.hpp"
 #include "capabilities/semantics/diagnostics.hpp"
 
-// Store
-#include "store/DocumentStore.hpp"
+// Filesystem
+#include "store/Documents.hpp"
 
-// Session
-#include "../core/session/session.hpp"
+// Front-End Driver
+#include "../core/driver/JugDriver.hpp"
 
 void logStdErr(std::string_view message) {
     std::cerr << message << std::endl;
@@ -38,17 +41,21 @@ int startServer(lsp::io::Stream& io) {
     int exit_code = false;
     lsp::ServerEndpoint endpoint = io;
 
-    // Setup session
-    Session::Session session = Session::getSessionDefaults();
-    Store::DocumentStore store = Store::DocumentStore();
-    session.store = &store;
+    // Set up the driver
+    auto docs = std::make_unique<Store::Documents>();
+    Driver::JugDriver::HostConfigs host;
+    host.vfs = docs.get();
+    Driver::JugDriver::DriverConfigs configs;
+    Driver::JugDriver::JugDriver driver(host, configs);
 
     // Configure protocol
-    Capabilities::configureProtocol(endpoint, session, exit_code);
-    Capabilities::Semantics::setupGlobalDiagnostics(endpoint, session);
+    Capabilities::Semantics::setupGlobalDiagnostics(endpoint, driver);
+    Capabilities::configureProtocol(endpoint, driver, exit_code);
 
     // Start the communication
     endpoint.runMessageLoop();
+
+    logStdErr("The message loop has been closed!");
 
     return exit_code;
 }
@@ -69,11 +76,11 @@ int runSocketServer(unsigned short port) {
             return EXIT_FAILURE;
 
         std::thread(
-            [socket = std::move(socket)]() mutable
+            [s = std::move(socket)]() mutable
             {
                 logStdErr("client connected");
 
-                startServer(socket); // The returned value is ignored!
+                startServer(s); // The returned value is ignored!
 
                 logStdErr("client disconnected");
             }).detach();
@@ -108,6 +115,10 @@ std::optional<unsigned short> parsePortArg(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    #ifndef _WIN32
+        std::signal(SIGPIPE, SIG_IGN);
+    #endif
+
     try {
         if(const auto port = parsePortArg(argc, argv))
             return runSocketServer(*port);

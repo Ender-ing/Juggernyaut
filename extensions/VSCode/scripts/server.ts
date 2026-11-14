@@ -47,7 +47,9 @@ async function start() {
     const clientOptions: LanguageClientOptions = {
         // Register the server for your custom language. 
         // 'yourLanguageId' must match the language id defined in your package.json
-        documentSelector: [{ scheme: 'file', language: 'juggernyaut' }],
+        documentSelector: [{ scheme: 'file', language: 'juggernyaut' },
+            { scheme: 'file', pattern: '**/jug.toml' }
+        ],
         
         // Override the default restart behavior
         errorHandler: {
@@ -85,7 +87,8 @@ export async function manageServerLifecycle() {
         return;
     }
     const hasActiveFiles = workspace.textDocuments.some(
-        (doc) => doc.languageId === 'juggernyaut' 
+        (doc) => doc.languageId === 'juggernyaut' ||
+            doc.uri.fsPath.replace(/\\/g, '/').endsWith('/jug.toml')
     );
 
     // Start/stop the server

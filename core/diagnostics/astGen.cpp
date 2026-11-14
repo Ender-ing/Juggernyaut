@@ -1,7 +1,9 @@
-/**
- * @brief
- * Lexer & parser error listeners
-**/
+/// @file
+/// @ingroup CoreDiagnostics
+/// @brief Implements source-#Diagnostics::Range extraction from ANTLR4 tokens, terminal nodes, and rule contexts.
+///
+/// @see astGen.hpp
+/// @see Diagnostics::Diagnostic
 
 #include "astGen.hpp"
 

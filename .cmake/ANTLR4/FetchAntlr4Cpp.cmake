@@ -46,6 +46,8 @@ if (NOT TARGET antlr4_shared)
         )
     endif()
     FetchContent_MakeAvailable(antlr4_runtime)
+    # Ignore ANTLR warnings
+    ignore_external_directory_warnings("${antlr4_runtime_BINARY_DIR}")
 endif()
 
 # Protect ANTLR4's shared target from Juggernyaut's global Windows/Optimization flags

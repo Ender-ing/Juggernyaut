@@ -33,6 +33,7 @@ set(CMAKE_MODULE_PATH
 )
 
 # ANTLR4 files generation configuration
+set(JUG_ANTLR4_LEXER_FILES ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/Lexer*.g4)
 set(JUG_ANTLR4_LEXER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautLexer.g4)
 set(JUG_ANTLR4_PARSER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautParser.g4)
 

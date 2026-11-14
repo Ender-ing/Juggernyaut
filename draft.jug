@@ -1,0 +1,437 @@
+// @!DRAFT
+
+// [Notice]
+// The language should be designed with as little runtime overhead as possible.
+
+// [Note] Directy function calls and such within the root scope would actually be forbidden in the actual language! This rule is not followed in this file simply for the sake of simplicity!
+
+// [Modules System]
+// Each .jug file is considered a seperate unit!
+// (You may think of each file as its own module)
+
+// [Imports and Exports]
+
+import { Type, vari, fn } from "path/to/file.jug"; // Local file import
+
+import "path/to/file.jug" as handle; // Local file import (SHOULD THIS BE ALLOWED?)
+
+import { Type, vari, fn } from std.types; // Library import (looks for libs/std/types/import.jug)
+import std.types as handle;
+// Note that libraries are resolved by the [dependencies] section in the jug.toml configuration file!
+
+export value; // You may export components the moment they are defined by adding
+// the *out-most* prefix statement 'export' to its defintion, or by simply exporting
+// it using its name as such!
+
+// [Variables]
+
+let varName:int = 1;
+// "let" defines a variable!
+// "varName" is the name of the variable.
+// "int" is the type of this specific variable!
+// And assignment pretty much works the same as other languages.
+const constName:int = 2; // You may use the word "const" to indicate
+
+// [NOTE] Constants MUST be assigned a value on definition!
+
+// [Integers]
+let var_1:int = 0, // Matches the compilation target arch
+    var_2:int8 = 0,
+    var_3:int16 = 0,
+    var_4:int32 = 0,
+    var_5:int64 = 0,
+    var_6:int128 = 0,
+    // [Unsigned integers]
+    var_7:uint = 0, // Matches the compilation target arch
+    var_8:uint8 = 0,
+    var_9:uint16 = 0,
+    var_10:uint32 = 0,
+    var_11:uint64 = 0,
+    var_12:uint128 = 0,
+    // [Decimals]
+    var_13:float = 0.1,  // Matches the compilation target arch
+    var_14:float16 = 0.1, // IEEE 754
+    var_15:float32 = 0.1, // IEEE 754
+    var_16:float64 = 0.1, // IEEE 754
+    var_17:float128 = 0.1, // IEEE 754
+    var_18:bfloat = 0.1, // Brain Floating Point
+    // [Booleans]
+    var_19:bool = true, // or 'false'
+    // [Characters and strings]
+    var_20:char = 'A',
+    var_21:string = "Hello!", // [Note] Strings are a special case! They are also a built-in type!
+    // [C-interfacing]
+    var_22:float80; // (x86_fp80) [Issue] ...maybe this should not be allowed in normal contexts??
+
+// [Note] Notice that all built-in compiler types hold a "default" value when not
+// assigned a proper value on defintion.
+let myEmptyVar:int;
+myEmptyVar == 0; // This would evalute as a 'true' boolean value!
+
+// [NOTE] You can "bind" external functions/variables to your program!
+bind "C" func externalFunc(); // You can specify a mode!
+bind func libFunc() from "__lib_func__";
+bind {
+    func newName() -> int from "_original_func_name";
+    let val:int128 from "heavy_number"; // [NOTE] WATCH OUT, THIS WILL COPY THE VALUE!
+    ref val2:bool from "is_valid_state";
+}
+
+// NOTE: Array types need a rework, this is too restrictive...
+
+// NOTICE: Initial front-end implementation will only include things above this line, and functions.
+// =============================================================================
+
+// [Arrays]
+let myArray:[int, 5] = [0, 1, 2, 3, 4]; // A fixed array of 5 integers!
+let myArray:[[int, 2], 3] = [[0, 1], [2, 3], [4, 5]]; // A fixed array of that acts\ like a 5x4 matrix!
+// [Note] Note that there exists a type shorthand (up to 16 dimensions):
+// [int, i, j, k] = [[int, k], j, i]
+
+// [Tuples]
+let myTuple:(int, bool) = (0, false); // A fixed tuple that can hold different values!
+
+// [Note] You can use tuples to assign values simultaneously!
+let (a:int, b:bool) = (1, false);
+let c:int, d:int;
+// ...
+(c, d) = (d, c) // This switches the values of both variables!
+
+// [Lists]
+let myList:[int]; // A dynamic array of integers than can be extended. (Similar to a vector in C++)
+
+// [Functions]
+func myFunction(arg_1:int, const arg_2:int) { // A function that takes in a variable integer and a constant integer!
+    // Do some stuff here with 'arg_1' and 'arg_2'!
+    // Don't worry, these are treated as seperate variables!
+    // Your original variables won't be affected by any changes made to the arguments!
+    // ...
+    // You can exit a function early by using the return statement!
+    return;
+    // ...
+    // Anything here won't run!
+}
+
+// [Note] A function taking in a constant integer doesn't nessesary mean that
+// you need to feed it an actual value defined using the 'const' keyword!
+// This is merely a promise made the function that it won't modify the input value!
+
+func myNewFunction(arg:int) -> bool { // You must specifiy the type of returned values (if returned)
+    return arg == 1; // Returns a boolean value!
+}
+
+// [Note] Of course, if a return type is specified, a function MUST return a valid corresponding value!
+
+// [Explicit referencing]
+let myImportantVar:int = 0;
+func myOtherFunction(ref arg:int) {
+    // Any changes made to arg here will change the original value!
+    arg = 1;
+}
+myImportantVar == 1; // This evalues to a boolean 'true' value!
+
+// [Note] Only non-constant values can be referenced
+
+// [Memory]
+// Each defined component is managed staticly at compile time.
+// As such somee rules are nessesary in order to make sure racing conditons
+// and memory faults never occur!
+
+// [Implicit referencing]
+func myBoringFunc(arg:int) -> int {
+    return arg;  // [Note] Since the argument was never modified, no copies are made
+    // of your original variable!
+    // You can think of 'arg' as a reference that was never edited!
+}
+func myExcitingFunction(arg_1:int, const arg_2:int) -> bool {
+    arg_1 = arg_2; // Since 'arg_1' was modified, this means a new variable was created in memory!
+    // [Note] Since 'arg_2' is a const, it's always going to be treated like a reference!
+    return arg_1 == arg_2; // Always returns a 'true' boolean value!
+}
+
+// [Note] You can overload a function's defintion!
+//  But be careful, overloading is allowed only when argument types or the number of arguments differ!
+func myExcitingFunction(const arg:int) -> bool {
+    return arg % 2 == 0;
+}
+
+// [Note] You can take in optional arguments!
+func myLaxFunc(const myInt:int = 1) -> bool {
+    return myInt == 2;
+}
+myLaxFunc() == myLaxFunc(2); // This resolves to a boolean 'false'
+
+// [Note] You can also pass functions to functions!
+func myWeirdFunction(otherFunc: func (int) -> int, const myInt:int) -> func () -> bool {
+    // [Note] You can even return functions using the variable syntax!
+    let secretFunc:func () -> bool = [const myInt]() -> bool { // [Note] If you are to use a value within the
+        // function, you must add [...] before the arguments' parentheses, and
+        // specify said value with either a const or a val!
+        // [Note] values captured using [...] in this syntax are never referenced,
+        // they are ALWAYS copied!
+
+        return otherFunc(myInt) == myInt;
+    };
+
+    // [Note]  You can also return functions!
+    return secretFunc;
+}
+
+// [While loop]
+while (true) {
+    // Things you write here will keep happening until the condition of the while
+    // loop turns in a 'false' boolean value!
+}
+do {
+    // ...
+} while (true); // The same as the first 'while' loop, except it executes the code block first,
+// then starts checking the condition!
+
+// [Logical operators]
+1 == 2; // 'equals'
+1 != 2; // 'does not equal'
+1 < 2; // 'less than'
+1 <= 2; // 'less/equal to'
+1 > 2; // 'greater than'
+1 >=2 ; // 'greater/equal to'
+!true; // 'not'
+true || false; // 'or'
+true & false; // 'and'
+(true || false) && true; // Of course, you can mix them all, as long as the value of the parentheses is a boolean!
+
+// [Increments and Decrements]
+let mySmallInt:int = 1;
+mySmallInt++; // Increments the value of 'mySmallInt' by 1!
+mySmallInt--; // Decrements the value of 'mySmallInt' by 1!
+mySmallInt++ == 1; // Evaluates to a 'true' boolean value!
+++mySmallInt == 2; // Evaluates to a 'false' boolean value!
+mySmallInt-- == 3; // Evaluates to a 'true' boolean value!
+--mySmallInt == 1; // Evaluates to a 'ture' boolean value!
+
+// [Other operators]
+// '+', '-', '*', '/', '\', '%', '&', '|', '^', '~', '<<', '>>', '**', '^^', '%%', '\\', '~~', '..', ...
+
+// [Note] that appending an '=' to the end of any of the functional operators
+// will result in the value of a variable to be changed to the output of the operation applied
+// to the variable's value and the right-hand-side value!
+mySmallInt += 100; // This is the same as "mySmallInt = mySmallInt + 100"
+
+// [Note] All built-in types would naturally their own defined functional operator actions.
+
+// [User-defined types]
+type MyType {
+    // Values attached to the type
+    let a:int = 1; // You can assign these values a default value!
+    const b:int = 2;
+    hide let c:int = 3; // Cannot be accessed by anyone, other than functions defined for this type!
+    prot let d:int = 4; // Can only be accessed by functions defined for this type AND types than extend this type!
+    stat let e:int = 5; // Can be accessed using the type's name! It's not specific to your variable!
+
+    // [Note] Non-static functions can use the 'self' keyword!
+
+    // Functions can be attached to the type too!
+    func myAction() -> int {
+        // You can access the values of this type using the 'self' argument!
+        self.a == 1; // Evaluates to a 'true' boolean value!
+        return 1;
+    }
+
+    // [Note] You can define a constructor function!
+    // It can take any number of arguments!
+    func MyType(const arg:int) {
+        self.a = arg; // 'self' is the defined variable!
+    }
+
+    // [Note] The keywords 'hide', 'prot', and 'stat' work with functions too!
+
+    // [Note] Operators support can be added using a special operator function!
+    // All of these functions should use references/constants for proper functionality!
+    op ++() -> MyType {
+        self.a++;
+        self.c++;
+        self.d++;
+        return self; // This returns the object itself!
+    }
+    op +(const left:MyType, const right:MyType) -> MyType {
+        let result:MyType;
+        result.a = left.a + right.a;
+        result.c = left.c + right.c;
+        result.d = left.d + right.d;
+        return result;
+    }
+    // [Note] Two-sided operator functions that may place the variable at any side
+    //  can still access the self function, even though the variable is passed
+    // as an argument anyways!
+    op =(other:MyType) -> MyType {
+        // ...
+        return MyType;
+    }
+    // [Note] You can also, for example, define operations like 'a ++ b' using
+    // the proper arguments scheme, and even between different types! 
+}
+
+MyType.e == 5; // This evaluates to a 'true' boolean value!
+
+let myFancyVar:MyType; // Now, we have a fancy variable!
+let myOtherFancyVar:MyType = MyType(1);
+
+myFancyVar.a == myOtherFancyVar.a; // Evaluates to a 'false' boolean value!
+myFancyVar++; // This is the same as myFancyVar._operator__plusplus()
+myFancyVar + myOtherFancyVar; // This is the same as MyType._operator__plus(myFancyVar, myOtherFancyVar)
+
+myFancyVar.c == myFancyVar.d; // This will cause a compilation error!
+
+type MyEnhancedType extends MyType {
+    // [Note] You can always add new defintions here,
+    // but you can never remove inherited ones!
+    // [Issue] Allowing class inheritance will introduce lots of overhead.
+    // A potential fix is to treat extended classes as completely different classes.
+    // A reframe of this design choice is necessary!
+
+    func MyEnhancedType(ref self:MyEnhancedType, const arg:int) -> MyEnhancedType {
+        // Note that the constructor of MyType is called beforehand!
+        // You can do other stuff over here..
+
+        self.d++; // This is legal! But 'self.c' is illegal since c is invisible to this type!
+    }
+
+    // [Note] You may override existing non-static definitions using the 'ride' keyword!
+    ride func myAction(ref self:MyEnhancedType) -> int {
+        return self.d == self.a || MyType.myAction(self); // You can even call the old function within the function's scope!
+    }
+}
+
+// [User-defined types and memory management]
+
+let someOtherFancyVar:MyType = myFancyVar; // [Note] This will move 'myFancyVar' to 'someOtherFancyVar'.
+// (Basiclly deleting 'myFancyVar' and giving its old value to 'someOtherFancyVar')
+// So, if you pass 'someOtherFancyVar' to a function as a variable ('val'), your original 'someOtherFancyVar' will be deleted!
+
+// If you wish to share a variable of this custom type between variables/functions whilst maintaining your original variable,
+// you must make your original value into a "box"!
+// a "box" is like a reference for user-defined types!
+let mySharedFancyVar:box<MyType> = box<MyType>(100);
+let theSameFancyVar:box<MyType> = mySharedFancyVar;
+// Both 'mySharedFancyVar' and 'theSameFancyVar' share the same value!
+mySharedFancyVar.a = 0;
+theSameFancyVar.a == 0; // Evaluates to a 'true' boolean value!
+
+// [Complex data and memory]
+// Note that when a complex data structure (like nested arrays or user-defined types) are copied,
+// they are always copied as a deep copy. Shallow copies are not to be allowed at all!  (All said structures shall have a .copy() function!)
+// As such, when a complex data structure is passed by value (not a reference)
+// to other components (such as variables or functions), they are always moved
+// by default, and the old component loses its value!
+
+// A potential fix would be requiring the use of a .copy() function
+// and forbidding directly passing a complex structure to a function
+// without the use of .copy()
+// This is quite clunky, a better solution might be needed...
+
+// [for loops and iterable]
+
+for (let myInt:int = 1; myInt < 100; myInt++) {
+    // Pretty much work the same as traditional loops...
+}
+
+const myArray:[int, 5] = [0, 1, 2, 3, 4];
+for (let myInt:int in myArray) {
+    // Pretty much works like the : shorthand in C++...
+    // You can even use a 'ref' or a 'const' for more efficiency!
+}
+
+// [Note] Arrays (both static and dynamic - e.i. lists) are iterable!
+// Note that iteration in one loop is - and should be - limited to consistant types!
+// Meaning, types like a tuple should not be made iterable!
+
+type MyIterableType {
+    let someVar:[int, 5];
+    let someOtherVar:[bool, 5];
+    // ... do some magic over here ...
+
+    // [Note] You can support for-loop iteration using the proper 'op iterate' scheme!
+    op iterate(ref self:MyIterableType) -> int {
+        // ... do some stuff
+        // ...
+        //  [Note] When an iteration is not possible (for example, at the end of a literal), you can use an empty return!
+        return;
+    }
+
+    // [Note] You can even support multiple types of iteration!
+    op iterate(ref self:MyIterableType) -> bool {
+        // ...
+    }
+}
+
+let myFancyIterable:MyIterableType;
+// ...
+for (let myInt:int in myFancyIterable) {
+    // Do something with the integers!
+}
+for (let myBool:bool in myFancyIterable) {
+    // Do something with the booleans!
+}
+
+// [Thread-specific asynchronisation]
+// You can make a function asynchronous by adding the 'async' keyword right before the 'func' keyword!
+async func myGrumpyFunction(myImportantInt:share<int>, const myHeavyData:MyType) -> async func () -> bool { // [Note] the 'ref' keyword is banned in async calls, and so are non-const box<> variables!
+    // ^ When a variable needs to be shared between asynchronous calls, you may use the share<> type!
+
+    // [Note] Any data of a type that isn't a 'share<>' is completely copied before being accessed here! Even 'behind the scenes' references aren't allowed!
+
+    // [Note] 'share<>' types are very special! You can't read/write to them like normal  variables!
+    // You need to use the 'lock' statement with either a 'const' for reading,
+    // or a 'ref' for writing!
+    let myInt:int;
+    lock (myImportantInt as const theValue:int) {
+        myInt = theValue; // You can read the value safely!
+    }
+
+    myInt++; // Do some stuff, la dah dah dah...
+
+    lock (myImportantInt as ref theValue:int) {
+        theValue = myInt; // Update the value safely!
+    }
+
+    return async [const myInt](){ // You can even return an async function!
+        return myInt == 1;
+    };
+}
+
+//  [Note] The actual return type of async functions is future<...>!
+// For 'myGrumpyFunction', that'd be future<async func  () ->  bool>!
+// For a normal function that doesn't take in arguments or return anything, that'd be future<func ()>
+
+// [Note] You may await the result of multipe async functions by grouping them
+// in an array!
+async someTask(const num:int) -> bool {
+    // ...
+}
+async runTasks(const num:int[]){
+    // [Note] a cluster of tasks returns a tuple of coresponding size!
+    let tasks:future<bool>[];
+
+    for (const v:int in num) {
+        tasks += someTask(v);
+    }
+
+    // Wait for all tasks to finish!
+    await tasks; // You can access their values using future<>.value!
+}
+
+// You may also access the value within a 'future<>' from a normal context using 'future.join()'!
+let myNeededValue:bool = future.join(someTast());
+
+// [System threads]
+// You can spawn system threads using the 'thread' function!
+// Note that 'thread' can only take an async function, and  returns a 'future<>'
+let handle:future<bool> = thread(async () -> bool {
+    // Do some stuff...
+    // ...
+
+    return true;
+});
+
+future.join(handle); // You can use the same 'future.join' function!
+
+// TO-DO: [external binds, compile-time @actions, templates, static type checking]

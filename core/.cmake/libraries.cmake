@@ -52,6 +52,17 @@ if(MSVC)
     # 4251: non-exported member variable
     target_compile_options(JuggernyautParserLibrary PRIVATE /wd4275 /wd4251)
 endif()
+# Ignore ANTLR4 warnings
+if(MSVC)
+    set(_antlr_gen_suppress_flag "/W0")
+else()
+    set(_antlr_gen_suppress_flag "-w")
+endif()
+set_source_files_properties(
+    ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS}
+    ${ANTLR_JuggernyautGrammarParser_CXX_OUTPUTS}
+    PROPERTIES COMPILE_OPTIONS "${_antlr_gen_suppress_flag}"
+)
 
 # Create a library from /session
 add_library(JuggernyautSessionLibrary SHARED)
@@ -67,16 +78,17 @@ jug_common(JuggernyautSessionLibrary)
 add_dependencies(JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautParserLibrary)
 target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautParserLibrary)
 
-# Create a library from /manager
-add_library(JuggernyautManagerLibrary SHARED)
-target_sources_search(JuggernyautManagerLibrary ${JUG_CORE_SOURCE_DIR}/manager/*.cpp TRUE)
+# Create a library from /driver
+add_library(JuggernyautDriverLibrary SHARED)
+target_sources_search(JuggernyautDriverLibrary ${JUG_CORE_SOURCE_DIR}/driver/*.cpp TRUE)
 # Expose library exports
-target_compile_definitions(JuggernyautManagerLibrary PRIVATE JUG_MANAGER_LIBRARY_EXPORTS)
+target_compile_definitions(JuggernyautDriverLibrary PRIVATE JUG_DRIVER_LIBRARY_EXPORTS)
 # Attach manifest data
-attach_manifest_data(JuggernyautManagerLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
+attach_manifest_data(JuggernyautDriverLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 # Add compiler flags
-add_internal_target_cxx_flags(JuggernyautManagerLibrary FALSE)
+add_internal_target_cxx_flags(JuggernyautDriverLibrary FALSE)
 # Dependencies
-jug_common(JuggernyautManagerLibrary)
-add_dependencies(JuggernyautManagerLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautSessionLibrary)
-target_link_libraries(JuggernyautManagerLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautSessionLibrary)
+jug_common(JuggernyautDriverLibrary)
+add_dependencies(JuggernyautDriverLibrary JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
+target_link_libraries(JuggernyautDriverLibrary PUBLIC JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
+target_include_directories(JuggernyautDriverLibrary SYSTEM PRIVATE ${TOMLPP_INCLUDE_DIR})

@@ -38,7 +38,7 @@ install_debug_symbols(JuggernyautCatConsoleLibrary CmpJuggernyautCompiler CmpDeb
 
 # Core
 install(TARGETS JuggernyautDiagnosticsLibrary JuggernyautDataLibrary
-        JuggernyautParserLibrary JuggernyautSessionLibrary JuggernyautManagerLibrary
+        JuggernyautParserLibrary JuggernyautSessionLibrary JuggernyautDriverLibrary
     EXPORT JuggernyautToolchain
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
@@ -47,15 +47,7 @@ install_debug_symbols(JuggernyautDiagnosticsLibrary CmpJuggernyautCompiler CmpDe
 install_debug_symbols(JuggernyautDataLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautParserLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautSessionLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
-install_debug_symbols(JuggernyautManagerLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
-
-# Configs
-install(TARGETS JuggernyautConfigsLibrary
-    EXPORT JuggernyautToolchain
-    RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
-    LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
-)
-install_debug_symbols(JuggernyautConfigsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautDriverLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # External deps (without installs/excluded)
 if(TARGET mimalloc)

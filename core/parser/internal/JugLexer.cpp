@@ -29,7 +29,14 @@ namespace Parser {
                 internal_dispatchSyntaxError(this, curToken, "100002"); // LEXER ERROR CODE!
                 break;
             case JuggernyautLexer::INVALID_2_LIT_STRING:
+            case JuggernyautLexer::INVALID_2_LIT_CHAR:
                 internal_dispatchSyntaxError(this, curToken, "100003"); // LEXER ERROR CODE!
+                break;
+            case JuggernyautLexer::INVALID_1_LIT_CHAR:
+                internal_dispatchSyntaxError(this, curToken, "100004"); // LEXER ERROR CODE!
+                break;
+            case JuggernyautLexer::INVALID_LIT_NUMBER_REP:
+                internal_dispatchSyntaxError(this, curToken, "100005"); // LEXER ERROR CODE!
                 break;
             default:
                 break;

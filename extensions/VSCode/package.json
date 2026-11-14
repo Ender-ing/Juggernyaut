@@ -106,13 +106,8 @@
                 "category": "Juggernyaut"
             },
             {
-                "command": "juggernyaut.server.session.trigger",
+                "command": "juggernyaut.server.driver.trigger",
                 "title": "Trigger the Juggernyaut language server's session workflow",
-                "category": "Juggernyaut"
-            },
-            {
-                "command": "juggernyaut.server.session.rejuvenate",
-                "title": "Rejuvenate the Juggernyaut language server's session",
                 "category": "Juggernyaut"
             }
         ],
@@ -126,7 +121,8 @@
     },
     "activationEvents": [
         "onLanguage:juggernyaut",
-        "workspaceContains:**/*.jug"
+        "workspaceContains:**/*.jug",
+        "workspaceContains:**/jug.toml"
     ],
     "repository": {
         "type": "git",

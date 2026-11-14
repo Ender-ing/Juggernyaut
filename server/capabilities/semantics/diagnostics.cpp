@@ -8,6 +8,7 @@
 
 // Diagnostics
 #include "../../../core/diagnostics/Diagnostic.hpp"
+#include "../../../core/diagnostics/DiagnosticsManager.hpp"
 
 namespace Capabilities {
     namespace Semantics {
@@ -46,56 +47,71 @@ namespace Capabilities {
 
             return diagnostic;
         }
+        lsp::MessageType internal_getMessageType(const lsp::Opt<lsp::DiagnosticSeverity> &severity) {
+            if (!severity.has_value()) {
+                return lsp::MessageType::Info;
+            }
+            switch (severity.value()) {
+            case lsp::DiagnosticSeverity::Error:
+                return lsp::MessageType::Error;
+            case lsp::DiagnosticSeverity::Warning:
+                return lsp::MessageType::Warning;
+            case lsp::DiagnosticSeverity::Information:
+                return lsp::MessageType::Info;
+            case lsp::DiagnosticSeverity::Hint:
+            default:
+                return lsp::MessageType::Log;
+            }
+        }
 
         lsp::ServerEndpoint *io = nullptr;
-        void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Session::Session &session) {
-            Data::Store::SourceStore *store = session.store;
+        std::unique_ptr<Diagnostics::DiagnosticsManager<lsp::Diagnostic>> diagManager = nullptr;
+        void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver) {
+            // Data::Host::VFS *vfs = driver.host.vfs;
 
             // Update diagnostics I/O endpoint
             io = &endpoint;
 
-            session.hooks.parser.onContextEnd = [store](const Data::Store::SourceId srcId) {
-                std::unique_ptr<Data::Store::Source> &source = store->getSourceById(srcId);
+            diagManager = std::make_unique<Diagnostics::DiagnosticsManager<lsp::Diagnostic>>(
+                driver.configs.hooks,
+                [](const Diagnostics::Diagnostic &diag) -> lsp::Diagnostic {
+                    return internal_diagToLSP(diag);
+                },
+                Diagnostics::DiagnosticsManager<lsp::Diagnostic>::ManagerCallbacks{
+                    .onFileFlush = [](const std::string &uri, const std::vector<lsp::Diagnostic> &diags) {
+                        if (io ==  nullptr) {
+                            return;
+                        }
 
-                std::vector<lsp::Diagnostic> diagnostics;
+                        io->textDocumentPublishDiagnostics({
+                            .uri = lsp::DocumentUri::fileUriFromPath(uri),
+                            .diagnostics = diags
+                        });
+                    },
+                    .onComponentFlush = [](const lsp::Diagnostic &diag) {
+                        if (io ==  nullptr) {
+                            return;
+                        }
 
-                source->visitParserDiagnostics([&diagnostics](const Diagnostics::Diagnostic &diag) {
-                    diagnostics.push_back(internal_diagToLSP(diag));
-                });
+                        const lsp::MessageType msgType = internal_getMessageType(diag.severity);
+                        const std::string &msg = std::get<std::string>(diag.message);
 
-                // Publish the diagnostics to the editor
-                io->textDocumentPublishDiagnostics({
-                    .uri = lsp::DocumentUri::fileUriFromPath(source->uri), // The URI of the file
-                    .diagnostics = std::move(diagnostics)
-                });
-            };
-        }
-
-        void resetSourceDiagnostics(const std::string &uri) {
-            if (io == nullptr){
-                return;
-            }
-
-            // Publish empty diagnostics to the editor
-            io->textDocumentPublishDiagnostics({
-                .uri = lsp::DocumentUri::fileUriFromPath(uri),
-                .diagnostics = {}
-            });
-        }
-        void sendSourceDiagnosticsByURI(const std::vector<Diagnostics::Diagnostic> &diags, const std::string &uri) {
-            std::vector<lsp::Diagnostic> diagnostics;
-
-            for (const auto &diag : diags) {
-                std::cerr << "DIAG: " << diag.message << std::endl;
-                diagnostics.push_back(internal_diagToLSP(diag));
-            }
-
-            std::cerr << "PATH: " << uri << std::endl;
-            // Publish empty diagnostics to the editor
-            io->textDocumentPublishDiagnostics({
-                .uri = lsp::DocumentUri::fileUriFromPath(uri),
-                .diagnostics = std::move(diagnostics)
-            });
+                        // Show a popup notification in the editor for Errors/Warnings,
+                        // and log quietly to the Output panel for Info/Hints:
+                        if (msgType == lsp::MessageType::Error || msgType == lsp::MessageType::Warning) {
+                            io->windowShowMessage({
+                                .type = msgType,
+                                .message = msg
+                            });
+                        } else {
+                            io->windowLogMessage({
+                                .type = msgType,
+                                .message = msg
+                            });
+                        }
+                    }
+                }
+            );
         }
     }
 }

@@ -1,7 +1,9 @@
-/**
- * @brief
- * Handle diagnostic for shared contexts
-**/
+/// @file
+/// @ingroup CoreDiagnostics
+/// @brief Implements ANTLR4 syntax error and ambiguity conversion into #Diagnostics::Diagnostic reports.
+///
+/// @see antlr.hpp
+/// @see Diagnostics::Diagnostic
 
 #include "antlr.hpp"
 
@@ -54,8 +56,7 @@ namespace Diagnostics {
         }
     }
 
-    Diagnostic antlrSyntaxErrorToDiagnostic(antlr4::Recognizer *recognizer,
-        antlr4::Token *offendingSymbol, size_t line, size_t charPositionInLine,
+    Diagnostic antlrSyntaxErrorToDiagnostic(antlr4::Token *offendingSymbol, size_t line, size_t charPositionInLine,
         const std::string &msg, std::exception_ptr e) {
 
         Diagnostic error;

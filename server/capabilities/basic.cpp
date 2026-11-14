@@ -8,45 +8,37 @@
 
 #include "../base/info.hpp"
 
-// Session
-#include "../session/SessionDebouncer.hpp"
-
-// Configs
-#include "../../configs/configs.hpp"
-
-// Store
-#include "../store/DocumentStore.hpp"
+// Front-End Driver
+#include "../driver/DriverDebouncer.hpp"
 
 // Server Session Configs
 #include "docs/configs.hpp"
 
 namespace Capabilities {
-    static std::unique_ptr<Session::SessionDebouncer> debouncer = nullptr;
+    static std::unique_ptr<Driver::DriverDebouncer> debouncer = nullptr;
 
     void logStdErr (std::string_view message) {
         std::cerr << "[DBG] EVENT: " << message << std::endl;
     }
 
-    std::string configUri = "";
-    void configureProtocol(lsp::ServerEndpoint &endpoint, Session::Session &session, int &exit_code) {
+    std::string rootUri = "",
+        configUri = "";
+    void configureProtocol(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver, int &exit_code) {
         bool received_shutdown = false;
-        Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
+        // Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
 
         if (debouncer == nullptr) {
-            debouncer = std::make_unique<Session::SessionDebouncer>(session);
+            debouncer = std::make_unique<Driver::DriverDebouncer>(driver);
         }
 
         endpoint.onInitialize(
-            [&session](auto&& params) -> lsp::InitializeResult {
+            [](auto&& params) -> lsp::InitializeResult {
                 //printMessage<lsp::requests::Initialize>(params);
                 logStdErr("Initialising the connection...");
 
                 // Get the workspace's 'jug.toml' file
                 if (!params.rootUri.isNull()) {
-                    const std::string rootUri = std::string(params.rootUri.value().path());
-
-                    // Look for 'jug.toml'
-                    configUri = session.store->_joinPaths(rootUri, "jug.toml");
+                    rootUri = std::string(params.rootUri.value().path());
                 }
 
                 // Declare basic server info and capabilities
@@ -62,8 +54,7 @@ namespace Capabilities {
                         .definitionProvider = false,
                         .executeCommandProvider = lsp::ExecuteCommandOptions{
                             .commands = {
-                                "juggernyaut.server.session.trigger",
-                                "juggernyaut.server.session.rejuvenate"
+                                "juggernyaut.server.driver.trigger"
                             }
                         }
                     },
@@ -74,17 +65,12 @@ namespace Capabilities {
                 };
             }
         ).onWorkspaceExecuteCommand(
-            [&session](auto&& params) -> lsp::WorkspaceExecuteCommandResult {
+            [](auto&& params) -> lsp::WorkspaceExecuteCommandResult {
 
                 // Route the specific command
-                if (params.command == "juggernyaut.server.session.trigger") {
+                if (params.command == "juggernyaut.server.driver.trigger") {
 
                     debouncer->trigger();
-
-                    return nullptr;
-                } else if (params.command == "juggernyaut.server.session.rejuvenate") {
-
-                    Session::rejuvenate(session);
 
                     return nullptr;
                 }
@@ -93,33 +79,36 @@ namespace Capabilities {
                 throw lsp::RequestError(lsp::MessageError::InvalidParams, "Unknown command: " + params.command);
             }
         ).onInitialized(
-            [&session, &endpoint](auto&&) {
+            [&driver, &endpoint](auto&&) {
                 logStdErr("Initialising the workspace configs...");
 
-                std::thread([&session, &endpoint]() {
-                    try {
-                        if (configUri != "" && session.store->_isFileAccessible(configUri)) {
-                            // Load external configs
-                            Configs::BreakingChanges changes = Docs::updateSessionConfigs(endpoint, session, configUri);
-                            Configs::refreshSessionState(session, changes);
-
-                            // Watch file for changes
-                            Docs::registerConfigsWatcher(endpoint, session, debouncer, configUri);
-                        }
-
-                        // Allow Session runs
-                        debouncer->allowRuns = true;
-                
-                        // Optional: trigger the first debounce run now that everything is loaded
-                        debouncer->trigger();
-                
-                    } catch (const std::exception& e) {
-                        // If TOML parsing or something else fails, log it instead of crashing the server
-                        std::cerr << "Initialization Error: " << e.what() << std::endl;
-                    } catch (...) {
-                        std::cerr << "Unknown Error during initialization thread." << std::endl;
+                try {
+                    if (rootUri == "") {
+                        rootUri = driver.host.vfs->cwd();
                     }
-                }).detach();
+
+                    configUri = driver.lookupProject(rootUri);
+
+                    if (configUri != "") {
+                        // Load up the project
+                        driver.addProject(configUri);
+
+                        // Watch the file for changes (In case the file was never opened!)
+                        Docs::registerConfigsWatcher(endpoint, driver, debouncer, configUri);
+                    }
+
+                    // Allow Session runs
+                    debouncer->allowRuns = true;
+
+                    // Optional: trigger the first debounce run now that everything is loaded
+                    debouncer->trigger();
+                
+                } catch (const std::exception& e) {
+                    // If something fails, log it instead of crashing the server
+                    std::cerr << "Initialization Error: " << e.what() << std::endl;
+                } catch (...) {
+                    std::cerr << "Unknown Error during initialization thread." << std::endl;
+                }
             }
         ).onShutdown(
             [&received_shutdown]() -> lsp::ShutdownResult {
@@ -137,21 +126,25 @@ namespace Capabilities {
                 exit_code = received_shutdown ? 0 : 1;
             }
         ).onTextDocumentDidOpen(
-            [store](auto&& params) {
+            [&driver](auto&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
                 std::string sourceCode = std::move(params.textDocument.text);
 
-                // Create doc
-                store->addSource(rawUri, true);
+                // Load data
+                driver.host.vfs->updateFile(rawUri, sourceCode);
 
-                // Load doc
-                store->syncRaw(rawUri, sourceCode);
+                // Create a project/sudo-project
+                if (driver.host.vfs->filename(rawUri) != "jug.toml") {
+                    driver.addStrayFile(rawUri);
+                } else {
+                    driver.addProject(rawUri);
+                }
 
                 // Refresh the session
                 debouncer->trigger();
             }
         ).onTextDocumentDidChange(
-            [store](auto&& params) {
+            [&driver](auto&& params) {
                 // Note: If you requested Full sync in your InitializeResult, 
                 // params.contentChanges[0].text will contain the entire updated file.
                 if (!params.contentChanges.empty()) {
@@ -164,21 +157,38 @@ namespace Capabilities {
                     );
 
                     // Load doc
-                    store->syncRaw(rawUri, updatedSourceCode);
-                    store->syncStatus(rawUri, true);
+                    driver.host.vfs->updateFile(rawUri, updatedSourceCode);
+
+                    // Sync entry status!
+                    // ...?
 
                     // Refresh the session
                     debouncer->trigger();
                 }
             }
         ).onTextDocumentDidClose(
-            [store](auto&& params) {
+            [&driver](auto&& params) {
                 const std::string rawUri = std::string(params.textDocument.uri.path());
-                // Load doc
-                // TO-DO: Update content too??
-                store->syncStatus(rawUri, false);
+
+                // Reset content
+                driver.host.vfs->reloadFile(rawUri);
+
+                // Sync entry status!
+                // ...?
 
                 // Refresh the session
+                debouncer->trigger();
+            }
+        ).onWorkspaceDidChangeWatchedFiles(
+            [&driver](auto&& params) {
+                for (const auto& change : params.changes) {
+                    if (change.type == lsp::FileChangeType::Deleted) {
+                        std::string emptyStr = "";
+                        driver.host.vfs->updateFile((std::string) change.uri.path(), emptyStr);
+                    } else if (change.type == lsp::FileChangeType::Changed || change.type == lsp::FileChangeType::Created) {
+                        driver.host.vfs->reloadFile((std::string) change.uri.path());
+                    }
+                }
                 debouncer->trigger();
             }
         );
