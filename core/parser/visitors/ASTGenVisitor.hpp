@@ -110,5 +110,7 @@ namespace Parser::Visitors {
             std::any visitStat_switch(ANTLRParser::Stat_switchContext *context) override;
             std::any visitSwitch_arm(ANTLRParser::Switch_armContext *context) override;
             std::any visitStat_fall(ANTLRParser::Stat_fallContext *context) override;
+            std::any visitTypeAlias(ANTLRParser::TypeAliasContext *context) override;
+            std::any visitAbstractAlias(ANTLRParser::AbstractAliasContext *context) override;
     };
 }

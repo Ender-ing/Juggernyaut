@@ -15,6 +15,12 @@ bad_code;
 let a:int = 1,
     b:string = "MyString",
     c:int; // This has a default value!
+let array1:int[], // This is an int dynamic array!
+    array2:int[5], // This is a fixed int array!
+    array3:int[5][3], // This is a fixed 5x3 array!
+    array4:int[3][], // This is a dynamic array of fixed int arrays!
+    array5:int[][3]; // This is a fixed array of dynamic arrays!
+
 ref aRef:int = a; // (Any changed made to aRef apply to a!)
 const d:float = 0.1; // Constants can never be changed!
 func myFunc(arg1:int, ref arg2:string, const arg3:int = 1) {
@@ -77,7 +83,104 @@ func myFunc(arg1:int, ref arg2:string, const arg3:int = 1) {
             //
         }
     }
+
+    // You can use nested zones too!
+    {
+        let q:float = 1.0;
+    }
+    // q isn't accessible over here!
 }
 
+// You can appeend the export statement to any root-level defintions!
+export a;
+export b, d, myFunc;
+export const e:bool = true;
+export func myOtherFunc() -> int {
+    return 1; // Notice that you can return values!
+}
 
-// You can append
+// You can also import components from other .jug files/libraries
+import { externalFunc, ExternalType, externalVar } from "other_file.jug";
+import "other_file.jug" as otherFile;
+import { libFunc } from someLib; // You can import files from libraries specified in your project's jug.toml file!
+ref _externalVar:int = otherFile.externalVar; // This works too!
+
+// Notice that you can bind external library data/functions too!
+bind "C" func compiledLibFunc(myInt:__i32__) -> __i1__; // This is defined somewhere in a binary!
+bind "C" func compiledLibFunc2(myInt:int32) -> bool from "compiledLibFunc"(:__i32__) -> __i1__; // Notice that you can bind external functions whilst also renaming it internally and matching them to your defined types!
+// ^ Notice that you can also use any special defined-type in the function's signature as long as it has a valid casting implementation! (Notice that casting behaviour is affected by the state of the input)
+
+// [Issue] memory safety is not guaranteed when passing references to external libraries...something similar to the 'unsafe' keyword in rust in needed, with restrictions on reference passing non-unsafe variables inside binds!
+
+// Notice that you can also bind multiple components at the same time!
+bind "C" {
+    let meeow:int from "meow":__i32__; // Notice that this is a copy!
+    func meowMeow() -> bool from "meow_meow"() -> __i1__;
+}
+
+// Note that these are the internal compiler types that are planned to be exposed:
+/*
+INTEGERS (SIGNLESS)
+-------------------
+__i1__   - 1-bit integer. Used for booleans (bool) in registers/conditions.
+__i8__   - 8-bit integer. Used for int8, uint8, char8/C char, and bool in memory.
+__i16__  - 16-bit integer. Used for int16, uint16, char16 (UTF-16 / Windows wchar_t).
+__i32__  - 32-bit integer. Used for int32, uint32, char32/Unicode char, and C int.
+__i64__  - 64-bit integer. Used for int64, uint64, and 64-bit size_t / intptr_t.
+__i128__ - 128-bit integer. Used for int128 and uint128.
+__i__<N> - (iN) Arbitrary N-bit integer (e.g., i24, i256) up to 2^23 - 1 bits.
+(Note: LLVM IR has no signed/unsigned integer types or platform types like
+isize/usize/c_long; signedness is determined by instructions, and frontends
+pick i32 or i64 based on the target DataLayout.)
+
+FLOATING-POINT NUMBERS
+----------------------
+__half__      - IEEE 754 16-bit half-precision float (float16).
+__bfloat__    - 16-bit brain floating-point (bfloat16).
+__float__     - IEEE 754 32-bit single-precision float (float32).
+__double__    - IEEE 754 64-bit double-precision float (float64).
+__x86_fp80__  - 80-bit x87 extended-precision float (float80 / x86 long double).
+__fp128__     - IEEE 754 128-bit quadruple-precision float (float128).
+__ppc_fp128__ - 128-bit PowerPC double-double float.
+
+POINTERS & FUNCTIONS
+--------------------
+__ptr__                  - Opaque memory pointer (modern LLVM 15+ IR). Replaces all
+                       typed pointers (void*, T*, C strings, function pointers).
+__ptr__<N>               - (ptr addrspace(N)) Pointer in a non-default address space N (e.g., GPUs).
+__FUNC__<RET, ARGS...>   - (RET (ARGS...)) Function signature type (e.g., i32 (ptr, i64) or i32 (ptr, ...)).
+__void__                 - Represents no value; used only as a function return type.
+
+AGGREGATES
+----------
+__FIXED__<N, TYPE>     - ([N x TYPE]) Fixed-size array of N elements (e.g., [16 x i8]).
+__ABI__<...>           - ({ <type list> }) Structure with standard ABI alignment (e.g., { ptr, i64 }
+                       for slices/strings, or { float, float } for complex).
+__PACKED__<...>        - (<{ <type list> }>) Packed structure with no padding between fields.
+(Note: LLVM IR has no string, union, or enum types. Strings lower to ptr or
+{ ptr, i64 }; unions lower to [N x i8] or the largest member; enums lower to iN.)
+
+SIMD VECTORS
+------------
+__SIMD__<N, TYPE>           - (<N x TYPE>) Fixed-width SIMD vector (e.g., <4 x float>, <16 x i8>).
+__VSIMD__<N, type>          - (<vscale x N x TYPE>) Scalable SIMD vector (for ARM SVE / RISC-V RVV).
+
+OTHER BUILT-IN LLVM IR TYPES
+----------------------------
+__TARGET__<"name"> - (target("name")) Target-specific opaque extension type (e.g., SPIR-V, AMDGPU).
+
+IGNORED LLVM IR TYPES
+----------------------------
+label          - Code label for basic blocks (branch targets).
+token          - Opaque token for intrinsics and exception handling (e.g., Win32 SEH).
+metadata       - Non-runtime metadata (debug info, TBAA, optimization hints).
+*/
+
+// Though not planned yet, appropriate LLVM functions will be exposed in order to allow for seamless copy/reference casting between defined types and built-in types, in addition to other built-in type to built-in type casting operations.
+
+// Type aliasing
+type MyType = MySuperLongNameForMyType; // You can reference types using other names!
+abstract MyAbstractType = MyType; // You can reference abstract types too! You may even treat a non-abstract type as an abstract type by doing this!
+
+// Defining types!
+// ...

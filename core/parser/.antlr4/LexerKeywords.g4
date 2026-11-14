@@ -37,6 +37,12 @@ KWD_CONST
 KWD_FUNC
     : 'func'
     ;
+KWD_TYPE
+    : 'type'
+    ;
+KWD_ABSTRACT
+    : 'abstract'
+    ;
 
 // Flow
 KWD_FROM

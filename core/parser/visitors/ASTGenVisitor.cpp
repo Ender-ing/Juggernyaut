@@ -152,4 +152,6 @@ namespace Parser::Visitors {
     std::any ASTGenVisitor::visitStat_switch(ANTLRParser::Stat_switchContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitSwitch_arm(ANTLRParser::Switch_armContext *context) DEFAULT_VISIT
     std::any ASTGenVisitor::visitStat_fall(ANTLRParser::Stat_fallContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitTypeAlias(ANTLRParser::TypeAliasContext *context) DEFAULT_VISIT
+    std::any ASTGenVisitor::visitAbstractAlias(ANTLRParser::AbstractAliasContext *context) DEFAULT_VISIT
 }

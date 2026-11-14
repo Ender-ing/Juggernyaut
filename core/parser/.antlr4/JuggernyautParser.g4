@@ -64,6 +64,7 @@ root_statement
 declaration
     : decl_data
     | decl_function
+    | decl_type
     ;
 
 // Import statement
@@ -73,11 +74,11 @@ stat_import
     ;
 import_discrete
     : KWD_IMPORT
-        SYM_CURLY_BRACKET_LEFT import_list? SYM_CURLY_BRACKET_RIGHT
-        KWD_FROM import_source SYM_SEMICOLON
+        SYM_CURLY_BRACKET_LEFT list=import_list? SYM_CURLY_BRACKET_RIGHT
+        KWD_FROM source=import_source SYM_SEMICOLON
     ;
 import_encapsulate
-    : KWD_IMPORT import_source KWD_AS identifier SYM_SEMICOLON
+    : KWD_IMPORT source=import_source KWD_AS handle=identifier SYM_SEMICOLON
     ;
 import_list
     : identifier (SYM_COMMA identifier)*
@@ -99,7 +100,7 @@ stat_export
     ;
 export_discrete
     : KWD_EXPORT
-        identifier (SYM_COMMA identifier)*
+        items=identifier (SYM_COMMA items=identifier)*
         SYM_SEMICOLON
     ;
 
@@ -111,8 +112,15 @@ bind_block
     : SYM_CURLY_BRACKET_LEFT (bind_item*) SYM_CURLY_BRACKET_RIGHT
     ;
 bind_item
-    : (function_details | (data_storage data_details))
-        (KWD_FROM originalName=lit_string)?
+    : (funcDetails=function_details | (dataState=data_storage dataDetails=data_details))
+        (KWD_FROM originalName=lit_string (
+            (SYM_PARENTHESES_LEFT
+                data_details*
+            SYM_PARENTHESES_RIGHT
+            SYM_ARROW_RIGHT returnType=type_spec)
+            |
+            (SYM_COLON type=type_spec)
+        ))?
         SYM_SEMICOLON
     ;
 
@@ -185,13 +193,14 @@ data_item
     : details=data_details (SYM_EQUAL value=expr)?
     ;
 data_details
-    :  name=identifier (SYM_COLON type=type_spec)
+    :  name=identifier? (SYM_COLON type=type_spec)
     ;
 data_storage
     : KWD_LET
     | KWD_CONST
     | KWD_REF
     ;
+
 // Function declaration
 decl_function
     : details=function_details body=generic_block
@@ -201,7 +210,7 @@ function_details
         SYM_PARENTHESES_LEFT
             (function_argument (SYM_COMMA function_argument)*)?
         SYM_PARENTHESES_RIGHT
-        (SYM_ARROW_RIGHT returnType=type_spec)?
+        (SYM_ARROW_RIGHT returnState=argument_state? returnType=type_spec)?
     ;
 function_argument
     : state=argument_state? details=data_details (SYM_EQUAL defaultValue=expr)?
@@ -209,6 +218,12 @@ function_argument
 argument_state
     : KWD_CONST
     | KWD_REF
+    ;
+
+// Types
+decl_type
+    : KWD_TYPE identifier SYM_EQUAL expr SYM_SEMICOLON                          # TypeAlias
+    | KWD_ABSTRACT identifier SYM_EQUAL expr SYM_SEMICOLON                      # AbstractAlias
     ;
 
 // NOTE: from here on, no semicolons are allowed within rules
@@ -317,7 +332,9 @@ op_assign
 
 // Types
 type_spec
-    : base=identifier (SYM_SQUARE_BRACKET_LEFT dims=expr_list? SYM_SQUARE_BRACKET_RIGHT)*
+    : base=identifier
+        (SYM_LESS (internalTypes=type_spec | internalConsts=lit) (SYM_COMMA internalTypes=type_spec | internalConsts=lit)* SYM_GREATER)?
+        (SYM_SQUARE_BRACKET_LEFT dims=lit_number? SYM_SQUARE_BRACKET_RIGHT)*
     ;
 
 // Primary data
