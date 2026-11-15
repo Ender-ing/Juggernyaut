@@ -24,6 +24,7 @@ namespace Capabilities {
     static std::string rootUri = "",
         configUri = "";
     static bool received_shutdown = false;
+    static lsp::PositionEncodingKindEnum activeEncoding = lsp::PositionEncodingKind::UTF16;
     void configureProtocol(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver, int &exit_code) {
         received_shutdown = false;
 
@@ -40,10 +41,22 @@ namespace Capabilities {
                     rootUri = std::string(params.rootUri.value().path());
                 }
 
+                // Check for UTF8 support
+                activeEncoding = lsp::PositionEncodingKind::UTF16;
+                if (params.capabilities.general.has_value() &&
+                    params.capabilities.general->positionEncodings.has_value()) {
+                    for (const auto& enc : *params.capabilities.general->positionEncodings) {
+                        if (enc == lsp::PositionEncodingKind::UTF8) {
+                            activeEncoding = lsp::PositionEncodingKind::UTF8;
+                            break;
+                        }
+                    }
+                }
+
                 // Declare basic server info and capabilities
                 return lsp::InitializeResult {
                     .capabilities = {
-                        .positionEncoding = lsp::PositionEncodingKind::UTF8,
+                        .positionEncoding = activeEncoding,
                         .textDocumentSync = lsp::TextDocumentSyncOptions {
                             .openClose = true,
                             .change = lsp::TextDocumentSyncKind::Incremental,
@@ -154,22 +167,42 @@ namespace Capabilities {
                 std::vector<Data::Host::ByteEdit> edits;
                 edits.reserve(params.contentChanges.size());
 
+                // Handle UTF16 to UTF8 conversion
+                auto toByteOffset = [&](const lsp::Position& pos) -> Data::Host::FileByte {
+                    Data::Host::FileByte bytePos = file->content.lineStartByte(pos.line);
+                    if (activeEncoding == lsp::PositionEncodingKind::UTF8) {
+                        return bytePos + pos.character;
+                    }
+
+                    Data::Host::FileByte total = file->content.byteLength();
+                    Data::Host::FileByte u16 = 0;
+                    while (bytePos < total && u16 < pos.character) {
+                        std::string_view chunk = file->content.getChunk(bytePos);
+                        if (chunk.empty()) break;
+
+                        unsigned char c = static_cast<unsigned char>(chunk[0]);
+                        if (c == '\n' || c == '\r') break;
+
+                        Data::Host::FileByte charBytes =
+                            (c < 0x80) ? 1 : ((c & 0xE0) == 0xC0) ? 2 : ((c & 0xF0) == 0xE0) ? 3 : 4;
+                        Data::Host::FileByte u16Units = (charBytes == 4) ? 2 : 1;
+                        if (u16 + u16Units > pos.character) break;
+
+                        u16 += u16Units;
+                        bytePos += charBytes;
+                    }
+                    return bytePos;
+                };
+
                 // Feed changes into 'edits'
                 for (auto& change : params.contentChanges) {
                     std::visit(
                         [&](auto& changeEvent) {
                             using T = std::decay_t<decltype(changeEvent)>;
                             if constexpr (std::is_same_v<T, lsp::TextDocumentContentChangePartial>) {
-                                Data::Host::FileByte startByte =
-                                    file->content.lineStartByte(changeEvent.range.start.line) +
-                                    changeEvent.range.start.character;
-                                Data::Host::FileByte oldEndByte =
-                                    file->content.lineStartByte(changeEvent.range.end.line) +
-                                    changeEvent.range.end.character;
-
                                 edits.push_back(Data::Host::ByteEdit{
-                                    startByte,
-                                    oldEndByte,
+                                    toByteOffset(changeEvent.range.start),
+                                    toByteOffset(changeEvent.range.end),
                                     std::move(changeEvent.text)
                                 });
                             } else {
