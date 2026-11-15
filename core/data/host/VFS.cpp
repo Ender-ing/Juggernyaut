@@ -60,6 +60,7 @@ namespace Data {
 
             // Update content
             file->content.setFullContent(newContent);
+            file->pendingDeltas.clear();
             file->isValid = true;
 
             // Bump up the version
@@ -70,37 +71,23 @@ namespace Data {
 
             // Update content
             for (const ByteEdit& edit : edits) {
-                file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text);
+                file->pendingDeltas.push_back( // Keep track of changes for CST regeneration!
+                    file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text)
+                );
             }
-            file->content.compact(); // Compacting is only allowed here!
             file->isValid = true;
 
             // Bump up the version
             file->version++;
         }
         void VFS::fetchLocalFileContent(const std::string& path) {
-            const std::string canonicalUri = this->_canonical(path);
-
-            File* file;
-            // Check if the file already exists
-            auto it = this->index.find(canonicalUri);
-            if (it != this->index.end()) {
-                auto fileId = it->second;
-
-                file = this->cache[fileId - this->FILE_ID_OFFSET].get();
-
-                // Update modification time
-                if (this->trackModificationTime) {
-                    file->lastModified = this->_lastModified(canonicalUri);
-                }
-            } else {
-                file = this->addEmptyFile(canonicalUri);
-            }
+            File* file = getFilePtr(path);
 
             // Update content
             std::string newContent;
-            file->isValid = this->_readFile(canonicalUri, newContent);
+            file->isValid = this->_readFile(file->canonical, newContent);
             file->content.setFullContent(newContent);
+            file->pendingDeltas.clear();
 
             // Bump up the version
             file->version++;
