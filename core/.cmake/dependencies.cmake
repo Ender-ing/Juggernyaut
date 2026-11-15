@@ -24,7 +24,7 @@ if(NOT DEFINED TOMLPP_INCLUDE_DIR)
 endif()
 
 # tree-sitter C runtime
-set(TREE_SITTER_VERSION 0.24.7)
+set(TREE_SITTER_VERSION 0.26.11)
 set(JUG_DEP_TREE_SITTER_PATH ${JUG_DEPENDENCIES_DIR}/tree-sitter)
 if(NOT EXISTS ${JUG_DEP_TREE_SITTER_PATH}/lib/src/lib.c)
     FetchContent_Declare(
