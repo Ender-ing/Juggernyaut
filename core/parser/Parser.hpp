@@ -53,7 +53,7 @@ namespace Parser {
             const Environment *env = nullptr;
 
             void emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const;
-            void reportAntlrData(const File *file, std::string &&data) const;
+            void sendCSTDataReport(const File *file, std::string &&data) const;
 
         public:
             Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr)

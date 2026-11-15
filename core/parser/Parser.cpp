@@ -28,7 +28,7 @@ namespace Parser {
             this->hooks.onDiagnostic(diag);
         }
     }
-    void Parser::reportAntlrData(const File *file, std::string &&data) const {
+    void Parser::sendCSTDataReport(const File *file, std::string &&data) const {
         if (this->hooks.onDiagnostic == nullptr) {
             return;
         }
@@ -53,7 +53,7 @@ namespace Parser {
         }
 
         const bool reportAmbiguity = (this->env != nullptr) && this->env->debug.reportAmbiguity;
-        const bool reportANTLRData = (this->env != nullptr) && this->env->debug.reportANTLRData;
+        const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
 
         Listeners::ANTLRDiagnosticListener diagListener(
             file,
@@ -70,7 +70,7 @@ namespace Parser {
         antlr4::CommonTokenStream tokens(&lexer);
 
         tokens.fill();
-        if (reportANTLRData) {
+        if (reportCSTData) {
             std::string tokenStreamStr;
             for (const antlr4::Token *token : tokens.getTokens()) {
                 if (!tokenStreamStr.empty()) {
@@ -78,7 +78,7 @@ namespace Parser {
                 }
                 tokenStreamStr += token->toString();
             }
-            this->reportAntlrData(file, std::move(tokenStreamStr));
+            this->sendCSTDataReport(file, std::move(tokenStreamStr));
         }
 
         if (this->hooks.onLexerContextEnd != nullptr) {
@@ -124,8 +124,8 @@ namespace Parser {
             tree = parser.prog(); // Root
         }
 
-        if (reportANTLRData && tree != nullptr) {
-            this->reportAntlrData(file, tree->toStringTree(&parser));
+        if (reportCSTData && tree != nullptr) {
+            this->sendCSTDataReport(file, tree->toStringTree(&parser));
         }
 
         // [STAGE 3] AST & Import Extraction

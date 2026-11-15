@@ -34,4 +34,4 @@ export="lib.jug" # If you want to make a library, you need to specify one entry 
 # internal debug configs
 [debug]
 report-ambiguity=false
-report-antlr-data=false
+report-cst-data=false

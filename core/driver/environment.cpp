@@ -279,7 +279,7 @@ namespace Driver {
         void processDebugSection(const Diagnostics::Event &emit, const File *file, const toml::table& tbl, DebugConfigs &debugConfigs) {
             static const std::unordered_map<std::string_view, bool DebugConfigs::*> debugMapping = {
                 { "report-ambiguity", &DebugConfigs::reportAmbiguity },
-                { "report-antlr-data", &DebugConfigs::reportANTLRData }
+                { "report-cst-data", &DebugConfigs::reportCSTData }
             };
             for (const auto& [fKey, fVal] : tbl) {
                 std::string_view fk = fKey.str();
