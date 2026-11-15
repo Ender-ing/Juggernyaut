@@ -145,7 +145,8 @@
         "tamasfe.even-better-toml"
     ],
     "scripts": {
-        "build": "esbuild ./scripts/extension.ts --bundle --outfile=./scripts/extension.js --external:vscode --format=cjs --platform=node && esbuild ./scripts/extension.light.ts --bundle --outfile=./scripts/extension.light.js --external:vscode --format=cjs --platform=browser --minify",
+        "build": "esbuild ./scripts/extension.ts --bundle --outfile=./scripts/extension.js --external:vscode --format=cjs --platform=node && esbuild ./scripts/extension.light.ts --bundle --outfile=./scripts/extension.light.js --external:vscode --format=cjs --platform=browser --minify && npm run build-grammar",
+        "build-grammar": "cd ../tree-sitter-jug/ && npm i && npm run generate:vscode",
         "package:desktop": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode",
         "package:web": "vsce package --no-dependencies --baseContentUrl https://github.com/Ender-ing/juggernyaut/tree/main/extensions/VSCode --target web",
         "package:all": "npm run package:desktop && npm run package:web",
