@@ -19,23 +19,17 @@
 
 namespace Data {
     namespace Host {
-        struct FileChangeRequest {
-            bool isReload = false; // true = reloadFile(), false = updateFile()
-            std::string content = ""; // Only used when isReload == false
-        };
-
-        // 
-        struct FileChangeRequest {
-            enum class Kind { Full, Edit, Reload } kind = Kind::Full; // Default to full changes
-            std::string content = "";
-            std::vector<ByteEdit> edits; // Used for Kind::Edits
-        };
-
         // FileBuffer changes
         struct ByteEdit {
             FileByte startByte = 0;
             FileByte oldEndByte = 0;
             std::string text;
+        };
+
+        struct FileChangeRequest {
+            enum class Kind { Full, Edit, Reload } kind = Kind::Full; // Default to full changes
+            std::string content = ""; // Used for Kind::Full
+            std::vector<ByteEdit> edits; // Used for Kind::Edits
         };
 
         class JUG_DATA_API VFS {
