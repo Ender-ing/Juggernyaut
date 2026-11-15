@@ -24,6 +24,20 @@ namespace Data {
             std::string content = ""; // Only used when isReload == false
         };
 
+        // 
+        struct FileChangeRequest {
+            enum class Kind { Full, Edit, Reload } kind = Kind::Full; // Default to full changes
+            std::string content = "";
+            std::vector<ByteEdit> edits; // Used for Kind::Edits
+        };
+
+        // FileBuffer changes
+        struct ByteEdit {
+            FileByte startByte = 0;
+            FileByte oldEndByte = 0;
+            std::string text;
+        };
+
         class JUG_DATA_API VFS {
             private:
                 std::unordered_map<std::string, FileId> index; // Canonical  URI-based tracking
@@ -39,7 +53,9 @@ namespace Data {
                 bool trackModificationTime = false;
 
                 // Internal
+                File* getFilePtr(const std::string& path) ;
                 void setFileContent(const std::string& path, std::string &newContent) ;
+                void editFileContent(const std::string& path, std::vector<ByteEdit> &edits) ;
                 void fetchLocalFileContent(const std::string& path) ;
 
             protected:
@@ -59,9 +75,10 @@ namespace Data {
                 virtual ~VFS() = default;
 
                 // External Management functions (Should not be called within the front-end!)
-                // Note: newContent will be reset!
-                void updateFile(const std::string& path, std::string &newContent) ;
-                void reloadFile(const std::string& path) ;
+                // Note: newContent & edits will be moved!
+                void updateFile(const std::string& path, std::string& newContent) ; // Kind::Full
+                void editFile(const std::string& path, std::vector<ByteEdit> &edits) ; // Kind::Edit
+                void reloadFile(const std::string& path) ; // Kind::Reload
                 const std::string getURI(const FileId& id) ;
 
                 // Internal Management functions (Only called within the front-end!)

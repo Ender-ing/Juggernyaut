@@ -33,7 +33,7 @@ namespace Data {
         }
 
         // Internal
-        void VFS::setFileContent(const std::string& path, std::string &newContent) {
+        File* VFS::getFilePtr(const std::string& path) {
             const std::string canonicalUri = this->_canonical(path);
 
             File* file;
@@ -52,8 +52,26 @@ namespace Data {
                 file  = this->addEmptyFile(canonicalUri);
             }
 
+            // Return pointer
+            return file;
+        }
+        void VFS::setFileContent(const std::string& path, std::string &newContent) {
+            File* file = getFilePtr(path);
+
             // Update content
             file->content.setFullContent(newContent);
+            file->isValid = true;
+
+            // Bump up the version
+            file->version++;
+        }
+        void VFS::editFileContent(const std::string& path, std::vector<ByteEdit> &edits) {
+            File* file = getFilePtr(path);
+
+            // Update content
+            for (ByteEdit edit : edits) {
+                file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text);
+            }
             file->isValid = true;
 
             // Bump up the version
@@ -93,17 +111,27 @@ namespace Data {
            std::lock_guard<std::mutex> lock(this->pendingMtx);
             if (this->safetyCount.load(std::memory_order_acquire) > 0) {
                 // Driver is running: stage/coalesce the edit without touching `cache` or `index`
-                this->pendingRequests[path] = FileChangeRequest{false, std::move(newContent)};
+                this->pendingRequests[path] = FileChangeRequest{FileChangeRequest::Kind::Full, std::move(newContent)};
                 newContent.clear();
                 return;
             }
             this->setFileContent(path, newContent);
             newContent.clear();
         }
+        void VFS::editFile(const std::string& path, std::vector<ByteEdit> &edits) {
+           std::lock_guard<std::mutex> lock(this->pendingMtx);
+            if (this->safetyCount.load(std::memory_order_acquire) > 0) {
+                this->pendingRequests[path] = FileChangeRequest{FileChangeRequest::Kind::Edit, "", std::move(edits)};
+                edits.clear();
+                return;
+            }
+            this->editFileContent(path, edits);
+            edits.clear();
+        }
         void VFS::reloadFile(const std::string& path) {
             std::lock_guard<std::mutex> lock(this->pendingMtx);
             if (this->safetyCount.load(std::memory_order_acquire) > 0) {
-                this->pendingRequests[path] = FileChangeRequest{true, ""};
+                this->pendingRequests[path] = FileChangeRequest{FileChangeRequest::Kind::Reload, ""};
                 return;
             }
             this->fetchLocalFileContent(path);
@@ -132,10 +160,17 @@ namespace Data {
             // When opting out of safe mode, flush all queued operations!
             if (this->safetyCount.fetch_sub(1, std::memory_order_acq_rel) == 1) {
                 for (auto& [path, op] : this->pendingRequests) {
-                    if (op.isReload) {
-                        this->fetchLocalFileContent(path);
-                    } else {
-                        this->setFileContent(path, op.content);
+                    switch (op.kind) {
+                        case FileChangeRequest::Kind::Edit:
+                            this->editFileContent(path, op.edits);
+                            break;
+                        case FileChangeRequest::Kind::Reload:
+                            this->fetchLocalFileContent(path);
+                            break;
+                        case FileChangeRequest::Kind::Full:
+                            default:
+                            this->setFileContent(path, op.content);
+                            break;
                     }
                 }
                 this->pendingRequests.clear();
