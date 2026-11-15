@@ -75,7 +75,7 @@ namespace Parser {
             // Parse a single VFS file into an AST and list of ImportRequests
             ParseResult parse(const File *file) const;
 
-            // Clear shared ANTLR4 DFA caches
+            // Clear shared caches
             static void cleanup();
     };
 }

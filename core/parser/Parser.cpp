@@ -5,21 +5,12 @@
 
 #include "Parser.hpp"
 
-// ANTLR4 runtime strategies & prediction modes
-#include "atn/ParserATNSimulator.h"
-#include "atn/PredictionMode.h"
-#include "BailErrorStrategy.h"
-#include "DefaultErrorStrategy.h"
-#include "Exceptions.h"
+// tree-sitter
+#include "tree-sitter.hpp"
 
-// Internal
-#include "internal/JugLexer.hpp"
-#include "internal/JugParser.hpp"
-#include "internal/cleanup.hpp"
 
 // Listeners & Visitors
-#include "listeners/ANTLRDiagnosticListener.hpp"
-#include "visitors/ASTGenVisitor.hpp"
+// ...
 
 namespace Parser {
     void Parser::emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const {
@@ -55,30 +46,32 @@ namespace Parser {
         const bool reportAmbiguity = (this->env != nullptr) && this->env->debug.reportAmbiguity;
         const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
 
-        Listeners::ANTLRDiagnosticListener diagListener(
+        (void)reportAmbiguity;
+
+        /*Listeners::ANTLRDiagnosticListener diagListener(
             file,
             this->hooks.onDiagnostic,
             reportAmbiguity
-        );
+        );*/
 
         // [STAGE 1] ANTLR4 Lexer
-        antlr4::ANTLRInputStream input(file->content.getChunk(0));
+        /*antlr4::ANTLRInputStream input(file->content.getChunk(0));
         Internal::JugLexer lexer(&input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(&diagListener);
 
         antlr4::CommonTokenStream tokens(&lexer);
 
-        tokens.fill();
+        tokens.fill();*/
         if (reportCSTData) {
-            std::string tokenStreamStr;
+            /*std::string tokenStreamStr;
             for (const antlr4::Token *token : tokens.getTokens()) {
                 if (!tokenStreamStr.empty()) {
                     tokenStreamStr += '\n';
                 }
                 tokenStreamStr += token->toString();
-            }
-            this->sendCSTDataReport(file, std::move(tokenStreamStr));
+            }*/
+            //this->sendCSTDataReport(file, std::move(tokenStreamStr));
         }
 
         if (this->hooks.onLexerContextEnd != nullptr) {
@@ -87,12 +80,12 @@ namespace Parser {
 
         // Respect early termination
         if (this->configs.terminateAfterLexer) {
-            result.hasSyntaxErrors = diagListener.hasErrors();
+            result.hasSyntaxErrors = false; //diagListener.hasErrors();
             return result;
         }
 
         // [STAGE 2] Parser (Fast SLL -> Slow LL Fallback)
-        Internal::JugParser parser(&tokens);
+        /*Internal::JugParser parser(&tokens);
         parser.removeErrorListeners();
 
         auto *interpreter = parser.getInterpreter<antlr4::atn::ParserATNSimulator>();
@@ -122,19 +115,23 @@ namespace Parser {
             parser.addErrorListener(&diagListener);
 
             tree = parser.prog(); // Root
-        }
+        }*/
 
-        if (reportCSTData && tree != nullptr) {
-            this->sendCSTDataReport(file, tree->toStringTree(&parser));
+        if (reportCSTData) { //&& tree != nullptr) {
+            //this->sendCSTDataReport(file, tree->toStringTree(&parser));
         }
 
         // [STAGE 3] AST & Import Extraction
-        if (tree != nullptr) {
+        /*if (tree != nullptr) {
             Visitors::ASTGenVisitor visitor(file, this->hooks.onDiagnostic, result);
             visitor.visit(tree);
-        }
+        }*/
 
-        result.hasSyntaxErrors = diagListener.hasErrors();
+        result.hasSyntaxErrors = false;//diagListener.hasErrors();
+
+        // TMP
+        Diagnostics::Diagnostic diag = {.message = "Meow!", .severity = Diagnostics::Severity::Warning};
+        this->emitDiagnostic(file, diag);
 
         if (this->hooks.onParserContextEnd != nullptr) {
             this->hooks.onParserContextEnd(file);
@@ -144,6 +141,6 @@ namespace Parser {
     }
 
     void Parser::cleanup() {
-        Internal::flushAntlrCache(); // ...maybe this isn't worth it?
+        // Internal::flushAntlrCache(); // ...maybe this isn't worth it?
     }
 }

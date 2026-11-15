@@ -125,22 +125,6 @@ int main(int argc, const char *argv[]) {
     }
     // sourceVisits; // THIS IS OUT OF SYNC! 
 
-    // Debug action
-    /*if (Base::InitialConfigs::Debug::Parser::activateAntlrSyntaxTest) {
-        session.hooks.parser.onANTLRTokenDetected = [](const uint8_t &stage, const std::string &tokenText) {
-            if (stage == 2) {
-                REPORT(tokenText, "\n");
-            } else if (stage == 1) {
-                REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "tokens: \n");
-            } else if (stage == 3) {
-                REPORT(Console::END_REPORT);
-            }
-        };
-        session.hooks.parser.onANTLRTreeGenerated = [](const std::string &treeText) {
-            REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "parse tree: \n", treeText, Console::END_REPORT);
-        };
-    }*/
-
     // Check for requested termination
     if (Base::InitialConfigs::Technical::terminateAfterActions) {
         // End the program

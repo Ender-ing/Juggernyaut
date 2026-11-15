@@ -112,21 +112,6 @@ namespace Base {
                     ACTION_PROGRESS;
                 }
             ),
-            DEFINE_ACTION(
-                "dbg-antlr", "debug-antlr-syntax",
-                "Print the parser's ANTLR4 tokens list and initial ANTLR4 tree.",
-                {},
-                {
-                    // Enable the test
-                    InitialConfigs::Debug::Parser::activateAntlrSyntaxTest = true;
-
-                    // Report status
-                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "enabled the ANTLR4 parser print syntax test!",
-                        Console::END_REPORT);
-
-                    ACTION_PROGRESS;
-                }
-            ),
         };
 
         // The help menu!

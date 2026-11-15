@@ -21,15 +21,8 @@
 
 /// @defgroup CoreDiagnostics Core Diagnostics
 /// @ingroup Core
-/// @brief Structured diagnostic reporting, ANTLR4/AST error conversion, and lifecycle management.
+/// @brief Structured diagnostic reporting, CST/AST error conversion, and lifecycle management.
 ///
-/// ```mermaid
-/// flowchart LR
-///     ANTLR["ANTLR4 Lexer / Parser"] -->|antlr.hpp| Diag["Diagnostics::Diagnostic"]
-///     AST["AST Builders / Visitors"] -->|astGen.hpp| Diag
-///     Diag -->|Driver Hooks| Mgr["Diagnostics::DiagnosticsManager"]
-///     Mgr -->|onFileFlush / onComponentFlush| Consumer["CLI / LSP Server"]
-/// ```
 /// @{
 
 /// @brief Declares a new #Diagnostics::Diagnostic variable and populates its severity, numeric code, and formatted message.
@@ -148,7 +141,6 @@ namespace Diagnostics {
     /// @see Range
     /// @see Severity
     /// @see DiagnosticsManager
-    /// @see antlrSyntaxErrorToDiagnostic
     /// @see getGenTokenDiagnostic
     struct Diagnostic {
         // Source info
