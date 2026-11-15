@@ -32,6 +32,7 @@ else()
                 -P "${JUG_CMAKE_DIR}/LSP/patches/apply.cmake"
             )
     endif()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(lsp)
     ignore_external_directory_warnings("${lsp_BINARY_DIR}")
 endif()

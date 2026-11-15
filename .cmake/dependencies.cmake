@@ -213,6 +213,7 @@ if(DEFINED NEED_FMT_LIB)
                 SYSTEM)
         endif()
     endif()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(fmt)
 
     if(TARGET fmt)
