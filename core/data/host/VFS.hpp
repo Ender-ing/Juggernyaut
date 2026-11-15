@@ -8,6 +8,8 @@
 #include "common/headers.hpp"
 #include "../dynamic.hpp" // JUG_DATA_API
 
+#include "File.hpp"
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4251) // Suppress DLL interface warning for STL types
@@ -17,21 +19,6 @@
 
 namespace Data {
     namespace Host {
-        using FileId = uint32_t;
-        using FileVersion = uint32_t;
-        using Timestamp = uint64_t;
-
-        struct File {
-            FileId id = 0;
-            std::string canonical = "";
-            std::string content = ""; // Can store either valid content, or error messages! (Depends on the value of 'isValid')
-            FileVersion version = 0;
-            // bool isLoaded = false;
-            bool isValid = false;
-            Timestamp lastModified = 0; // Needed for disk-caching in the future!
-        };
-        using FilePtr = std::unique_ptr<File>;
-
         struct FileChangeRequest {
             bool isReload = false; // true = reloadFile(), false = updateFile()
             std::string content = ""; // Only used when isReload == false

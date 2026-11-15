@@ -53,8 +53,7 @@ namespace Data {
             }
 
             // Update content
-            file->content = std::move(newContent);
-            newContent.clear(); // For safety!
+            file->content.setFullContent(newContent);
             file->isValid = true;
 
             // Bump up the version
@@ -80,7 +79,9 @@ namespace Data {
             }
 
             // Update content
-            file->isValid = this->_readFile(canonicalUri, file->content);
+            std::string newContent;
+            file->isValid = this->_readFile(canonicalUri, newContent);
+            file->content.setFullContent(newContent);
 
             // Bump up the version
             file->version++;
@@ -160,7 +161,9 @@ namespace Data {
 
                 // Request and load the file!
                 // Diagnostic generation is handled by third parties!
-                file->isValid = this->_readFile(canonicalUri, file->content);
+                std::string newContent;
+                file->isValid = this->_readFile(canonicalUri, newContent);
+                file->content.setFullContent(newContent);
 
                 // Bump up the version
                 file->version++;

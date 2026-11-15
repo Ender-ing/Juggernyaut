@@ -62,7 +62,7 @@ namespace Parser {
         );
 
         // [STAGE 1] ANTLR4 Lexer
-        antlr4::ANTLRInputStream input(file->content);
+        antlr4::ANTLRInputStream input(file->content.getChunk(0));
         Internal::JugLexer lexer(&input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(&diagListener);
