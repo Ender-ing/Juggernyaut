@@ -40,6 +40,9 @@ include(${JUG_CORE_CMAKE_DIR}/dependencies.cmake)
 # CMake functions & macros
 include(${JUG_CMAKE_DIR}/shared.cmake)
 
+# Generate tree-sitter parser
+include(${JUG_CORE_CMAKE_DIR}/tree-sitter-gen.cmake)
+
 # Generate Core libraries
 include(${JUG_CORE_CMAKE_DIR}/libraries.cmake)
 
