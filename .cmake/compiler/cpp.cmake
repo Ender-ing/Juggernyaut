@@ -87,7 +87,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     add_non_debug_c_cxx_flag("-DNDEBUG")                    # Disable standard assert() checks in release code [matches MSVC /DNDEBUG]
     add_non_debug_c_cxx_flag("-ffunction-sections")         # Place each function into its own section for linker dead-code stripping [matches MSVC /Gy]
     add_non_debug_c_cxx_flag("-fdata-sections")             # Place each global/static variable into its own section for linker dead-data stripping [matches MSVC /Gw]
-    add_non_debug_c_cxx_flag("-fmerge-all-constants")       # Merge identical constants and read-only arrays across translation units [matches MSVC /GF string/constant pooling]
+    add_non_debug_c_cxx_flag("-fmerge-constants")           # Merge identical string literals and constants across translation units without breaking distinct object addresses [matches MSVC /GF string pooling]
 
     # Linux-specific compile optimizations (not supported on macOS Mach-O)
     if(NOT APPLE)
@@ -123,7 +123,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_non_debug_c_cxx_flag("/Oi")                         # Generate intrinsic functions (replaces function calls with inline CPU instructions)
     add_non_debug_c_cxx_flag("/Ot")                         # Favor fast machine code over small machine code
     add_non_debug_c_cxx_flag("/Ob2")                        # Aggressive function inlining (inline any suitable function)
-    add_non_debug_c_cxx_flag("/GF")                         # Enable read-only string pooling [matches GCC/Clang -fmerge-all-constants]
+    add_non_debug_c_cxx_flag("/GF")                         # Enable read-only string pooling [matches GCC/Clang -fmerge-constants]
     add_non_debug_c_cxx_flag("/Gw")                         # Package global data in individual COMDAT sections for linker stripping [matches GCC/Clang -fdata-sections]
     add_non_debug_c_cxx_flag("/Gy")                         # Package functions in individual COMDAT sections for linker stripping/folding [matches GCC/Clang -ffunction-sections]
     add_non_debug_c_cxx_flag("/Zc:inline")                  # Remove unreferenced inline/internal-linkage functions & data before emitting .obj (shrinks .obj and speeds up linking)
