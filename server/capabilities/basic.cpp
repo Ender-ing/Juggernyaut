@@ -43,10 +43,10 @@ namespace Capabilities {
                 // Declare basic server info and capabilities
                 return lsp::InitializeResult {
                     .capabilities = {
-                        .positionEncoding = lsp::PositionEncodingKind::UTF16,
+                        .positionEncoding = lsp::PositionEncodingKind::UTF8,
                         .textDocumentSync = lsp::TextDocumentSyncOptions {
                             .openClose = true,
-                            .change = lsp::TextDocumentSyncKind::Full,
+                            .change = lsp::TextDocumentSyncKind::Incremental,
                             .save = true
                         },
                         .hoverProvider = false,
@@ -144,26 +144,53 @@ namespace Capabilities {
             }
         ).onTextDocumentDidChange(
             [&driver](auto&& params) {
-                // Note: If you requested Full sync in your InitializeResult, 
-                // params.contentChanges[0].text will contain the entire updated file.
-                if (!params.contentChanges.empty()) {
-                    const std::string rawUri = std::string(params.textDocument.uri.path());
-                    std::string updatedSourceCode = std::visit(
-                        [](auto& changeEvent) {
-                            return std::move(changeEvent.text);
-                        },
-                        params.contentChanges[0]
-                    );
-
-                    // Load doc
-                    driver.host.vfs->updateFile(rawUri, updatedSourceCode);
-
-                    // Sync entry status!
-                    // ...?
-
-                    // Refresh the session
-                    debouncer->trigger();
+                if (params.contentChanges.empty()) {
+                    return;
                 }
+
+                // Prepare for edits conversion
+                const std::string rawUri = std::string(params.textDocument.uri.path());
+                const Data::Host::File* file = driver.host.vfs->readFile(rawUri);
+                std::vector<Data::Host::ByteEdit> edits;
+                edits.reserve(params.contentChanges.size());
+
+                // Feed changes into 'edits'
+                for (auto& change : params.contentChanges) {
+                    std::visit(
+                        [&](auto& changeEvent) {
+                            using T = std::decay_t<decltype(changeEvent)>;
+                            if constexpr (std::is_same_v<T, lsp::TextDocumentContentChangePartial>) {
+                                Data::Host::FileByte startByte =
+                                    file->content.lineStartByte(changeEvent.range.start.line) +
+                                    changeEvent.range.start.character;
+                                Data::Host::FileByte oldEndByte =
+                                    file->content.lineStartByte(changeEvent.range.end.line) +
+                                    changeEvent.range.end.character;
+
+                                edits.push_back(Data::Host::ByteEdit{
+                                    startByte,
+                                    oldEndByte,
+                                    std::move(changeEvent.text)
+                                });
+                            } else {
+                                edits.clear();
+                                driver.host.vfs->updateFile(rawUri, changeEvent.text);
+                            }
+                        },
+                        change
+                    );
+                }
+
+                // Apply edits
+                if (!edits.empty()) {
+                    driver.host.vfs->editFile(rawUri, edits);
+                }
+
+                // Sync entry status!
+                // ...?
+
+                // Refresh the session
+                debouncer->trigger();
             }
         ).onTextDocumentDidClose(
             [&driver](auto&& params) {
