@@ -121,7 +121,18 @@ namespace Data {
         void VFS::editFile(const std::string& path, std::vector<ByteEdit> &edits) {
            std::lock_guard<std::mutex> lock(this->pendingMtx);
             if (this->safetyCount.load(std::memory_order_acquire) > 0) {
-                this->pendingRequests[path] = FileChangeRequest{FileChangeRequest::Kind::Edit, "", std::move(edits)};
+                if (this->pendingRequests.contains(path)) {
+                    // Extend existing edits
+                    this->pendingRequests[path].edits.reserve(this->pendingRequests[path].edits.size() + edits.size()); 
+                    this->pendingRequests[path].edits.insert(
+                        this->pendingRequests[path].edits.end(),
+                        std::make_move_iterator(edits.begin()),
+                        std::make_move_iterator(edits.end())
+                    );
+                } else {
+                    // Add edits request
+                    this->pendingRequests[path] = FileChangeRequest{FileChangeRequest::Kind::Edit, "", std::move(edits)};
+                }
                 edits.clear();
                 return;
             }
