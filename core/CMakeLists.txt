@@ -24,7 +24,6 @@ info("[START] Configuring Juggernyaut Core...")
 set(CMAKE_MODULE_PATH
     # CMake files folder
     ${JUG_CMAKE_DIR}
-    ${JUG_CMAKE_DIR}/ANTLR4
     ${JUG_CORE_CMAKE_DIR}
     # Build folder
     ${CMAKE_BINARY_DIR}
@@ -32,19 +31,14 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
 )
 
-# ANTLR4 files generation configuration
-set(JUG_ANTLR4_LEXER_FILES ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/Lexer*.g4)
-set(JUG_ANTLR4_LEXER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautLexer.g4)
-set(JUG_ANTLR4_PARSER_PATH ${JUG_CORE_SOURCE_DIR}/parser/.antlr4/JuggernyautParser.g4)
+# tree-sitter generated files
+set(JUG_TS_GRAMMAR_DIR ${JUG_CORE_SOURCE_DIR}/../extensions/tree-sitter-jug)
 
 # Manage dependencies
 include(${JUG_CORE_CMAKE_DIR}/dependencies.cmake)
 
 # CMake functions & macros
 include(${JUG_CMAKE_DIR}/shared.cmake)
-
-# Generate ANTLR4
-include(${JUG_CORE_CMAKE_DIR}/ANTLR4-gen.cmake)
 
 # Generate Core libraries
 include(${JUG_CORE_CMAKE_DIR}/libraries.cmake)

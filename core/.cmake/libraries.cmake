@@ -13,8 +13,8 @@ attach_manifest_data(JuggernyautDiagnosticsLibrary ${JUG_CORE_MANIFEST_FILE} TRU
 add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
 # Dependencies
 jug_common(JuggernyautDiagnosticsLibrary)
-add_dependencies(JuggernyautDiagnosticsLibrary antlr4_shared JugGlobalDiagnostics)
-target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC JugGlobalDiagnostics antlr4_shared)
+add_dependencies(JuggernyautDiagnosticsLibrary JugGlobalDiagnostics)
+target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC JugGlobalDiagnostics)
 
 # Create a library from /data
 add_library(JuggernyautDataLibrary SHARED)
@@ -32,8 +32,8 @@ target_link_libraries(JuggernyautDataLibrary PUBLIC JugGlobalDiagnostics)
 
 # Create a library from /parser
 add_library(JuggernyautParserLibrary SHARED
-    ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS} # ANTLR4
-    ${ANTLR_JuggernyautGrammarParser_CXX_OUTPUTS} # ANTLR4
+    ${JUG_DEP_TREE_SITTER_PATH}/lib/src/lib.c # tree sitter
+    ${JUG_TS_GRAMMAR_DIR}/src/parser.c # tree sitter (generated parser)
 )
 target_sources_search(JuggernyautParserLibrary ${JUG_CORE_SOURCE_DIR}/parser/*.cpp TRUE)
 # Expose library exports
@@ -44,24 +44,32 @@ attach_manifest_data(JuggernyautParserLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 add_internal_target_cxx_flags(JuggernyautParserLibrary TRUE)
 # Dependencies
 jug_common(JuggernyautParserLibrary)
-add_dependencies(JuggernyautParserLibrary antlr4_shared JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
-target_link_libraries(JuggernyautParserLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary antlr4_shared)
+add_dependencies(JuggernyautParserLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautTreeSitterGen)
+target_link_libraries(JuggernyautParserLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
+# tree-sitter && cpp-tree-sitter paths
+target_include_directories(JuggernyautParserLibrary SYSTEM PRIVATE
+    ${JUG_DEP_TREE_SITTER_PATH}/lib/include
+    ${JUG_DEP_TREE_SITTER_PATH}/lib/src
+    ${JUG_DEP_CPP_TREE_SITTER_PATH}/include
+    ${JUG_TS_GRAMMAR_DIR}/src
+)
+
 # Handle known issues
 if(MSVC)
     # 4275: non-exported base class
     # 4251: non-exported member variable
     target_compile_options(JuggernyautParserLibrary PRIVATE /wd4275 /wd4251)
 endif()
-# Ignore ANTLR4 warnings
+# Ignore warnings
 if(MSVC)
-    set(_antlr_gen_suppress_flag "/W0")
+    set(_ts_gen_suppress_flag "/W0")
 else()
-    set(_antlr_gen_suppress_flag "-w")
+    set(_ts_gen_suppress_flag "-w")
 endif()
 set_source_files_properties(
-    ${ANTLR_JuggernyautGrammarLexer_CXX_OUTPUTS}
-    ${ANTLR_JuggernyautGrammarParser_CXX_OUTPUTS}
-    PROPERTIES COMPILE_OPTIONS "${_antlr_gen_suppress_flag}"
+    ${JUG_DEP_TREE_SITTER_PATH}/lib/src/lib.c
+    ${JUG_TS_GRAMMAR_DIR}/src/parser.c
+    PROPERTIES COMPILE_OPTIONS "${_ts_gen_suppress_flag}"
 )
 
 # Create a library from /session
