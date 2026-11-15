@@ -43,7 +43,7 @@ set(JUG_DEP_CPP_TREE_SITTER_PATH ${JUG_DEPENDENCIES_DIR}/cpp-tree-sitter)
 if(NOT EXISTS ${JUG_DEP_CPP_TREE_SITTER_PATH}/include/cpp-tree-sitter.h)
     FetchContent_Declare(
         cpp_tree_sitter_src
-        GIT_REPOSITORY https://github.com/nwjlyons/cpp-tree-sitter.git
+        GIT_REPOSITORY https://github.com/nsumner/cpp-tree-sitter.git
         GIT_TAG main
         GIT_SHALLOW TRUE
         SOURCE_DIR ${JUG_DEP_CPP_TREE_SITTER_PATH}
