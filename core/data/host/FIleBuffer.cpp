@@ -16,12 +16,12 @@ namespace Data {
             this->lineStarts.clear();
             this->lineStarts.push_back(0);
 
-            uint32_t logicalOffset = 0;
+            FileByte logicalOffset = 0;
             for (const auto& p : this->pieces) { // You must read valid ranges only!
                 std::string_view view(this->buffer.data() + p.offset, p.length); // Read the piece's content
                 for (size_t i = 0; i < view.size(); ++i) {
                     if (view[i] == '\n') { // Check for new lines
-                        this->lineStarts.push_back(logicalOffset + static_cast<uint32_t>(i) + 1);
+                        this->lineStarts.push_back(logicalOffset + static_cast<FileByte>(i) + 1);
                     }
                 }
                 logicalOffset += p.length;
@@ -33,7 +33,7 @@ namespace Data {
             this->buffer = std::move(content);
             content.clear();
             this->pieces.clear();
-            this->totalBytes = static_cast<uint32_t>(buffer.size());
+            this->totalBytes = static_cast<FileByte>(buffer.size());
 
             if (this->totalBytes > 0) {
                 this->pieces.push_back({0, this->totalBytes});
@@ -45,14 +45,14 @@ namespace Data {
         }
 
         // Raw data interactions
-        TextPoint FileBuffer::pointAtByte(uint32_t byteOffset) const noexcept {
+        TextPoint FileBuffer::pointAtByte(FileByte byteOffset) const noexcept {
             if (byteOffset >= this->totalBytes) {
-                uint32_t lastLine = static_cast<uint32_t>(this->lineStarts.size() - 1);
+                FileByte lastLine = static_cast<FileByte>(this->lineStarts.size() - 1);
                 return {lastLine, this->totalBytes - this->lineStarts[lastLine]}; // Default to the last line
             }
 
             auto it = std::upper_bound(this->lineStarts.begin(), this->lineStarts.end(), byteOffset);
-            uint32_t line = static_cast<uint32_t>(std::distance(this->lineStarts.begin(), it) - 1);
+            FileByte line = static_cast<FileByte>(std::distance(this->lineStarts.begin(), it) - 1);
             return {line, byteOffset - this->lineStarts[line]};
         }
         std::string_view FileBuffer::getChunk(FileByte byteIndex) const {
@@ -60,12 +60,13 @@ namespace Data {
                 return {};
             }
 
-            // [!]
-
-            uint32_t curr = 0;
+            FileByte curr = 0;
             for (const auto& p : this->pieces) {
+                // Check if byteIndex falls inside [curr, curr + p.length)
                 if (byteIndex < curr + p.length) {
-                    uint32_t innerOffset = byteIndex - curr;
+                    FileByte innerOffset = byteIndex - curr; // piece-relative offset
+
+                    // Return the piece's content, starting from byteIndex!
                     return std::string_view(
                         this->buffer.data() + p.offset + innerOffset,
                         p.length - innerOffset
@@ -76,8 +77,114 @@ namespace Data {
 
             return {};
         }
-        void FileBuffer::applyEdit(FileByte startByte, FileByte oldEndByte, const std::string &insert) {
-            // ...
+        EditDelta FileBuffer::applyEdit(FileByte startByte, FileByte oldEndByte, const std::string &insert) { // Don't touch this pls TT
+            // Make sure edits remain within [0, this->totalBytes]
+            startByte = std::min(startByte, this->totalBytes);
+            oldEndByte = std::clamp(oldEndByte, startByte, this->totalBytes);
+
+            // Get line & column info
+            TextPoint startPoint = pointAtByte(startByte);
+            TextPoint oldEndPoint = pointAtByte(oldEndByte);
+
+            // Calculate newEndByte
+            FileByte insertLen = static_cast<FileByte>(insert.size());
+            FileByte newEndByte = startByte + insertLen;
+
+            // Compute newEndPoint and collect line breaks within insert
+            TextPoint newEndPoint = startPoint;
+            std::vector<FileByte> insertLineStarts;
+            for (FileByte i = 0; i < insertLen; ++i) {
+                if (insert[i] == '\n') {
+                    newEndPoint.line++;
+                    newEndPoint.column = 0;
+                    insertLineStarts.push_back(startByte + i + 1);
+                } else {
+                    newEndPoint.column++;
+                }
+            }
+
+            // Append inserted bytes to the buffer
+            FileByte appendOffset = static_cast<FileByte>(buffer.size());
+            buffer.append(insert);
+            Piece newPiece{appendOffset, insertLen};
+
+            // Split and splice piece descriptors
+            std::vector<Piece> nextPieces;
+            nextPieces.reserve(this->pieces.size() + 2);
+
+            FileByte curr = 0;
+            bool isInserted = false;
+
+            auto pushNewPiece = [&]() {
+                if (isInserted) {
+                    return;
+                }
+                isInserted = true;
+                if (newPiece.length == 0) {
+                    return;
+                }
+
+                // Coalesce contiguous appends into the trailing piece
+                if (!nextPieces.empty() &&
+                    nextPieces.back().offset + nextPieces.back().length == newPiece.offset) {
+                    nextPieces.back().length += newPiece.length;
+                } else {
+                    nextPieces.push_back(newPiece);
+                }
+            };
+            for (const auto& p : this->pieces) {
+                uint32_t pStart = curr;
+                uint32_t pEnd = curr + p.length;
+
+                if (pEnd <= startByte) {
+                    nextPieces.push_back(p);
+                } else if (pStart >= oldEndByte) {
+                    pushNewPiece();
+                    nextPieces.push_back(p);
+                } else {
+                    if (pStart < startByte) {
+                        nextPieces.push_back({p.offset, startByte - pStart});
+                    }
+                    pushNewPiece();
+                    if (pEnd > oldEndByte) {
+                        uint32_t skip = oldEndByte - pStart;
+                        nextPieces.push_back({p.offset + skip, pEnd - oldEndByte});
+                    }
+                }
+                curr = pEnd;
+            }
+            pushNewPiece();
+
+            // Replace pieces by a cleaner version
+            this->pieces = std::move(nextPieces);
+            int64_t byteDelta = static_cast<int64_t>(newEndByte) - static_cast<int64_t>(oldEndByte);
+            this->totalBytes = static_cast<uint32_t>(static_cast<int64_t>(this->totalBytes) + byteDelta);
+
+            // Patch lineStarts table
+            // Remove line starts that fell inside the deleted range
+            auto eraseBegin = this->lineStarts.begin() + startPoint.line + 1;
+            auto eraseEnd = this->lineStarts.begin() + oldEndPoint.line + 1;
+            auto insertPos = this->lineStarts.erase(eraseBegin, eraseEnd);
+            // Splice in new line starts collected from `inserted` in Step 1
+            insertPos = this->lineStarts.insert(
+                insertPos,
+                insertLineStarts.begin(),
+                insertLineStarts.end()
+            );
+
+            // Shift every surviving line after the edit by `byte_delta`
+            for (auto it = insertPos + insertLineStarts.size(); it != lineStarts.end(); ++it) {
+                *it = static_cast<uint32_t>(static_cast<int64_t>(*it) + byteDelta);
+            }
+
+            return EditDelta{
+                startByte,
+                oldEndByte,
+                newEndByte,
+                startPoint,
+                oldEndPoint,
+                newEndPoint
+            };
         }
 
         // Technical
@@ -105,13 +212,13 @@ namespace Data {
         }
 
         // General queries
-        uint32_t FileBuffer::byteLength() const noexcept {
+        FileByte FileBuffer::byteLength() const noexcept {
             return this->totalBytes;
         }
-        uint32_t FileBuffer::lineCount() const noexcept {
-            return static_cast<uint32_t>(this->lineStarts.size());
+        FileByte FileBuffer::lineCount() const noexcept {
+            return static_cast<FileByte>(this->lineStarts.size());
         }
-        uint32_t FileBuffer::lineStartByte(uint32_t line) const noexcept {
+        FileByte FileBuffer::lineStartByte(FileByte line) const noexcept {
             if (line >= this->lineStarts.size()) {
                 return this->totalBytes; // Default to the end of the file
             }
@@ -119,110 +226,3 @@ namespace Data {
         }
     }
 }
-
-
-
-/*
-        // Pure byte-range delta mutation
-        EditDelta applyEdit(uint32_t start_byte, uint32_t old_end_byte, std::string_view inserted) {
-            start_byte = std::min(start_byte, total_bytes);
-            old_end_byte = std::clamp(old_end_byte, start_byte, total_bytes);
-
-            TextPoint start_point = pointAtByte(start_byte);
-            TextPoint old_end_point = pointAtByte(old_end_byte);
-
-            uint32_t inserted_len = static_cast<uint32_t>(inserted.size());
-            uint32_t new_end_byte = start_byte + inserted_len;
-
-            // 1. Compute new_end_point and collect line breaks within inserted text
-            TextPoint new_end_point = start_point;
-            std::vector<uint32_t> inserted_line_starts;
-            for (uint32_t i = 0; i < inserted_len; ++i) {
-                if (inserted[i] == '\n') {
-                    new_end_point.line++;
-                    new_end_point.column = 0;
-                    inserted_line_starts.push_back(start_byte + i + 1);
-                } else {
-                    new_end_point.column++;
-                }
-            }
-
-            // 2. Append inserted bytes to the single append-only buffer
-            uint32_t append_offset = static_cast<uint32_t>(buffer.size());
-            buffer.append(inserted);
-            Piece new_piece{append_offset, inserted_len};
-
-            // 3. Split and splice piece descriptors
-            std::vector<Piece> next_pieces;
-            next_pieces.reserve(pieces.size() + 2);
-
-            uint32_t curr = 0;
-            bool is_inserted = false;
-
-            auto push_new_piece = [&]() {
-                if (is_inserted) return;
-                is_inserted = true;
-                if (new_piece.length == 0) return;
-
-                // Coalesce contiguous appends into the trailing piece
-                if (!next_pieces.empty() &&
-                    next_pieces.back().offset + next_pieces.back().length == new_piece.offset) {
-                    next_pieces.back().length += new_piece.length;
-                } else {
-                    next_pieces.push_back(new_piece);
-                }
-            };
-
-            for (const auto& p : pieces) {
-                uint32_t p_start = curr;
-                uint32_t p_end = curr + p.length;
-
-                if (p_end <= start_byte) {
-                    next_pieces.push_back(p);
-                } else if (p_start >= old_end_byte) {
-                    push_new_piece();
-                    next_pieces.push_back(p);
-                } else {
-                    if (p_start < start_byte) {
-                        next_pieces.push_back({p.offset, start_byte - p_start});
-                    }
-                    push_new_piece();
-                    if (p_end > old_end_byte) {
-                        uint32_t skip = old_end_byte - p_start;
-                        next_pieces.push_back({p.offset + skip, p_end - old_end_byte});
-                    }
-                }
-                curr = p_end;
-            }
-            push_new_piece();
-
-            pieces = std::move(next_pieces);
-            int64_t byte_delta = static_cast<int64_t>(new_end_byte) - static_cast<int64_t>(old_end_byte);
-            total_bytes = static_cast<uint32_t>(static_cast<int64_t>(total_bytes) + byte_delta);
-
-            // 4. Patch line_starts table
-            auto erase_begin = line_starts.begin() + start_point.line + 1;
-            auto erase_end = line_starts.begin() + old_end_point.line + 1;
-            auto insert_pos = line_starts.erase(erase_begin, erase_end);
-            insert_pos = line_starts.insert(
-                insert_pos,
-                inserted_line_starts.begin(),
-                inserted_line_starts.end()
-            );
-
-            for (auto it = insert_pos + inserted_line_starts.size(); it != line_starts.end(); ++it) {
-                *it = static_cast<uint32_t>(static_cast<int64_t>(*it) + byte_delta);
-            }
-
-            return EditDelta{
-                start_byte,
-                old_end_byte,
-                new_end_byte,
-                start_point,
-                old_end_point,
-                new_end_point
-            };
-        }
-    };
-
-*/

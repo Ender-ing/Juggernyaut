@@ -20,8 +20,8 @@ namespace Data {
         using FileByte = uint32_t;
 
         struct TextPoint {
-            uint32_t line = 0;   // 0-based line index
-            uint32_t column = 0; // 0-based UTF-8 byte offset from start of line
+            FileByte line = 0;   // 0-based line index
+            FileByte column = 0; // 0-based UTF-8 byte offset from start of line
         };
 
         struct EditDelta {
@@ -40,14 +40,14 @@ namespace Data {
             private:
                 // New buffer edit location info
                 struct Piece {
-                    uint32_t offset; // relative to the start of the buffer
-                    uint32_t length; // edit's content length
+                    FileByte offset; // relative to the start of the buffer
+                    FileByte length; // edit's content length
                 };
 
                 std::string buffer;
                 std::vector<Piece> pieces;
-                std::vector<uint32_t> lineStarts{0};
-                uint32_t totalBytes = 0;
+                std::vector<FileByte> lineStarts{0};
+                FileByte totalBytes = 0;
 
                 std::string data; // REMOVE LATER
 
@@ -63,18 +63,18 @@ namespace Data {
                 void setFullContent(std::string &&content) ;
 
                 // Raw data interactions
-                TextPoint pointAtByte(uint32_t byte_offset) const noexcept ;
+                TextPoint pointAtByte(FileByte byteOffset) const noexcept ;
                 std::string_view getChunk(FileByte byteIndex) const ;
-                void applyEdit(FileByte startByte, FileByte oldEndByte, const std::string &insert) ;
+                EditDelta applyEdit(FileByte startByte, FileByte oldEndByte, const std::string &insert) ;
 
                 // Technical
                 std::string toString() const;
                 void compact() ; // Cleans up the internal state!
 
                 // General queries
-                uint32_t byteLength() const noexcept ;
-                uint32_t lineCount() const noexcept ;
-                uint32_t lineStartByte(uint32_t line) const noexcept ;
+                FileByte byteLength() const noexcept ;
+                FileByte lineCount() const noexcept ;
+                FileByte lineStartByte(FileByte line) const noexcept ;
         };
     }
 }
