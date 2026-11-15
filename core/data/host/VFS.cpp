@@ -69,9 +69,10 @@ namespace Data {
             File* file = getFilePtr(path);
 
             // Update content
-            for (ByteEdit edit : edits) {
+            for (const ByteEdit& edit : edits) {
                 file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text);
             }
+            file->content.compact(); // Compacting is only allowed here!
             file->isValid = true;
 
             // Bump up the version

@@ -49,7 +49,7 @@ namespace Data {
                 // Internal
                 File* getFilePtr(const std::string& path) ;
                 void setFileContent(const std::string& path, std::string &newContent) ;
-                void editFileContent(const std::string& path, std::vector<ByteEdit> &edits) ;
+                void editFileContent(const std::string& path, std::vector<ByteEdit> &edits) ; // Compacts files too!
                 void fetchLocalFileContent(const std::string& path) ;
 
             protected:
