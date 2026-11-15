@@ -13,6 +13,11 @@ out
 # ANTLR extension
 .antlr
 
+# tree-sitter output
+extensions/tree-sitter-jug/src/*
+#extensions/VSCode/syntaxes/juggernyaut.tmLanguage.json
+#extensions/prism.juggernyaut.js
+
 # Build dirs
 .build
 .deps
