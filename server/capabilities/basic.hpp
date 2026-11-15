@@ -16,4 +16,5 @@
 
 namespace Capabilities {
     extern void configureProtocol(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver, int &exit_code) ;
+    extern void shutdownProtocol() ;
 }

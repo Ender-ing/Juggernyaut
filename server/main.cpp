@@ -57,6 +57,9 @@ int startServer(lsp::io::Stream& io) {
 
     logStdErr("The message loop has been closed!");
 
+    Capabilities::shutdownProtocol();
+    Capabilities::Semantics::shutdownGlobalDiagnostics();
+
     return exit_code;
 }
 

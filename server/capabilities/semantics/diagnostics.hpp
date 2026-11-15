@@ -18,5 +18,6 @@
 namespace Capabilities {
     namespace Semantics {
         extern void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver) ;
+        extern void shutdownGlobalDiagnostics() ;
     }
 }

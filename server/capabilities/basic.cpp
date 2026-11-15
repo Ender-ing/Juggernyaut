@@ -21,15 +21,14 @@ namespace Capabilities {
         std::cerr << "[DBG] EVENT: " << message << std::endl;
     }
 
-    std::string rootUri = "",
+    static std::string rootUri = "",
         configUri = "";
+    static bool received_shutdown = false;
     void configureProtocol(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver, int &exit_code) {
-        bool received_shutdown = false;
-        // Store::DocumentStore *store = static_cast<Store::DocumentStore*>(session.store);
+        received_shutdown = false;
 
-        if (debouncer == nullptr) {
-            debouncer = std::make_unique<Driver::DriverDebouncer>(driver);
-        }
+        // Always reset the debouncer
+        debouncer = std::make_unique<Driver::DriverDebouncer>(driver);
 
         endpoint.onInitialize(
             [](auto&& params) -> lsp::InitializeResult {
@@ -111,7 +110,7 @@ namespace Capabilities {
                 }
             }
         ).onShutdown(
-            [&received_shutdown]() -> lsp::ShutdownResult {
+            []() -> lsp::ShutdownResult {
                 //printMessage<lsp::requests::Shutdown>();
                 logStdErr("Shutting down the connection...");
 
@@ -119,7 +118,7 @@ namespace Capabilities {
                 return {};
             }
         ).onExit(
-            [&received_shutdown, &exit_code]() {
+            [&exit_code]() {
                 //printMessage<lsp::notifications::Exit>();
                 logStdErr("Exiting...");
 
@@ -192,5 +191,8 @@ namespace Capabilities {
                 debouncer->trigger();
             }
         );
+    }
+    void shutdownProtocol() {
+        debouncer.reset();
     }
 }

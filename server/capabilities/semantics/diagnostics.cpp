@@ -113,5 +113,9 @@ namespace Capabilities {
                 }
             );
         }
+        void shutdownGlobalDiagnostics() {
+            diagManager.reset();
+            io = nullptr;
+        }
     }
 }
