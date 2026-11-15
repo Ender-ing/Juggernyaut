@@ -135,7 +135,7 @@ Every non-trivial function or method declaration in a `.hpp` file should documen
 
 ### 1.5 Member Sections Inside a Class (`@name`)
 
-When a class has many methods (such as an ANTLR4 visitor or LSP endpoint), group related members under named subsections using `@name` and `/// @{ ... /// @}`:
+When a class has many methods (such as a CST visitor or LSP endpoint), group related members under named subsections using `@name` and `/// @{ ... /// @}`:
 
 ```cpp
 class ParserVisitor {
@@ -220,7 +220,7 @@ Documentation should never exist as isolated islands. Every class, struct, and e
 
 1. **Inline Type References (`#` and `@ref`)**:
    * Prefix any class, struct, enum, or member name in prose with `#` (e.g., `#Diagnostic`, `#Session::parse()`, `#SourceSpan`) to force Doxygen to generate a verified link and warn if the symbol is renamed or removed.
-   * When custom link text improves readability, use `@ref SymbolName "Custom Label"` (e.g., `@ref JuggernyautParser "the ANTLR4 parser"`).
+   * When custom link text improves readability, use `@ref SymbolName "Custom Label"` (e.g., `@ref JuggernyautParser "the parser"`).
 2. **Bidirectional `@see` Blocks**:
    * Every class and struct **must** end its header comment with one or more `@see` lines pointing to its related types:
      * **Producer ↔ Consumer**: If `Parser` produces an `AstNode`, `Parser` must have `@see AstNode` and `AstNode` must have `@see Parser`.
