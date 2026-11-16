@@ -108,14 +108,11 @@ namespace Session {
 
     // Parser Stage Helpers
     Parser::Parser Session::createConfiguredParser() {
-        Parser::Configs parserConfigs{
-            .terminateAfterLexer = (this->configs.terminateAfter == Stage::Lexer)
-        };
+        Parser::Configs parserConfigs{};
 
         Parser::Hooks parserHooks{
             .onContextSkip = this->hooks.onContextSkip,
             .onContextStart = this->hooks.onContextStart,
-            .onLexerContextEnd = this->hooks.onLexerContextEnd,
             .onParserContextEnd = this->hooks.onParserContextEnd,
             .onContextEnd = this->hooks.onContextEnd,
             .onDiagnostic = [this](Diagnostic &diag) {
@@ -210,9 +207,7 @@ namespace Session {
         }
 
         Parser::Parser parser = this->createConfiguredParser();
-        const Stage targetStage = (this->configs.terminateAfter == Stage::Lexer)
-            ? Stage::Lexer
-            : Stage::Parser;
+        const Stage targetStage = Stage::Parser; // TMP
 
         std::vector<SourceId> worklist = this->entryPoints; // Copy entry points!
 
@@ -305,8 +300,7 @@ namespace Session {
 
         // [STAGE 1 & 2] Lexer & Parser
         this->runParserStage();
-        if (this->configs.terminateAfter == Stage::Lexer ||
-            this->configs.terminateAfter == Stage::Parser) {
+        if (this->configs.terminateAfter == Stage::Parser) {
             return;
         }
 
