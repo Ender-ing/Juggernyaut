@@ -5,7 +5,7 @@ module.exports = {
     rules: {
         // Statement categories
         _statement: $ => choice(
-            $.stat_empty,
+            $._stat_empty,
             $.stat_expr,
             $.stat_return,
             $.stat_end,
@@ -18,7 +18,7 @@ module.exports = {
         ),
 
         _root_statement: $ => choice(
-            $.stat_empty,
+            $._stat_empty,
             $.stat_import,
             $.stat_export,
             $.stat_bind,
@@ -197,7 +197,7 @@ module.exports = {
 
         // Expression, empty & silly statements
         stat_expr: $ => seq($._expr, SYM.SYM_SEMICOLON),
-        stat_empty: _ => SYM.SYM_SEMICOLON,
+        _stat_empty: _ => SYM.SYM_SEMICOLON,
 
         stat_silly: _ => seq(
             choice(KWD.CAT, KWD.KITTY, KWD.MEOW, KWD.BAD_CODE),
