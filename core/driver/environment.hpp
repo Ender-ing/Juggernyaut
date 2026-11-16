@@ -32,7 +32,7 @@ namespace Driver {
         using VFS = Data::Host::VFS;
 
         // Load configs from a 'jug.toml' file (Assuming the file is accessible!)
-        void refreshEnvironment(VFS *vfs, Environment *env, const Diagnostics::Event &emit) ;
-        Environment fetchEnvironment(VFS *vfs, const Diagnostics::Event &emit, const std::string &path) ;
+        void refreshEnvironment(VFS *vfs, Environment *env, const Data::Diagnostics::Event &emit) ;
+        Environment fetchEnvironment(VFS *vfs, const Data::Diagnostics::Event &emit, const std::string &path) ;
     }
 }

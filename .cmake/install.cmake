@@ -37,13 +37,12 @@ install_debug_symbols(JuggernyautCommonLibrary CmpJuggernyautCompiler CmpDebugJu
 install_debug_symbols(JuggernyautCatConsoleLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # Core
-install(TARGETS JuggernyautDiagnosticsLibrary JuggernyautDataLibrary
+install(TARGETS JuggernyautDataLibrary
         JuggernyautParserLibrary JuggernyautSessionLibrary JuggernyautDriverLibrary
     EXPORT JuggernyautToolchain
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
-install_debug_symbols(JuggernyautDiagnosticsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautDataLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautParserLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautSessionLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)

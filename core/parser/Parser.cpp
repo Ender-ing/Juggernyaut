@@ -13,7 +13,7 @@
 // ...
 
 namespace Parser {
-    void Parser::emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const {
+    void Parser::emitDiagnostic(const File *file, Data::Diagnostics::Diagnostic &diag) const {
         diag.file = file;
         if (this->hooks.onDiagnostic != nullptr) {
             this->hooks.onDiagnostic(diag);
@@ -24,8 +24,8 @@ namespace Parser {
             return;
         }
 
-        Diagnostics::Diagnostic diag = {.file = file};
-        diag.severity = Diagnostics::Severity::Info;
+        Data::Diagnostics::Diagnostic diag = {.file = file};
+        diag.severity = Data::Diagnostics::Severity::Info;
         diag.code = 200011;
         diag.message = std::move(data);
 
@@ -130,7 +130,7 @@ namespace Parser {
         result.hasSyntaxErrors = false;//diagListener.hasErrors();
 
         // TMP
-        Diagnostics::Diagnostic diag = {.message = "Meow!", .severity = Diagnostics::Severity::Warning};
+        Data::Diagnostics::Diagnostic diag = {.message = "Meow!", .severity = Data::Diagnostics::Severity::Warning};
         this->emitDiagnostic(file, diag);
 
         if (this->hooks.onParserContextEnd != nullptr) {

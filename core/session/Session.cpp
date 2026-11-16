@@ -29,18 +29,18 @@ namespace Session {
         if (this->env != nullptr) {
             // Upgrade warnings to errors!
             if (this->env->build.flags.treatWarningsAsErrors &&
-                diag.severity == Diagnostics::Severity::Warning) {
-                diag.severity = Diagnostics::Severity::Error;
+                diag.severity == Data::Diagnostics::Severity::Warning) {
+                diag.severity = Data::Diagnostics::Severity::Error;
             }
             // Ignore warnings
             if (this->env->build.flags.ignoreWarnings &&
-                diag.severity == Diagnostics::Severity::Warning) {
+                diag.severity == Data::Diagnostics::Severity::Warning) {
                 return;
             }
         }
 
         // Update internal stats
-        if (diag.severity == Diagnostics::Severity::Error) {
+        if (diag.severity == Data::Diagnostics::Severity::Error) {
             this->hasErrors = true;
 
             if (diag.file != nullptr) {
@@ -149,7 +149,7 @@ namespace Session {
                 if (hasExternalDeps) {
                     diag.code = 1;
                     diag.message = "external resource inclusion is not supported yet.";
-                    diag.severity = Diagnostics::Severity::Warning;
+                    diag.severity = Data::Diagnostics::Severity::Warning;
                 } else {
                     USE_CODE(diag, Error, 600001);
                 }

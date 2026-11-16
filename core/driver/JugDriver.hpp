@@ -32,7 +32,7 @@ namespace Driver {
         using SetupId = Environment::EnvironmentId;
         using Setup = Environment::Environment;
 
-        using Diagnostic = Diagnostics::Diagnostic;
+        using Diagnostic = Data::Diagnostics::Diagnostic;
 
         struct HostConfigs {
             Data::Host::VFS *vfs = nullptr; // Virtual File System
@@ -49,7 +49,7 @@ namespace Driver {
                 // Provided Configs
                 HostConfigs host;
                 DriverConfigs configs;
-                const Diagnostics::Event diagnosticEmitter = [this](const Diagnostic& d) { this->emitDiagnostic(d); };
+                const Data::Diagnostics::Event diagnosticEmitter = [this](const Diagnostic& d) { this->emitDiagnostic(d); };
             private:
                 // Internal variables
                 std::vector<std::unique_ptr<Setup>> setups;

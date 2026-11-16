@@ -9,10 +9,11 @@
 #include "dynamic.hpp" // JUG_PARSER_API
 
 // Diagnostics
-#include "../diagnostics/Diagnostic.hpp"
+#include "../data/diagnostics/Diagnostic.hpp"
 
 namespace Parser {
-    using FileEvent = Diagnostics::FileEvent;
+    using FileEvent = Data::Diagnostics::FileEvent;
+    using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
     // typedef std::function<Data::Store::Source(const std::string)> SourceRequest;
 
@@ -26,6 +27,6 @@ namespace Parser {
 
         // [Diagnostic Events]
         // Args: <diagnostics_obj> (Diagnostics::Diagnostic)
-        Diagnostics::ModifiableEvent onDiagnostic = nullptr;
+        ModifiableEvent onDiagnostic = nullptr;
     };
 }

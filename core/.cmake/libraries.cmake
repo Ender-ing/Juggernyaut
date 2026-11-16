@@ -2,20 +2,6 @@
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS ON)
 
-# Create a library from /diagnostics
-add_library(JuggernyautDiagnosticsLibrary SHARED)
-target_sources_search(JuggernyautDiagnosticsLibrary ${JUG_CORE_SOURCE_DIR}/diagnostics/*.cpp TRUE)
-# Expose library exports
-target_compile_definitions(JuggernyautDiagnosticsLibrary PRIVATE JUG_DIAGNOSTICS_LIBRARY_EXPORTS)
-# Attach manifest data
-attach_manifest_data(JuggernyautDiagnosticsLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
-# Add compiler flags
-add_internal_target_cxx_flags(JuggernyautDiagnosticsLibrary FALSE)
-# Dependencies
-jug_common(JuggernyautDiagnosticsLibrary)
-add_dependencies(JuggernyautDiagnosticsLibrary JugGlobalDiagnostics)
-target_link_libraries(JuggernyautDiagnosticsLibrary PUBLIC JugGlobalDiagnostics)
-
 # Create a library from /data
 add_library(JuggernyautDataLibrary SHARED)
 target_sources_search(JuggernyautDataLibrary ${JUG_CORE_SOURCE_DIR}/data/*.cpp TRUE)
@@ -44,8 +30,8 @@ attach_manifest_data(JuggernyautParserLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 add_internal_target_cxx_flags(JuggernyautParserLibrary TRUE)
 # Dependencies
 jug_common(JuggernyautParserLibrary)
-add_dependencies(JuggernyautParserLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautTreeSitterGen)
-target_link_libraries(JuggernyautParserLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
+add_dependencies(JuggernyautParserLibrary JuggernyautDataLibrary JuggernyautTreeSitterGen)
+target_link_libraries(JuggernyautParserLibrary PUBLIC JuggernyautDataLibrary)
 # tree-sitter && cpp-tree-sitter paths
 target_include_directories(JuggernyautParserLibrary SYSTEM PRIVATE
     ${JUG_DEP_TREE_SITTER_PATH}/lib/include
@@ -83,8 +69,8 @@ attach_manifest_data(JuggernyautSessionLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 add_internal_target_cxx_flags(JuggernyautSessionLibrary FALSE)
 # Dependencies
 jug_common(JuggernyautSessionLibrary)
-add_dependencies(JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautParserLibrary)
-target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautDiagnosticsLibrary JuggernyautDataLibrary JuggernyautParserLibrary)
+add_dependencies(JuggernyautSessionLibrary JuggernyautDataLibrary JuggernyautParserLibrary)
+target_link_libraries(JuggernyautSessionLibrary PUBLIC JuggernyautDataLibrary JuggernyautParserLibrary)
 
 # Create a library from /driver
 add_library(JuggernyautDriverLibrary SHARED)
@@ -97,6 +83,6 @@ attach_manifest_data(JuggernyautDriverLibrary ${JUG_CORE_MANIFEST_FILE} TRUE)
 add_internal_target_cxx_flags(JuggernyautDriverLibrary FALSE)
 # Dependencies
 jug_common(JuggernyautDriverLibrary)
-add_dependencies(JuggernyautDriverLibrary JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
-target_link_libraries(JuggernyautDriverLibrary PUBLIC JuggernyautSessionLibrary JuggernyautDiagnosticsLibrary JuggernyautDataLibrary)
+add_dependencies(JuggernyautDriverLibrary JuggernyautSessionLibrary JuggernyautDataLibrary)
+target_link_libraries(JuggernyautDriverLibrary PUBLIC JuggernyautSessionLibrary JuggernyautDataLibrary)
 target_include_directories(JuggernyautDriverLibrary SYSTEM PRIVATE ${TOMLPP_INCLUDE_DIR})

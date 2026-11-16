@@ -7,27 +7,27 @@
 #include "diagnostics.hpp"
 
 // Diagnostics
-#include "../../../core/diagnostics/Diagnostic.hpp"
-#include "../../../core/diagnostics/DiagnosticsManager.hpp"
+#include "../../../core/data/diagnostics/Diagnostic.hpp"
+#include "../../../core/data/diagnostics/DiagnosticsManager.hpp"
 
 namespace Capabilities {
     namespace Semantics {
         // LSP functions
-        lsp::DiagnosticSeverity internal_getSeverity(const Diagnostics::Severity &severity) {
+        lsp::DiagnosticSeverity internal_getSeverity(const Data::Diagnostics::Severity &severity) {
             switch (severity) {
-            case Diagnostics::Severity::Error:
+            case Data::Diagnostics::Severity::Error:
                 return lsp::DiagnosticSeverity::Error;
-            case Diagnostics::Severity::Warning:
+            case Data::Diagnostics::Severity::Warning:
                 return lsp::DiagnosticSeverity::Warning;
-            case Diagnostics::Severity::Info:
+            case Data::Diagnostics::Severity::Info:
                 return lsp::DiagnosticSeverity::Information;
-            case Diagnostics::Severity::Hint:
+            case Data::Diagnostics::Severity::Hint:
                 return lsp::DiagnosticSeverity::Hint;
             default:
                 return lsp::DiagnosticSeverity::MAX_VALUE;
             }
         }
-        lsp::Diagnostic internal_diagToLSP(const Diagnostics::Diagnostic &diag) {
+        lsp::Diagnostic internal_diagToLSP(const Data::Diagnostics::Diagnostic &diag) {
 
             lsp::Diagnostic diagnostic;
 
@@ -65,19 +65,19 @@ namespace Capabilities {
         }
 
         lsp::ServerEndpoint *io = nullptr;
-        std::unique_ptr<Diagnostics::DiagnosticsManager<lsp::Diagnostic>> diagManager = nullptr;
+        std::unique_ptr<Data::Diagnostics::DiagnosticsManager<lsp::Diagnostic>> diagManager = nullptr;
         void setupGlobalDiagnostics(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver) {
             // Data::Host::VFS *vfs = driver.host.vfs;
 
             // Update diagnostics I/O endpoint
             io = &endpoint;
 
-            diagManager = std::make_unique<Diagnostics::DiagnosticsManager<lsp::Diagnostic>>(
+            diagManager = std::make_unique<Data::Diagnostics::DiagnosticsManager<lsp::Diagnostic>>(
                 driver.configs.hooks,
-                [](const Diagnostics::Diagnostic &diag) -> lsp::Diagnostic {
+                [](const Data::Diagnostics::Diagnostic &diag) -> lsp::Diagnostic {
                     return internal_diagToLSP(diag);
                 },
-                Diagnostics::DiagnosticsManager<lsp::Diagnostic>::ManagerCallbacks{
+                Data::Diagnostics::DiagnosticsManager<lsp::Diagnostic>::ManagerCallbacks{
                     .onFileFlush = [](const std::string &uri, const std::vector<lsp::Diagnostic> &diags) {
                         if (io ==  nullptr) {
                             return;

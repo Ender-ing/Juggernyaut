@@ -21,15 +21,15 @@
 #include "base/config.hpp"
 #include "base/info.hpp"
 
-Console::ReportType getReportType(Diagnostics::Severity severity) {
+Console::ReportType getReportType(Data::Diagnostics::Severity severity) {
     switch (severity) {
-    case Diagnostics::Severity::Error:
+    case Data::Diagnostics::Severity::Error:
         return Console::CRITICAL_REPORT;
-    case Diagnostics::Severity::Warning:
+    case Data::Diagnostics::Severity::Warning:
         return Console::WARNING_REPORT;
-    case Diagnostics::Severity::Info:
+    case Data::Diagnostics::Severity::Info:
         return Console::NORMAL_REPORT;
-    case Diagnostics::Severity::Hint:
+    case Data::Diagnostics::Severity::Hint:
         return Console::NORMAL_REPORT;
     default:
         return Console::UNKNOWN_REPORT;
@@ -82,7 +82,7 @@ int main(int argc, const char *argv[]) {
     Driver::JugDriver::JugDriver driver(host, configs);
 
     // Handle diagnostics
-    driver.configs.hooks.driver.onDiagnostic = [](const Diagnostics::Diagnostic &diag){
+    driver.configs.hooks.driver.onDiagnostic = [](const Data::Diagnostics::Diagnostic &diag){
         if (diag.file != nullptr) {
             // Get the position
             Console::IndividualReport::path = diag.file->canonical;
@@ -143,7 +143,7 @@ int main(int argc, const char *argv[]) {
         std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
         const std::string &srcPath = source->uri;
 
-        source->visitParserDiagnostics([&srcPath](const Diagnostics::Diagnostic &diag) {
+        source->visitParserDiagnostics([&srcPath](const Data::Diagnostics::Diagnostic &diag) {
             // Get the position
             Console::IndividualReport::path = srcPath;
             Console::IndividualReport::startLine = diag.range.start.line;

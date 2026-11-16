@@ -11,7 +11,7 @@
 // Data & Diagnostics
 #include "../data/host/VFS.hpp"
 #include "../data/parser/AST.hpp"
-#include "../diagnostics/Diagnostic.hpp"
+#include "../data/diagnostics/Diagnostic.hpp"
 
 // Environment
 #include "./../data/driver/Environment.hpp"
@@ -27,7 +27,8 @@
 
 namespace Parser {
     using File = Data::Host::File;
-    using Range = Diagnostics::Range;
+    using Range = Data::Diagnostics::Range;
+    using Diagnostic = Data::Diagnostics::Diagnostic;
     using Environment = Data::Driver::Environment;
     using ASTNode = Data::Parser::ASTNode;
 
@@ -52,7 +53,7 @@ namespace Parser {
         private:
             const Environment *env = nullptr;
 
-            void emitDiagnostic(const File *file, Diagnostics::Diagnostic &diag) const;
+            void emitDiagnostic(const File *file, Diagnostic &diag) const;
             void sendCSTDataReport(const File *file, std::string &&data) const;
 
         public:

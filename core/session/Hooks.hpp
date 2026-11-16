@@ -9,10 +9,11 @@
 #include "dynamic.hpp" // JUG_SESSION_API
 
 // Diagnostics
-#include "../diagnostics/Diagnostic.hpp"
+#include "../data/diagnostics/Diagnostic.hpp"
 
 namespace Session {
-    using FileEvent = Diagnostics::FileEvent;
+    using FileEvent = Data::Diagnostics::FileEvent;
+    using Event = Data::Diagnostics::Event;
     class JUG_SESSION_API Session;
     using StageCall = std::function<void(const Session*)>;
 
@@ -29,6 +30,6 @@ namespace Session {
         FileEvent onContextDetached = nullptr;
 
         // [Diagnostics]
-        Diagnostics::Event onDiagnostic = nullptr; // ALL session diagnostics go through here!
+        Event onDiagnostic = nullptr; // ALL session diagnostics go through here!
     };
 }

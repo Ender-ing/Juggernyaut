@@ -31,7 +31,7 @@ namespace Session {
     using VFS = Data::Host::VFS;
     using Environment = Data::Driver::Environment;
 
-    using Diagnostic = Diagnostics::Diagnostic;
+    using Diagnostic = Data::Diagnostics::Diagnostic;
     using ASTNode = Data::Parser::ASTNode;
     using SymbolTable = bool; // TO-DO
 
