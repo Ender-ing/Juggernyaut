@@ -87,7 +87,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     add_non_debug_c_cxx_flag("-DNDEBUG")                    # Disable standard assert() checks in release code [matches MSVC /DNDEBUG]
     add_non_debug_c_cxx_flag("-ffunction-sections")         # Place each function into its own section for linker dead-code stripping [matches MSVC /Gy]
     add_non_debug_c_cxx_flag("-fdata-sections")             # Place each global/static variable into its own section for linker dead-data stripping [matches MSVC /Gw]
-    add_non_debug_c_cxx_flag("-fmerge-constants")           # Merge identical string literals and constants across translation units without breaking distinct object addresses [matches MSVC /GF string pooling]
 
     # Linux-specific compile optimizations (not supported on macOS Mach-O)
     if(NOT APPLE)
@@ -97,6 +96,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
 
     # Parallel LTO for GCC (matches MSVC multi-threaded LTCG)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_non_debug_c_cxx_flag("-fmerge-constants")       # Merge identical string literals and constants across translation units without breaking distinct object addresses [matches MSVC /GF string pooling]
         add_non_debug_c_cxx_flag("-flto=auto")              # Parallelize Link-Time Optimization (LTO) across all available CPU cores on GCC
         add_non_debug_link_flag("-flto=auto")               # Use parallel jobs during the GCC LTO link step
     endif()
