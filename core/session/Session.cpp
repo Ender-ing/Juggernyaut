@@ -207,7 +207,7 @@ namespace Session {
         }
 
         Parser::Parser parser = this->createConfiguredParser();
-        const Stage targetStage = Stage::Parser; // TMP
+        constexpr Stage targetStage = Stage::Parser; // TMP
 
         std::vector<SourceId> worklist = this->entryPoints; // Copy entry points!
 
@@ -256,7 +256,7 @@ namespace Session {
             unit.hasSyntaxErrors = result.hasSyntaxErrors;
             unit.completedStage = targetStage;
 
-            if (targetStage >= Stage::Parser) {
+            if constexpr (targetStage >= Stage::Parser) {
                 // Reserve capacity BEFORE taking `currentUnit` reference so `this->units` cannot reallocate inside `resolveUnitImports`
                 this->units.reserve(this->units.size() + result.imports.size());
                 CompilationUnitState &currentUnit = getOrCreateUnit(this->units, file);
