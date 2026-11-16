@@ -25,7 +25,6 @@ namespace Driver {
         // Source stages
         FileEvent onContextSkip = nullptr;
         FileEvent onContextStart = nullptr;
-        FileEvent onLexerContextEnd = nullptr;
         FileEvent onParserContextEnd = nullptr;
         FileEvent onContextEnd = nullptr;
         FileEvent onContextDetached = nullptr;

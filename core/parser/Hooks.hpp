@@ -21,7 +21,6 @@ namespace Parser {
         // [Source Stage Lifecycle]
         FileEvent onContextSkip = nullptr; // Context is already up-to-date
         FileEvent onContextStart = nullptr; // Fresh lex/parse started for file
-        FileEvent onLexerContextEnd = nullptr; // Lexer stage finished for file
         FileEvent onParserContextEnd = nullptr; // Parser stage finished for file
         FileEvent onContextEnd = nullptr; // Full parser workflow finished for file
 

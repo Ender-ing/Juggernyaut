@@ -40,7 +40,6 @@ namespace Driver {
             this->units.emplace_back(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
                 .onContextSkip = this->configs.hooks.unitSources.onContextSkip,
                 .onContextStart = this->configs.hooks.unitSources.onContextStart,
-                .onLexerContextEnd = this->configs.hooks.unitSources.onLexerContextEnd,
                 .onParserContextEnd = this->configs.hooks.unitSources.onParserContextEnd,
                 .onContextEnd = this->configs.hooks.unitSources.onContextEnd,
                 .onContextDetached = this->configs.hooks.unitSources.onContextDetached,

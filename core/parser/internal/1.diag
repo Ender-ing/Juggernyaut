@@ -1,8 +1,0 @@
-2:
--unclosed string literal
-3:
--invalid escape sequence(s) used (within a string/character)
-4:
--invalid character literal
-5:
--invalid radix literal

@@ -74,7 +74,6 @@ and the [Code Documentation Guide](./CODE_DOCUMENTATION.md), it'd be gladly acce
 ## Diagnostic codes
 
 - Temporary placeholder: 1
-- Lexer: 1xxxxx
 - Parser: 2xxxxx
 - Transformer: 3xxxxx
 - Semantic: 4xxxxx

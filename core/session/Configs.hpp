@@ -15,7 +15,6 @@
 namespace Session {
     enum class Stage : uint8_t {
         Unprocessed = 0,
-        Lexer       = 1,
         Parser      = 2,
         Transformer = 3,
         Semantic    = 4,

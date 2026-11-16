@@ -25,7 +25,6 @@ namespace Data::Diagnostics {
         FileEvent *onEnvironmentChange = nullptr;
 
         // Front-End Driver (Units/Sessions)
-        FileEvent *onLexerContextEnd = nullptr;
         FileEvent *onParserContextEnd = nullptr;
         FileEvent *onContextEnd = nullptr; // If this is not set, this you'd likely needs to manually flush the diagnostics when you are done!
 
@@ -145,7 +144,6 @@ namespace Data::Diagnostics {
                     state.isDetached = false;
                     state.diagnostics.clear();
                 };
-                //frontEnd.unitSources.onLexerContextEnd = flushAndKeep; // Too much?
                 frontEnd.unitSources.onParserContextEnd = flushAndKeep;
                 frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
                 frontEnd.unitSources.onContextSkip = [this](const File *file) {

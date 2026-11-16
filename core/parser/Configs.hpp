@@ -10,6 +10,6 @@
 
 namespace Parser {
     struct Configs {
-        bool terminateAfterLexer = false;
+        // ...
     };
 }
