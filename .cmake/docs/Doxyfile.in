@@ -28,8 +28,8 @@ FILE_PATTERNS          = *.hpp *.cpp
 #ALIASES                = "mermaid=\code{.mermaid}" \
 #                         "endmermaid=\endcode"
 
-# Exclude ANTLR grammar build artifacts or internal third-party folders if any
-EXCLUDE_PATTERNS       = */.antlr/* */antlr4cpp_generated_src/* */.build/* */.out/* */.dist/*
+# Exclude internal third-party folders
+EXCLUDE_PATTERNS       = */.build/* */.out/* */.dist/*  */.deps/*
 
 # Only extract files, classes, and members that actually have /// documentation
 EXTRACT_ALL            = NO
