@@ -313,7 +313,7 @@ namespace Driver {
             env->version = env->file->version;
 
             // Process TOML data
-            toml::parse_result result = toml::parse(file->content.getChunk(0));
+            toml::parse_result result = toml::parse(file->content.view());
             if (!result) {
                 const toml::parse_error& err = result.error();
                 std::string description = std::string(err.description());
