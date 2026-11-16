@@ -7,8 +7,10 @@ set(JUG_TS_PARSER_H    "${JUG_TS_GRAMMAR_DIR}/src/tree_sitter/parser.h")
 
 # Track all grammar JS files so CMake re-runs when any of them change
 file(GLOB_RECURSE JUG_TS_GRAMMAR_SOURCES CONFIGURE_DEPENDS
-    "${JUG_TS_GRAMMAR_DIR}/grammar.js"
     "${JUG_TS_GRAMMAR_DIR}/grammar/*.js"
+)
+list(APPEND JUG_TS_GRAMMAR_SOURCES
+    "${JUG_TS_GRAMMAR_DIR}/grammar.js"
     "${JUG_TS_GRAMMAR_DIR}/package.json"
 )
 
