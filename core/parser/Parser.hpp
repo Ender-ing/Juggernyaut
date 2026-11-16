@@ -55,6 +55,9 @@ namespace Parser {
 
             void emitDiagnostic(const File *file, Diagnostic &diag) const;
             void sendCSTDataReport(const File *file, std::string &&data) const;
+            
+            // tree-sitter
+            void updateCST(const File *file) const;
 
         public:
             Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr)

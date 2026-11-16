@@ -8,11 +8,18 @@
 // tree-sitter
 #include "tree-sitter.hpp"
 
-
 // Listeners & Visitors
 // ...
 
+// Grab tree sitter language
+extern "C" const TSLanguage* tree_sitter_jug(void); 
+
 namespace Parser {
+    // Handle tree sitter parseer
+    namespace Internal {
+        thread_local auto tsParser = ts::Parser::create(ts::Language{tree_sitter_jug()});
+    }
+
     void Parser::emitDiagnostic(const File *file, Data::Diagnostics::Diagnostic &diag) const {
         diag.file = file;
         if (this->hooks.onDiagnostic != nullptr) {
@@ -32,6 +39,52 @@ namespace Parser {
         this->hooks.onDiagnostic(diag);
     }
 
+    // tree-sitter
+    void Parser::updateCST(const File *file) const {
+        if (file == nullptr || !file->isValid) {
+            return;
+        }
+        if (file->cst != nullptr && file->cstVersion == file->version) {
+            return;
+        }
+        if (!Internal::tsParser.has_value()) {
+            // Creation failed (ErrorKind::LanguageIncompatible)
+            SET_CODE(diag, Error, 200001);
+            this->emitDiagnostic(file, diag);
+            return;
+        }
+
+        ts::Parser& parser = *Internal::tsParser;
+        const std::string source = file->content.toString();
+
+        std::expected<ts::Tree, ts::Error> treeRes =
+            std::unexpected{ts::Error{.kind = ts::ErrorKind::ParseFailed}};
+
+        if (file->cst != nullptr && !file->pendingDeltas.empty()) {
+            auto oldTree = std::static_pointer_cast<ts::Tree>(file->cst);
+            for (const auto& delta : file->pendingDeltas) {
+                oldTree->edit(ts::InputEdit{
+                    .start  = {delta.startByte,  {delta.startPoint.line,  delta.startPoint.column}},
+                    .oldEnd = {delta.oldEndByte, {delta.oldEndPoint.line, delta.oldEndPoint.column}},
+                    .newEnd = {delta.newEndByte, {delta.newEndPoint.line, delta.newEndPoint.column}},
+                });
+            }
+            treeRes = parser.parse(source, *oldTree);
+        } else {
+            treeRes = parser.parse(source);
+        }
+
+        if (!treeRes.has_value()) {
+            // Parse failed (ErrorKind::ParseFailed)
+            SET_CODE(diag, Error, 200002);
+            this->emitDiagnostic(file, diag);
+            return;
+        }
+
+        file->cst = std::make_shared<ts::Tree>(std::move(*treeRes));
+        file->cstVersion = file->version;
+    }
+
     ParseResult Parser::parse(const File *file) const {
         ParseResult result;
         if (file == nullptr) {
@@ -47,6 +100,9 @@ namespace Parser {
         const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
 
         (void)reportAmbiguity;
+
+        // Generate/Update CST
+        this->updateCST(file);
 
         /*Listeners::ANTLRDiagnosticListener diagListener(
             file,
@@ -72,16 +128,6 @@ namespace Parser {
                 tokenStreamStr += token->toString();
             }*/
             //this->sendCSTDataReport(file, std::move(tokenStreamStr));
-        }
-
-        if (this->hooks.onLexerContextEnd != nullptr) {
-            this->hooks.onLexerContextEnd(file);
-        }
-
-        // Respect early termination
-        if (this->configs.terminateAfterLexer) {
-            result.hasSyntaxErrors = false; //diagListener.hasErrors();
-            return result;
         }
 
         // [STAGE 2] Parser (Fast SLL -> Slow LL Fallback)
