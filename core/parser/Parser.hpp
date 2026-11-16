@@ -58,6 +58,7 @@ namespace Parser {
             
             // tree-sitter
             void updateCST(const File *file) const;
+            void negotiateCSTCache(const File *file) const; // TO-DO: Implement a cache manager
 
         public:
             Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr)

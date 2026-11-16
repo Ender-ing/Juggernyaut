@@ -84,6 +84,19 @@ namespace Parser {
         file->cst = std::make_shared<ts::Tree>(std::move(*treeRes));
         file->cstVersion = file->version;
     }
+    constexpr size_t MAX_CACHED_CST_BYTES = 4 * 1024 * 1024; // 4 MB (~120,000 LOC)
+    constexpr uint32_t MAX_CACHED_ROOT_NODES = 50000;
+    void Parser::negotiateCSTCache(const File *file) const {
+        if (file->cst == nullptr) {
+            return;
+        }
+        auto tree = std::static_pointer_cast<ts::Tree>(file->cst);
+        if (file->content.byteLength() > MAX_CACHED_CST_BYTES ||
+            tree->getRootNode().getNumChildren() > MAX_CACHED_ROOT_NODES) {
+            file->cst.reset();
+            file->cstVersion = 0;
+        }
+    }
 
     ParseResult Parser::parse(const File *file) const {
         ParseResult result;
@@ -103,6 +116,8 @@ namespace Parser {
 
         // Generate/Update CST
         this->updateCST(file);
+        // ...
+        this->negotiateCSTCache(file);
 
         /*Listeners::ANTLRDiagnosticListener diagListener(
             file,
