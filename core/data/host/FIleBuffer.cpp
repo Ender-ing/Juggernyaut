@@ -162,8 +162,8 @@ namespace Data {
 
             // Patch lineStarts table
             // Remove line starts that fell inside the deleted range
-            auto eraseBegin = this->lineStarts.begin() + startPoint.line + 1;
-            auto eraseEnd = this->lineStarts.begin() + oldEndPoint.line + 1;
+            auto eraseBegin = this->lineStarts.begin() + static_cast<std::ptrdiff_t>(startPoint.line + 1);
+            auto eraseEnd = this->lineStarts.begin() + static_cast<std::ptrdiff_t>(oldEndPoint.line + 1);
             auto insertPos = this->lineStarts.erase(eraseBegin, eraseEnd);
             // Splice in new line starts collected from `inserted` in Step 1
             insertPos = this->lineStarts.insert(
@@ -173,7 +173,7 @@ namespace Data {
             );
 
             // Shift every surviving line after the edit by `byte_delta`
-            for (auto it = insertPos + insertLineStarts.size(); it != lineStarts.end(); ++it) {
+            for (auto it = insertPos + static_cast<std::ptrdiff_t>(insertLineStarts.size()); it != lineStarts.end(); ++it) {
                 *it = static_cast<uint32_t>(static_cast<int64_t>(*it) + byteDelta);
             }
 
