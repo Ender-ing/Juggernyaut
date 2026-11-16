@@ -72,11 +72,6 @@ if(TARGET mimalloc)
         " COMPONENT CmpJuggernyautCompiler)
     endif()
 endif()
-install(TARGETS antlr4_shared
-    RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
-    LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
-)
-install_debug_symbols(antlr4_shared CmpJuggernyautCompiler CmpDebugExternalCore)
 install(TARGETS libgit2package
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautPackageManager
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautPackageManager
