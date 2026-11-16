@@ -55,7 +55,7 @@ namespace Parser {
         }
 
         ts::Parser& parser = *Internal::tsParser;
-        const std::string source = file->content.toString();
+        const std::string_view source = file->content.view();
 
         std::expected<ts::Tree, ts::Error> treeRes =
             std::unexpected{ts::Error{.kind = ts::ErrorKind::ParseFailed}};
