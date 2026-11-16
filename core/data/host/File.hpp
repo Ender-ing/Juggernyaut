@@ -25,6 +25,10 @@ namespace Data {
             // bool isLoaded = false;
             bool isValid = false;
             Timestamp lastModified = 0; // Needed for disk-caching in the future!
+
+            // Type-erased CST handle (owned by File, managed by JuggernyautParserLibrary)
+            mutable std::shared_ptr<void> cst = nullptr;
+            mutable FileVersion cstVersion = 0;
         };
         using FilePtr = std::unique_ptr<File>;
     }

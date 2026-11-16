@@ -188,6 +188,9 @@ namespace Data {
         }
 
         // Technical
+        std::string_view FileBuffer::view() const {
+            return this->getChunk(0);
+        }
         std::string FileBuffer::toString() const {
             std::string out;
             out.reserve(this->totalBytes);

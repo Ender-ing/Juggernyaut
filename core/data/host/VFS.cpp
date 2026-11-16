@@ -58,9 +58,10 @@ namespace Data {
         void VFS::setFileContent(const std::string& path, std::string &newContent) {
             File* file = getFilePtr(path);
 
-            // Update content
+            // Update content & internal state
             file->content.setFullContent(newContent);
             file->pendingDeltas.clear();
+            file->cst.reset();
             file->isValid = true;
 
             // Bump up the version
@@ -69,12 +70,19 @@ namespace Data {
         void VFS::editFileContent(const std::string& path, std::vector<ByteEdit> &edits) {
             File* file = getFilePtr(path);
 
+            // If no CST exists yet, or the CST already consumed all deltas up to
+            // file->version, clear old deltas before recording the new batch.
+            if (file->cst == nullptr || file->cstVersion == file->version) {
+                file->pendingDeltas.clear();
+            }
+
             // Update content
             for (const ByteEdit& edit : edits) {
                 file->pendingDeltas.push_back( // Keep track of changes for CST regeneration!
                     file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text)
                 );
             }
+            file->content.compact();
             file->isValid = true;
 
             // Bump up the version

@@ -68,6 +68,7 @@ namespace Data {
                 EditDelta applyEdit(FileByte startByte, FileByte oldEndByte, const std::string &insert) ;
 
                 // Technical
+                std::string_view view() const; // Used by VFS's clients in safe mode!
                 std::string toString() const;
                 void compact() ; // Cleans up the internal state!
 
