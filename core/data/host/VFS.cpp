@@ -91,11 +91,12 @@ namespace Data {
         void VFS::fetchLocalFileContent(const std::string& path) {
             File* file = getFilePtr(path);
 
-            // Update content
+            // Update content & internal state
             std::string newContent;
             file->isValid = this->_readFile(file->canonical, newContent);
             file->content.setFullContent(newContent);
             file->pendingDeltas.clear();
+            file->cst.reset();
 
             // Bump up the version
             file->version++;
