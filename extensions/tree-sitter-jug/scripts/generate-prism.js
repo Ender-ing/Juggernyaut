@@ -1,3 +1,9 @@
+/**
+ * 
+ * Generate prism.juggernyaut.js (most rules require manual updates)
+ * 
+**/
+
 const fs = require('fs');
 const path = require('path');
 
@@ -35,7 +41,7 @@ Prism.languages.juggernyaut = {
         greedy: true
     },
     'boolean': /\\b(?:true|false)\\b/,
-    'number': /\\b(?:0[bB][01]+|0[oO][0-7]+|0[xX][0-9a-fA-F]+|(?:[1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]+|[0-9]*\\.[0-9]+(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b/,
+    'number': /\\b(?:0[bB][01]*|0[oO][0-7]*|0[xX][0-9a-fA-F]*|(?:[1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]*|[0-9]*\\.[0-9]+(?:[eE][+-]?[0-9]+)?||[0-9]+\\.(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b/,
 
     // Keywords
     'keyword': /\\b(?:${allKeywords.join('|')})\\b/,

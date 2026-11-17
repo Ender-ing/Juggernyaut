@@ -28,17 +28,20 @@ module.exports = {
         ),
 
         // Floating-point numbers: 9.4, 1.0, 0.5, 1.5e-3
-        lit_float: _ => token(/[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?/),
+        lit_float: _ => token(choice(
+            /[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?/,
+            /[0-9]+\.([eE][+-]?[0-9]+)?/
+        )),
 
         // Decimal integers: 0, 1, 486
         lit_int: _ => token(/[0-9]+/),
 
         // Binary (0b), Octal (0o), Hex (0x), and Radix 1..36 (1d..36d)
         lit_num_rep: _ => token(choice(
-            /0[bB][01]+/,
-            /0[oO][0-7]+/,
-            /0[xX][0-9a-fA-F]+/,
-            /([1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]+/
+            /0[bB][01]*/,
+            /0[oO][0-7]*/,
+            /0[xX][0-9a-fA-F]*/,
+            /([1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]*/
         )),
 
         // Chars

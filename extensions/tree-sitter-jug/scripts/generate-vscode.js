@@ -1,3 +1,9 @@
+/**
+ * 
+ * Generate juggernyaut.tmLanguage.json (most rules require manual updates)
+ * 
+**/
+
 const fs = require('fs');
 const path = require('path');
 
@@ -127,7 +133,7 @@ const tmLanguage = {
             patterns: [
                 {
                     name: 'constant.numeric.juggernyaut',
-                    match: '\\b(0[bB][01]+|0[oO][0-7]+|0[xX][0-9a-fA-F]+|([1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]+|[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+)\\b',
+                    match: '\\b(0[bB][01]*|0[oO][0-7]*|0[xX][0-9a-fA-F]*|([1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]*|[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+\\.([eE][+-]?[0-9]+)?|[0-9]+)\\b',
                 },
             ],
         },
