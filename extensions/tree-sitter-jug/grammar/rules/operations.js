@@ -28,8 +28,8 @@ module.exports = {
             SYM.SYM_BACKSLASH_BACKSLASH,
             SYM.SYM_PERCENT,
             SYM.SYM_PERCENT_PERCENT,
-            SYM.SYM_AT,
-            SYM.SYM_AT_AT
+            SYM.SYM_DOLLAR,
+            SYM.SYM_DOLLAR_DOLLAR
         ),
 
         op_additive: _ => choice(
@@ -80,8 +80,8 @@ module.exports = {
             SYM.SYM_CARET_EQUAL,
             SYM.SYM_SHIFT_LEFT_EQUAL,
             SYM.SYM_SHIFT_RIGHT_EQUAL,
-            SYM.SYM_AT_EQUAL,
-            SYM.SYM_AT_AT_EQUAL,
+            SYM.SYM_DOLLAR_EQUAL,
+            SYM.SYM_DOLLAR_DOLLAR_EQUAL,
             SYM.SYM_HASH_EQUAL,
             SYM.SYM_HASH_HASH_EQUAL,
             SYM.SYM_TILDE_EQUAL,
