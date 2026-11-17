@@ -179,6 +179,24 @@ metadata       - Non-runtime metadata (debug info, TBAA, optimization hints).
 
 // Though not planned yet, appropriate LLVM functions will be exposed in order to allow for seamless copy/reference casting between defined types and built-in types, in addition to other built-in type to built-in type casting operations.
 
+// Compile-time values and directives
+
+// Just like how there are special intrinsic compiler values,
+// there are built-in compiler functions and variables!
+// The built-in functions and variables belong to the _BUILT_IN_ namespace!
+
+_BUILT_IN_.SOME_VERY_EFFICENT_FUNCTION(...);
+
+_BUILT_IN_.TARGET;
+
+// '@' directives aree always attached to the next valid statement!
+
+// Special directives:
+
+@when(_BUILT_IN_.TARGET) // This means the next statement is included in the AST only when the args of @when all evaluate to true!
+cat;
+// Note that @directives only accept compile-time values,
+// such as those provided by _BUILT_IN_
 // Type aliasing
 type MyType = MySuperLongNameForMyType; // You can reference types using other names!
 abstract MyAbstractType = MyType; // You can reference abstract types too! You may even treat a non-abstract type as an abstract type by doing this!

@@ -4,6 +4,7 @@ const declarations = require('./declarations');
 const expressions = require('./expressions');
 const operations = require('./operations');
 const types = require('./types');
+const directives = require('./directives');
 
 module.exports = {
     PREC: expressions.PREC,
@@ -22,6 +23,7 @@ module.exports = {
         ...declarations.rules,
         ...types.rules,
         ...expressions.rules,
-        ...operations.rules
+        ...operations.rules,
+        ...directives.rules
     }
 };

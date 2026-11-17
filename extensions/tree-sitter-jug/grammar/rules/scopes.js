@@ -7,9 +7,12 @@ module.exports = {
         prog: $ => repeat($._global),
 
         // Globals
-        _global: $ => choice(
-            $._root_statement,
-            seq(optional(KWD.KWD_EXPORT), $._declaration)
+        _global: $ => seq(
+            optional(field('directives', repeat1($.directive))),
+            choice(
+                $._root_statement,
+                seq(optional(KWD.KWD_EXPORT), $._declaration)
+            )
         ),
 
         // Zoned blocks
@@ -19,10 +22,13 @@ module.exports = {
             SYM.SYM_CURLY_BRACKET_RIGHT
         ),
 
-        _generic_content: $ => choice(
-            $._statement,
-            $.decl_data,
-            $.generic_block
+        _generic_content: $ => seq(
+            optional(field('directives', repeat1($.directive))),
+            choice(
+                $._statement,
+                $.decl_data,
+                $.generic_block
+            )
         )
     }
 };

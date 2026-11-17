@@ -4,6 +4,7 @@ module.exports = {
     SYM_DOT: '.',
     SYM_COMMA: ',',
     SYM_ARROW_RIGHT: '->',
+    SYM_AT: '@',
 
     // Postfix & Prefix
     SYM_PLUS_PLUS: '++',
