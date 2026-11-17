@@ -100,7 +100,7 @@ namespace Parser {
             return;
         }
         auto tree = std::static_pointer_cast<ts::Tree>(file->cst);
-        if (file->content.byteLength() > MAX_CACHED_CST_BYTES ||
+        if (!(this->configs.allowCSTCaching) || file->content.byteLength() > MAX_CACHED_CST_BYTES ||
             tree->getRootNode().getNumChildren() > MAX_CACHED_ROOT_NODES) {
             file->cst.reset();
             file->cstVersion = 0;
