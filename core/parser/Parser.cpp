@@ -33,7 +33,7 @@ namespace Parser {
 
         Data::Diagnostics::Diagnostic diag = {.file = file};
         diag.severity = Data::Diagnostics::Severity::Info;
-        diag.code = 200011;
+        diag.code = 200003;
         diag.message = std::move(data);
 
         this->hooks.onDiagnostic(diag);
@@ -81,8 +81,17 @@ namespace Parser {
             return;
         }
 
+        // Update file's CST content
         file->cst = std::make_shared<ts::Tree>(std::move(*treeRes));
         file->cstVersion = file->version;
+
+        // Report (debug) data (if needed)
+        const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
+        if (reportCSTData) {
+            auto tree = std::static_pointer_cast<ts::Tree>(file->cst);
+            std::string sexp = tree->getRootNode().getSExpr();
+            this->sendCSTDataReport(file, std::move(sexp));
+        }
     }
     constexpr size_t MAX_CACHED_CST_BYTES = 4 * 1024 * 1024; // 4 MB (~120,000 LOC)
     constexpr uint32_t MAX_CACHED_ROOT_NODES = 50000;
@@ -109,78 +118,10 @@ namespace Parser {
             this->hooks.onContextStart(file);
         }
 
-        const bool reportAmbiguity = (this->env != nullptr) && this->env->debug.reportAmbiguity;
-        const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
-
-        (void)reportAmbiguity;
-
         // Generate/Update CST
         this->updateCST(file);
         // ...
         this->negotiateCSTCache(file);
-
-        /*Listeners::ANTLRDiagnosticListener diagListener(
-            file,
-            this->hooks.onDiagnostic,
-            reportAmbiguity
-        );*/
-
-        // [STAGE 1] ANTLR4 Lexer
-        /*antlr4::ANTLRInputStream input(file->content.getChunk(0));
-        Internal::JugLexer lexer(&input);
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(&diagListener);
-
-        antlr4::CommonTokenStream tokens(&lexer);
-
-        tokens.fill();*/
-        if (reportCSTData) {
-            /*std::string tokenStreamStr;
-            for (const antlr4::Token *token : tokens.getTokens()) {
-                if (!tokenStreamStr.empty()) {
-                    tokenStreamStr += '\n';
-                }
-                tokenStreamStr += token->toString();
-            }*/
-            //this->sendCSTDataReport(file, std::move(tokenStreamStr));
-        }
-
-        // [STAGE 2] Parser (Fast SLL -> Slow LL Fallback)
-        /*Internal::JugParser parser(&tokens);
-        parser.removeErrorListeners();
-
-        auto *interpreter = parser.getInterpreter<antlr4::atn::ParserATNSimulator>();
-        antlr4::tree::ParseTree *tree = nullptr;
-
-        // If ambiguity reporting is explicitly requested, go straight to LL
-        if (!reportAmbiguity && interpreter != nullptr) {
-            interpreter->setPredictionMode(antlr4::atn::PredictionMode::SLL);
-            parser.setErrorHandler(std::make_shared<antlr4::BailErrorStrategy>());
-
-            try {
-                tree = parser.prog(); // Root
-            } catch (const antlr4::ParseCancellationException &) {
-                // SLL failed: rewind and fall back to full LL parsing with diagnostics
-                tokens.seek(0);
-                parser.reset();
-                parser.addErrorListener(&diagListener);
-                parser.setErrorHandler(std::make_shared<antlr4::DefaultErrorStrategy>());
-                interpreter->setPredictionMode(antlr4::atn::PredictionMode::LL);
-
-                tree = parser.prog(); // Root
-            }
-        } else {
-            if (interpreter != nullptr) {
-                interpreter->setPredictionMode(antlr4::atn::PredictionMode::LL);
-            }
-            parser.addErrorListener(&diagListener);
-
-            tree = parser.prog(); // Root
-        }*/
-
-        if (reportCSTData) { //&& tree != nullptr) {
-            //this->sendCSTDataReport(file, tree->toStringTree(&parser));
-        }
 
         // [STAGE 3] AST & Import Extraction
         /*if (tree != nullptr) {

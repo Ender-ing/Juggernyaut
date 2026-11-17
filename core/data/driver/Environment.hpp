@@ -40,7 +40,6 @@ namespace Data {
         };
         // (Internal )Debug
         struct DebugConfigs {
-            bool reportAmbiguity = false;
             bool reportCSTData = false;
         };
         // 'Environment' is derived from the 'jug.toml' configuration files!
