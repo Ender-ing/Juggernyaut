@@ -13,7 +13,8 @@
 #include "../data/driver/Environment.hpp"
 #include "../data/parser/AST.hpp"
 
-// Pipeline Stages
+// Parser
+#include "../data/parser/SharedCSTCache.hpp"
 #include "../parser/Parser.hpp"
 
 #include "Hooks.hpp"
@@ -25,11 +26,17 @@
 #endif
 
 namespace Session {
+    // Host
     using File = Data::Host::File;
     using FileVersion = Data::Host::FileVersion;
     using SourceId = Data::Host::FileId;
     using VFS = Data::Host::VFS;
+
+    // Driver
     using Environment = Data::Driver::Environment;
+
+    // Parser
+    using SharedCSTCache = Data::Parser::SharedCSTCache;
 
     using Diagnostic = Data::Diagnostics::Diagnostic;
     using ASTNode = Data::Parser::ASTNode;
@@ -70,6 +77,9 @@ namespace Session {
             VFS *vfs = nullptr;
             const Environment *env = nullptr; // Rules from jug.toml
 
+            // Cache
+            std::unique_ptr<Data::Parser::SharedCSTCache> cstCache = nullptr;
+
             // Read-only views into completed dependency sessions (keyed by package/alias)
             std::vector<ExternalPackage> externalPackages;
 
@@ -91,7 +101,13 @@ namespace Session {
         public:
             // NOTE: Session functions may operate on the assumption that 'hostVFS' and 'unitEnv' actually link to proper memory addresses!
             Session(VFS *hostVFS, const Environment *unitEnv, Configs sessionConfigs = {}, Hooks sessionHooks = {})
-                : vfs(hostVFS), env(unitEnv), hooks(std::move(sessionHooks)), configs(std::move(sessionConfigs)) {}
+                : vfs(hostVFS), env(unitEnv), hooks(std::move(sessionHooks)), configs(std::move(sessionConfigs)) {
+
+                    // Allow caching
+                    if (this->configs.allowCSTCache) {
+                        this->cstCache = std::make_unique<SharedCSTCache>();
+                    }
+                }
             ~Session() = default;
 
             // Non-copyable, movable

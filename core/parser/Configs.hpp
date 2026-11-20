@@ -10,6 +10,6 @@
 
 namespace Parser {
     struct Configs {
-        bool allowCSTCaching = true; // change to 'false' later
+        // ...
     };
 }

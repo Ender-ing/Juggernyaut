@@ -10,6 +10,7 @@
 
 // Data & Diagnostics
 #include "../data/host/VFS.hpp"
+#include "../data/parser/SharedCSTCache.hpp"
 #include "../data/parser/AST.hpp"
 #include "../data/diagnostics/Diagnostic.hpp"
 
@@ -26,11 +27,19 @@
 #endif
 
 namespace Parser {
+    // Host
     using File = Data::Host::File;
     using Range = Data::Diagnostics::Range;
     using Diagnostic = Data::Diagnostics::Diagnostic;
+
+    // Driver
     using Environment = Data::Driver::Environment;
+
+    // Parser
+    using SharedCSTCache = Data::Parser::SharedCSTCache;
+    using InternalCSTHandle = Data::Parser::CSTHandle;
     using ASTNode = Data::Parser::ASTNode;
+    
 
     struct ImportRequest {
         std::string target = "";
@@ -52,17 +61,18 @@ namespace Parser {
             Hooks hooks{};
         private:
             const Environment *env = nullptr;
+            SharedCSTCache *cstCache = nullptr;
 
             void emitDiagnostic(const File *file, Diagnostic &diag) const;
             void sendCSTDataReport(const File *file, std::string &&data) const;
             
             // tree-sitter
-            void updateCST(const File *file) const;
-            void negotiateCSTCache(const File *file) const; // TO-DO: Implement a cache manager
+            InternalCSTHandle updateCST(const File *file) const;
+            void negotiateCSTCache(const File *file, const InternalCSTHandle &cst) const;
 
         public:
-            Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr)
-                : configs(std::move(parserConfigs)), hooks(std::move(parserHooks)), env(sharedEnvironment) {}
+            Parser(Configs parserConfigs = {}, Hooks parserHooks = {}, const Environment *sharedEnvironment = nullptr, SharedCSTCache *sharedCstCache = nullptr)
+                : configs(std::move(parserConfigs)), hooks(std::move(parserHooks)), env(sharedEnvironment), cstCache(sharedCstCache) {}
             ~Parser() = default;
 
             // Non-copyable, movable

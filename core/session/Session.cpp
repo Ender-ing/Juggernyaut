@@ -120,7 +120,7 @@ namespace Session {
             }
         };
 
-        return Parser::Parser(std::move(parserConfigs), std::move(parserHooks), this->env);
+        return Parser::Parser(std::move(parserConfigs), std::move(parserHooks), this->env, this->cstCache.get());
     }
     void Session::resolveUnitImports(const File *sourceFile, CompilationUnitState &unitState,
         const std::vector<Parser::ImportRequest> &imports, std::vector<SourceId> &worklist) {
@@ -298,13 +298,15 @@ namespace Session {
         // Refresh entry points
         this->refreshEntryPoints();
 
-        // [STAGE 1 & 2] Lexer & Parser
+        // [STAGE 1 & 2] CST & AST generation
+        // Description: Generates a CST, then convers it into an internal AST
         this->runParserStage();
         if (this->configs.terminateAfter == Stage::Parser) {
             return;
         }
 
         // [STAGE 3] Transformer
+        // Description: Lowers the AST and readies it for semantic analysis
         if (this->configs.terminateAfter == Stage::Transformer) {
             return;
         }
@@ -315,6 +317,7 @@ namespace Session {
         }
 
         // [STAGE 5] IaRC
+        // Description: Flagging unreachable code, checking for expected functions, etc.
         // ...
     }
 

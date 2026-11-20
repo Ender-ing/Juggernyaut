@@ -22,6 +22,7 @@ namespace Session {
     };
 
     struct Configs {
+        bool allowCSTCache = true; // Change to false...
         bool inheritEnvironmentBuildInputs = true;
         Stage terminateAfter = Stage::IaRC;
     };

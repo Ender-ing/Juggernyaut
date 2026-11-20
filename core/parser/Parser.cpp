@@ -33,35 +33,43 @@ namespace Parser {
 
         Data::Diagnostics::Diagnostic diag = {.file = file};
         diag.severity = Data::Diagnostics::Severity::Info;
-        diag.code = 200003;
+        diag.code = 200002;
         diag.message = std::move(data);
 
         this->hooks.onDiagnostic(diag);
     }
 
     // tree-sitter
-    void Parser::updateCST(const File *file) const {
+    InternalCSTHandle Parser::updateCST(const File *file) const {
         if (file == nullptr || !file->isValid) {
-            return;
+            return nullptr;
         }
-        if (file->cst != nullptr && file->cstVersion == file->version) {
-            return;
+        // Check shared cache (if enabled for this session)
+        Data::Parser::CSTEntry cached{};
+        if (this->cstCache != nullptr) {
+            cached = this->cstCache->checkout(file->id, file->version);
+            if (cached.tree != nullptr && cached.version == file->version) {
+                return cached.tree;
+            }
         }
+
         if (!Internal::tsParser.has_value()) {
-            // Creation failed (ErrorKind::LanguageIncompatible)
-            SET_CODE(diag, Error, 200001);
-            this->emitDiagnostic(file, diag);
-            return;
+            // This shouldn't happen...
+            throw std::runtime_error("TSParser generation failed!");
+            return nullptr;
         }
 
         ts::Parser& parser = *Internal::tsParser;
         const std::string_view source = file->content.view();
-
         std::expected<ts::Tree, ts::Error> treeRes =
             std::unexpected{ts::Error{.kind = ts::ErrorKind::ParseFailed}};
-
-        if (file->cst != nullptr && !file->pendingDeltas.empty()) {
-            auto oldTree = std::static_pointer_cast<ts::Tree>(file->cst);
+        if (cached.tree != nullptr && !file->pendingDeltas.empty()) {
+            // Move out of `cached.tree` so `use_count()` accurately reflects external readers
+            auto oldTree = std::static_pointer_cast<ts::Tree>(std::move(cached.tree));
+            if (oldTree.use_count() > 1) {
+                // Another reader still holds this snapshot: O(1) shallow copy before in-place edit
+                oldTree = std::make_shared<ts::Tree>(ts_tree_copy(oldTree->raw()));
+            }
             for (const auto& delta : file->pendingDeltas) {
                 oldTree->edit(ts::InputEdit{
                     .start  = {delta.startByte,  {delta.startPoint.line,  delta.startPoint.column}},
@@ -76,35 +84,41 @@ namespace Parser {
 
         if (!treeRes.has_value()) {
             // Parse failed (ErrorKind::ParseFailed)
-            SET_CODE(diag, Error, 200002);
+            SET_CODE(diag, Error, 200001);
             this->emitDiagnostic(file, diag);
-            return;
+            return nullptr;
         }
-
-        // Update file's CST content
-        file->cst = std::make_shared<ts::Tree>(std::move(*treeRes));
-        file->cstVersion = file->version;
+        auto newTree = std::make_shared<ts::Tree>(std::move(*treeRes));
 
         // Report (debug) data (if needed)
         const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
         if (reportCSTData) {
-            auto tree = std::static_pointer_cast<ts::Tree>(file->cst);
-            std::string sexp = tree->getRootNode().getSExpr();
-            this->sendCSTDataReport(file, std::move(sexp));
+            std::string sExpr = newTree->getRootNode().getSExpr();
+            this->sendCSTDataReport(file, std::move(sExpr));
         }
+        return newTree;
     }
     constexpr size_t MAX_CACHED_CST_BYTES = 4 * 1024 * 1024; // 4 MB (~120,000 LOC)
     constexpr uint32_t MAX_CACHED_ROOT_NODES = 50000;
-    void Parser::negotiateCSTCache(const File *file) const {
-        if (file->cst == nullptr) {
+    void Parser::negotiateCSTCache(const File *file, const InternalCSTHandle &cst) const {
+        if (this->cstCache == nullptr || file == nullptr) {
             return;
         }
-        auto tree = std::static_pointer_cast<ts::Tree>(file->cst);
-        if (!(this->configs.allowCSTCaching) || file->content.byteLength() > MAX_CACHED_CST_BYTES ||
-            tree->getRootNode().getNumChildren() > MAX_CACHED_ROOT_NODES) {
-            file->cst.reset();
-            file->cstVersion = 0;
+        if (cst == nullptr) {
+            this->cstCache->evict(file->id);
+            return;
         }
+        auto tree = std::static_pointer_cast<ts::Tree>(cst);
+
+        // Filter out costly CSTs!
+        if (file->content.byteLength() > MAX_CACHED_CST_BYTES ||
+            tree->getRootNode().getNumChildren() > MAX_CACHED_ROOT_NODES) {
+            this->cstCache->evict(file->id);
+            return;
+        }
+
+        // Cache the CST!
+        this->cstCache->set(file->id, cst, file->version);
     }
 
     ParseResult Parser::parse(const File *file) const {
@@ -119,9 +133,9 @@ namespace Parser {
         }
 
         // Generate/Update CST
-        this->updateCST(file);
+        InternalCSTHandle cst = this->updateCST(file);
         // ...
-        this->negotiateCSTCache(file);
+        this->negotiateCSTCache(file, cst);
 
         // [STAGE 3] AST & Import Extraction
         /*if (tree != nullptr) {
