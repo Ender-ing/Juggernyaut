@@ -8,7 +8,7 @@
 
 namespace Data {
     namespace Parser {
-        auto SharedCSTCache::lowerBoundLocked(FileId id) noexcept {
+        std::vector<SharedCSTCache::Slot>::iterator SharedCSTCache::lowerBoundLocked(FileId id) noexcept {
             return std::lower_bound( // Binary seach
                 this->entries.begin(),
                 this->entries.end(),

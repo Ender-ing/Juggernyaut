@@ -23,7 +23,7 @@ namespace Data {
         };
 
         // (Owned by Session, used by Parser)
-        class SharedCSTCache {
+        class JUG_DATA_API SharedCSTCache {
             public:
                 static constexpr size_t DEFAULT_MAX_ENTRIES = 64; // 64 * 32B = 2 KB max container memory
 
@@ -41,7 +41,7 @@ namespace Data {
                 uint64_t tick = 0;
                 size_t maxEntries = DEFAULT_MAX_ENTRIES;
 
-                auto lowerBoundLocked(FileId id) noexcept ;
+                std::vector<Slot>::iterator lowerBoundLocked(FileId id) noexcept ;
 
                 // Evicts the least-recently-used slot (or an empty slot first).
                 // Moves the evicted tree into `outEvicted` so `ts_tree_delete` runs outside the lock.
