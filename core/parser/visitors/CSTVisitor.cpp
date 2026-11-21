@@ -5,10 +5,6 @@
 
 #include "CSTVisitor.hpp"
 
-// C++ headers
-#include <algorithm>
-#include <format>
-
 #include "../internal/cstDiagnostics.hpp"
 
 namespace Parser::Visitors {
@@ -93,8 +89,12 @@ namespace Parser::Visitors {
     }
     Diagnostic CSTVisitor::buildSyntaxDiagnostic(ts::Node node, std::string_view source, const File *originFile) {
         if (node.isNull()) {
-            SET_CODE(diag, Severity::Error, 200005);
-            return diag;
+            return Diagnostic{
+                .file = originFile,
+                .message = "Invalid syntax node",
+                .code = 200005,
+                .severity = Severity::Error
+            };
         }
 
         switch (classify(node)) {

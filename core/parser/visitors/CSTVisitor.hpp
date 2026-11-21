@@ -25,10 +25,8 @@ namespace Parser::Visitors {
     using File = Data::Host::File;
 
     // Diagnostics
-    using Position = Data::Diagnostics::Position;
-    using Range = Data::Diagnostics::Range;
-    using Severity = Data::Diagnostics::Severity;
     using Diagnostic = Data::Diagnostics::Diagnostic;
+    using Severity = Data::Diagnostics::Severity;
     using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
     // Tree-sitter node state classification
@@ -64,7 +62,8 @@ namespace Parser::Visitors {
             virtual ts::VisitAction onMissing(ts::Node node) ;
 
         public:
-            CSTVisitor() noexcept = default;
+            CSTVisitor(const File *targetFile = nullptr, ModifiableEvent diagnosticCallback = nullptr) noexcept
+                : file(targetFile), onDiagnostic(std::move(diagnosticCallback)) {}
             virtual ~CSTVisitor() = default;
 
             CSTVisitor(const CSTVisitor&) noexcept = default;

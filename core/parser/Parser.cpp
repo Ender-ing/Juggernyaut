@@ -12,7 +12,7 @@
 #include "tree-sitter.hpp"
 
 // Listeners & Visitors
-// ...
+#include "visitors/CSTVisitor.hpp"
 
 // Grab tree sitter language
 extern "C" const TSLanguage* tree_sitter_jug(void); 
@@ -141,7 +141,18 @@ namespace Parser {
 
         // Generate/Update CST
         InternalCSTHandle cst = this->updateCST(file);
+
+        // TMP
+        auto tree = std::static_pointer_cast<ts::Tree>(cst);
+        Visitors::CSTVisitor visitor(file, this->hooks.onDiagnostic);
+        if (tree != nullptr) {
+            visitor.visit(*tree);
+        }
+        result.hasSyntaxErrors = visitor.hasSyntaxErrors();
+
         // ...
+
+        // Handle post CST-logic
         this->negotiateCSTCache(file, cst);
 
         // [STAGE 3] AST & Import Extraction
