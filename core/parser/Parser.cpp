@@ -8,6 +8,11 @@
 // C++ headers
 #include <stdexcept>
 
+// mimalloc
+#ifdef JUG_USE_MIMALLOC
+#include <mimalloc.h>
+#endif
+
 // tree-sitter
 #include "tree-sitter.hpp"
 
@@ -20,7 +25,19 @@ extern "C" const TSLanguage* tree_sitter_jug(void);
 namespace Parser {
     // Handle tree sitter parseer
     namespace Internal {
-        thread_local auto tsParser = ts::Parser::create(ts::Language{tree_sitter_jug()});
+        static auto& getTSParser() {
+            // Force tree-sitter to use mimalloc
+            #ifdef JUG_USE_MIMALLOC
+            static const bool allocatorInit = []() {
+                ts_set_allocator(mi_malloc, mi_calloc, mi_realloc, mi_free);
+                return true;
+            }();
+            (void)allocatorInit;
+            #endif
+
+            thread_local auto tsParser = ts::Parser::create(ts::Language{tree_sitter_jug()});
+            return tsParser;
+        }
     }
 
     void Parser::emitDiagnostic(const File *file, Data::Diagnostics::Diagnostic &diag) const {
@@ -56,12 +73,14 @@ namespace Parser {
             }
         }
 
-        if (!Internal::tsParser.has_value()) {
+        // Grab the thread-local tree-sitter parser
+        auto& tsParser = Internal::getTSParser();
+        if (!tsParser.has_value()) {
             // This shouldn't happen...
             throw std::runtime_error("TSParser generation failed! (Please make sure that the imported TS language and the internal TS library use the same version of TS!)");
         }
+        ts::Parser& parser = *tsParser;
 
-        ts::Parser& parser = *Internal::tsParser;
         const std::string_view source = file->content.view();
         std::expected<ts::Tree, ts::Error> treeRes =
             std::unexpected{ts::Error{.kind = ts::ErrorKind::ParseFailed}};
