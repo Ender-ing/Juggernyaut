@@ -16,7 +16,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
-#include <limits.h>
+#include <limits>
 #include <optional>
 #include <cstdint>
 #include <cmath>
