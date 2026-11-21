@@ -5,17 +5,48 @@
 
 #include "CSTVisitor.hpp"
 
+// C++ headers
+#include <algorithm>
+#include <format>
+
+#include "../internal/cstDiagnostics.hpp"
+
 namespace Parser::Visitors {
+    // Diagnostics
+    void CSTVisitor::emitDiagnostic(Diagnostic &diag) {
+        diag.file = this->file;
+        if (this->onDiagnostic != nullptr) {
+            this->onDiagnostic(diag);
+        }
+    }
+    void CSTVisitor::reportSyntaxError(ts::Node node, NodeState state) {
+        if (state == NodeState::Valid) {
+            return;
+        }
+
+        this->syntaxErrors = true;
+        if (this->onDiagnostic == nullptr) {
+            return;
+        }
+
+        const std::string_view source = this->file != nullptr ? this->file->content.view() : std::string_view{};
+        Diagnostic diag = buildSyntaxDiagnostic(node, source, this->file);
+        this->emitDiagnostic(diag);
+    }
+
     ts::VisitAction CSTVisitor::onNode(ts::Node) {
         return ts::VisitAction::Continue;
     }
-    ts::VisitAction CSTVisitor::onError(ts::Node) {
+    ts::VisitAction CSTVisitor::onError(ts::Node node) {
+        this->reportSyntaxError(node, NodeState::Error);
         return ts::VisitAction::SkipChildren;
     }
-    ts::VisitAction CSTVisitor::onUnexpected(ts::Node) {
+    ts::VisitAction CSTVisitor::onUnexpected(ts::Node node) {
+        this->reportSyntaxError(node, NodeState::Unexpected);
         return ts::VisitAction::SkipChildren;
     }
-    ts::VisitAction CSTVisitor::onMissing(ts::Node) {
+    ts::VisitAction CSTVisitor::onMissing(ts::Node node) {
+        this->reportSyntaxError(node, NodeState::Missing);
         return ts::VisitAction::SkipChildren;
     }
 
@@ -59,5 +90,21 @@ namespace Parser::Visitors {
             return NodeState::Missing;
         }
         return NodeState::Valid;
+    }
+    Diagnostic CSTVisitor::buildSyntaxDiagnostic(ts::Node node, std::string_view source, const File *originFile) {
+        if (node.isNull()) {
+            SET_CODE(diag, Severity::Error, 200005);
+            return diag;
+        }
+
+        switch (classify(node)) {
+            case NodeState::Missing:
+                return Internal::CSTDiagnostics::buildMissingDiagnostic(node, source, originFile);
+            case NodeState::Unexpected:
+                return Internal::CSTDiagnostics::buildUnexpectedDiagnostic(node, source, originFile);
+            case NodeState::Error:
+            default:
+                return Internal::CSTDiagnostics::buildErrorDiagnostic(node, source, originFile);
+        }
     }
 }
