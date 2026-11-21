@@ -3,8 +3,10 @@
  * Thread-safe LRU CST (least recently used) cache for tree-sitter CST trees
 **/
 
-
 #include "SharedCSTCache.hpp"
+
+// C++ headers
+#include <algorithm>
 
 namespace Data {
     namespace Parser {

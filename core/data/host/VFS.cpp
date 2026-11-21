@@ -60,46 +60,67 @@ namespace Data {
 
             // Update content & internal state
             file->content.setFullContent(newContent);
-            file->pendingDeltas.clear();
-            file->cst.reset();
-            file->isValid = true;
 
             // Bump up the version
             file->version++;
+
+            // Update internal state
+            file->pendingDeltas.clear();
+            file->deltasBaseVersion = file->version;
+            file->isValid = true;
         }
+        constexpr size_t MAX_PENDING_DELTAS = 128;
         void VFS::editFileContent(const std::string& path, std::vector<ByteEdit> &edits) {
+            if (edits.empty()) {
+                return;
+            }
+
             File* file = getFilePtr(path);
+
+            // Keep 'deltasBaseVersion' up-to-date
+            if (file->pendingDeltas.empty()) {
+                file->deltasBaseVersion = file->version;
+                this->dirtyDeltaFiles.push_back(file);
+            }
+
+            // Bump up the version
+            file->version++;
 
             // If no CST exists yet, or the CST already consumed all deltas up to
             // file->version, clear old deltas before recording the new batch.
-            if (file->cst == nullptr || file->cstVersion == file->version) {
+            /*if (file->cst == nullptr || file->cstVersion == file->version) {
                 file->pendingDeltas.clear();
-            }
+            }*/
 
             // Update content
             for (const ByteEdit& edit : edits) {
                 file->pendingDeltas.push_back( // Keep track of changes for CST regeneration!
-                    file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text)
+                    file->content.applyEdit(edit.startByte, edit.oldEndByte, edit.text) // Apply edit
                 );
             }
             file->content.compact();
             file->isValid = true;
 
-            // Bump up the version
-            file->version++;
+            // Guard against single burst dumps
+            if (file->pendingDeltas.size() > MAX_PENDING_DELTAS) {
+                file->pendingDeltas.clear();
+                file->deltasBaseVersion = file->version; // Fall back to a full re-parse
+            }
         }
         void VFS::fetchLocalFileContent(const std::string& path) {
             File* file = getFilePtr(path);
 
-            // Update content & internal state
+            // Bump up the version
+            file->version++;
+
+            // Update content
             std::string newContent;
             file->isValid = this->_readFile(file->canonical, newContent);
             file->content.setFullContent(newContent);
-            file->pendingDeltas.clear();
-            file->cst.reset();
 
-            // Bump up the version
-            file->version++;
+            // Update internal state
+            file->pendingDeltas.clear();
+            file->deltasBaseVersion = file->version;
         }
 
         // External Management functions (Should not be called within the front-end!)
@@ -165,24 +186,34 @@ namespace Data {
             uint32_t prev = this->safetyCount.load(std::memory_order_relaxed);
             if (prev == 0) return;
 
-            // When opting out of safe mode, flush all queued operations!
-            if (this->safetyCount.fetch_sub(1, std::memory_order_acq_rel) == 1) {
-                for (auto& [path, op] : this->pendingRequests) {
-                    switch (op.kind) {
-                        case FileChangeRequest::Kind::Edit:
-                            this->editFileContent(path, op.edits);
-                            break;
-                        case FileChangeRequest::Kind::Reload:
-                            this->fetchLocalFileContent(path);
-                            break;
-                        case FileChangeRequest::Kind::Full:
-                            default:
-                            this->setFileContent(path, op.content);
-                            break;
-                    }
-                }
-                this->pendingRequests.clear();
+            // Allow cleanup when opting out of safe mode
+            if (this->safetyCount.fetch_sub(1, std::memory_order_acq_rel) != 1) return;
+
+            // Clean up unneeded deltas
+            // Note: Logic that uses this VFS should always run in safe mode!
+            // Otherwise, you lose access to the deltas!
+            for (File* file : this->dirtyDeltaFiles) {
+                file->pendingDeltas.clear();
+                file->deltasBaseVersion = file->version;
             }
+            this->dirtyDeltaFiles.clear();
+
+            // Flush all queued (external) operations!
+            for (auto& [path, op] : this->pendingRequests) {
+                switch (op.kind) {
+                    case FileChangeRequest::Kind::Edit:
+                        this->editFileContent(path, op.edits);
+                        break;
+                    case FileChangeRequest::Kind::Reload:
+                        this->fetchLocalFileContent(path);
+                        break;
+                    case FileChangeRequest::Kind::Full:
+                        default:
+                        this->setFileContent(path, op.content);
+                        break;
+                }
+            }
+            this->pendingRequests.clear();
         }
         bool VFS::isSafeMode() {
             return this->safetyCount.load() > 0;
@@ -210,6 +241,9 @@ namespace Data {
 
                 // Bump up the version
                 file->version++;
+
+                // Update internal state
+                file->deltasBaseVersion = file->version;
 
                 return file;
             }

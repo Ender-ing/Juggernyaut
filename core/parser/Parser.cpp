@@ -5,6 +5,9 @@
 
 #include "Parser.hpp"
 
+// C++ headers
+#include <stdexcept>
+
 // tree-sitter
 #include "tree-sitter.hpp"
 
@@ -55,15 +58,19 @@ namespace Parser {
 
         if (!Internal::tsParser.has_value()) {
             // This shouldn't happen...
-            throw std::runtime_error("TSParser generation failed!");
-            return nullptr;
+            throw std::runtime_error("TSParser generation failed! (Please make sure that the imported TS language and the internal TS library use the same version of TS!)");
         }
 
         ts::Parser& parser = *Internal::tsParser;
         const std::string_view source = file->content.view();
         std::expected<ts::Tree, ts::Error> treeRes =
             std::unexpected{ts::Error{.kind = ts::ErrorKind::ParseFailed}};
-        if (cached.tree != nullptr && !file->pendingDeltas.empty()) {
+        const bool canReuseTree =
+            cached.tree != nullptr &&
+            cached.version < file->version &&
+            cached.version == file->deltasBaseVersion &&
+            !(file->pendingDeltas.empty());
+        if (canReuseTree) {
             // Move out of `cached.tree` so `use_count()` accurately reflects external readers
             auto oldTree = std::static_pointer_cast<ts::Tree>(std::move(cached.tree));
             if (oldTree.use_count() > 1) {

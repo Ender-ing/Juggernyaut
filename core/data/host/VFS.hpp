@@ -42,6 +42,7 @@ namespace Data {
                 std::mutex pendingMtx;
                 std::atomic<uint32_t> safetyCount{0};
                 std::unordered_map<std::string, FileChangeRequest> pendingRequests;
+                std::vector<File*> dirtyDeltaFiles; // Accumulated deltas tracking (for cleanup)
 
                 // Configs
                 bool trackModificationTime = false;

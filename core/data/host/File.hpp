@@ -21,6 +21,7 @@ namespace Data {
             std::string canonical = "";
             FileBuffer content; // Can store either valid content, or an error message! (Depends on the value of 'isValid')
             std::vector<EditDelta> pendingDeltas; // Since the last full content reset!
+            FileVersion deltasBaseVersion = 0; // (last delta clear)
             FileVersion version = 0;
             // bool isLoaded = false;
             bool isValid = false;
