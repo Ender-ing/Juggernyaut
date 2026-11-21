@@ -89,12 +89,9 @@ namespace Parser::Visitors {
     }
     Diagnostic CSTVisitor::buildSyntaxDiagnostic(ts::Node node, std::string_view source, const File *originFile) {
         if (node.isNull()) {
-            return Diagnostic{
-                .file = originFile,
-                .message = "Invalid syntax node",
-                .code = 200005,
-                .severity = Severity::Error
-            };
+            SET_CODE(diag, Error, 200008);
+            diag.file = originFile;
+            return diag;
         }
 
         switch (classify(node)) {

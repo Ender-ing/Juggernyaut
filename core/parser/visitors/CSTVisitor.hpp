@@ -26,7 +26,6 @@ namespace Parser::Visitors {
 
     // Diagnostics
     using Diagnostic = Data::Diagnostics::Diagnostic;
-    using Severity = Data::Diagnostics::Severity;
     using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
     // Tree-sitter node state classification

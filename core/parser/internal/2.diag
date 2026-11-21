@@ -1,6 +1,10 @@
-3:
--RESERVED (CST syntax error)
-4:
--RESERVED (CST syntax error)
+3[TXT $EXPECTED]:
+-expected $EXPECTED
+4[TXT $EXPECTED, TXT $AFTER]:
+-expected $EXPECTED after '$AFTER'
 5:
--RESERVED (CST syntax error)
+-unexpected syntax error
+6[TXT $FOUND]:
+-unexpected '$FOUND'
+7[TXT $FOUND, TXT $EXPECTED]:
+-unexpected '$FOUND'; expected $EXPECTED
