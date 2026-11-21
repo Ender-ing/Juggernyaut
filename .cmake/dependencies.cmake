@@ -175,6 +175,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(MI_BUILD_TESTS OFF CACHE BOOL "Skip mimalloc tests" FORCE)
         set(MI_OVERRIDE ON CACHE BOOL "Override standard allocations" FORCE)
         set(MI_NO_OPT_ARCH ON CACHE BOOL "No architecture optimisation" FORCE)
+        set(MI_EXTRA_CPPDEFS "MI_DEFAULT_ARENA_RESERVE=65536;MI_DEFAULT_ARENA_EAGER_COMMIT=0" CACHE STRING "" FORCE)
         FetchContent_MakeAvailable(mimalloc)
         ignore_external_directory_warnings("${mimalloc_BINARY_DIR}")
         set_target_properties(mimalloc PROPERTIES
