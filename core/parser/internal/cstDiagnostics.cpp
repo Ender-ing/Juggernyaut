@@ -24,6 +24,12 @@ namespace Parser::Internal::CSTDiagnostics {
             return Range{.start = toPosition(pts.start), .end = toPosition(pts.end)};
         }
 
+        Range toRange(ts::Node first, ts::Node last) noexcept {
+            const ts::Point startPt = first.getPointRange().start,
+                endPtr = last.getPointRange().end;
+            return Range{.start = toPosition(startPt), .end = toPosition(endPtr)};
+        }
+
         std::optional<ts::Node> findPrevSibling(ts::Node node) noexcept {
             std::optional<ts::Node> prev = node.getPreviousSibling();
             while (prev.has_value() && prev->isExtra()) {
@@ -165,8 +171,8 @@ namespace Parser::Internal::CSTDiagnostics {
         return buildUnexpectedDiagnostic(leaf, source, originFile);
     }
 
-    Diagnostic buildDiagnostic(ts::Node node, const File *originFile) {
-        Diagnostic diag{.file = originFile, .range = Helper::toRange(node)};
+    Diagnostic buildRangedDiagnostic(ts::Node first, ts::Node last, const File *originFile) {
+        Diagnostic diag{.file = originFile, .range = Helper::toRange(first, last)};
         return diag;
     }
 }

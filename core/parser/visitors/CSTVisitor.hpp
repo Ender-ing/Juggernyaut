@@ -43,6 +43,14 @@ namespace Parser::Visitors {
     // (via `ts::visit()`)
     class JUG_PARSER_API CSTVisitor {
         private:
+            struct UnusedFrame {
+                const void *nodeId = nullptr;
+                bool isUnused = false;
+                bool hasUsedDescendant = false;
+                std::vector<ts::Node> pending;
+            };
+            std::vector<UnusedFrame> unusedStack;
+
             const File *file = nullptr;
             ModifiableEvent onDiagnostic;
             bool syntaxErrors = false;
@@ -53,7 +61,9 @@ namespace Parser::Visitors {
         protected:
             // Diagnostics
             void emitDiagnostic(Diagnostic &diag) ;
+            void emitUnusedNodeDiagnostic(ts::Node first, ts::Node last) ;
             void reportSyntaxError(ts::Node node, NodeState state) ;
+            void finalizeUnusedFrame(ts::Node node) ;
             void reportUnusedNode(ts::Node node, NodeState state) ;
 
             // (#NodeState::Valid).
