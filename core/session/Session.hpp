@@ -34,6 +34,7 @@ namespace Session {
 
     // Driver
     using Environment = Data::Driver::Environment;
+    using EnvironmentVersion = Data::Driver::EnvironmentVersion;
 
     // Parser
     using SharedCSTCache = Data::Parser::SharedCSTCache;
@@ -76,6 +77,7 @@ namespace Session {
             // Basic context objects
             VFS *vfs = nullptr;
             const Environment *env = nullptr; // Rules from jug.toml
+            EnvironmentVersion envRevision = 0; // Synced against env->version
 
             // Cache
             std::unique_ptr<Data::Parser::SharedCSTCache> cstCache = nullptr;
@@ -94,6 +96,10 @@ namespace Session {
             bool hasErrors : 1 = false;
 
             // Internal stage & dependency helpers
+            void refreshEntryPoints() ;
+            void invalidateCompilationUnits() ;
+
+            // Parser Stage Helpers
             Parser::Parser createConfiguredParser() ;
             void resolveUnitImports(const File *sourceFile, CompilationUnitState &unitState, const std::vector<Parser::ImportRequest> &imports, std::vector<SourceId> &worklist) ;
             bool runParserStage() ;
@@ -122,11 +128,10 @@ namespace Session {
 
             // Source & Dependency Registration (Called by JugDriver)
             void addEntryPoint(const File *file) ;
-            void refreshEntryPoints() ;
 
             // Pipeline
-            void run();
-            void rejuvenate(); // ...maybe this should be removed?
+            void run() ;
+            void rejuvenate() ; // ...maybe this should be removed?
 
             // Queries & Cross-Session Exports
             bool succeeded() const noexcept { return !this->hasErrors; }

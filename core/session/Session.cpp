@@ -24,67 +24,7 @@ namespace Session {
         return units.back();
     }
 
-    // (Internal) Management
-    void Session::emitDiagnostic(Diagnostic &diag) {
-        if (this->env != nullptr) {
-            // Upgrade warnings to errors!
-            if (this->env->build.flags.treatWarningsAsErrors &&
-                diag.severity == Data::Diagnostics::Severity::Warning) {
-                diag.severity = Data::Diagnostics::Severity::Error;
-            }
-            // Ignore warnings
-            if (this->env->build.flags.ignoreWarnings &&
-                diag.severity == Data::Diagnostics::Severity::Warning) {
-                return;
-            }
-        }
-
-        // Update internal stats
-        if (diag.severity == Data::Diagnostics::Severity::Error) {
-            this->hasErrors = true;
-
-            if (diag.file != nullptr) {
-                if (CompilationUnitState *unit = findUnit(this->units, diag.file->id)) {
-                    // Check the type of the error
-                    const int phaseCode = std::abs(diag.code) / 100'000;
-                    switch (phaseCode) {
-                    case 1: // Lexer
-                    case 2: // Parser
-                    case 3: // Transformer
-                        unit->hasSyntaxErrors = true;
-                        break;
-                    case 4: // Semantic
-                        unit->hasSemanticErrors = true;
-                        break;
-                    default:
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Trigger relevant events
-        if (this->hooks.onDiagnostic != nullptr) {
-            this->hooks.onDiagnostic(diag);
-        }
-    }
-
-    // Source & Dependency Registration (Called by JugDriver)
-    void Session::addEntryPoint(const File *file) {
-        if (file == nullptr) {
-            return;
-        }
-
-        // Only add to entryPoints if not already present
-        if (std::ranges::find(this->entryPoints, file->id) == this->entryPoints.end()) {
-            this->entryPoints.push_back(file->id);
-        }
-
-        // Update entry status
-        CompilationUnitState &unit = getOrCreateUnit(this->units, file);
-        unit.file = file;
-        unit.isEntryPoint = true;
-    }
+    // Internal stage & dependency helpers
     void Session::refreshEntryPoints() {
         // Reset entry points
         this->entryPoints.clear();
@@ -103,6 +43,11 @@ namespace Session {
                 const File *file = this->vfs->readFile(uri);
                 this->addEntryPoint(file);
             }
+        }
+    }
+    void Session::invalidateCompilationUnits() {
+        for (CompilationUnitState &unit : this->units) {
+            unit.completedStage = Stage::Unprocessed;
         }
     }
 
@@ -273,9 +218,71 @@ namespace Session {
         return !this->hasErrors;
     }
 
+    // (Internal) Management
+    void Session::emitDiagnostic(Diagnostic &diag) {
+        if (this->env != nullptr) {
+            // Upgrade warnings to errors!
+            if (this->env->build.flags.treatWarningsAsErrors &&
+                diag.severity == Data::Diagnostics::Severity::Warning) {
+                diag.severity = Data::Diagnostics::Severity::Error;
+            }
+            // Ignore warnings
+            if (this->env->build.flags.ignoreWarnings &&
+                diag.severity == Data::Diagnostics::Severity::Warning) {
+                return;
+            }
+        }
+
+        // Update internal stats
+        if (diag.severity == Data::Diagnostics::Severity::Error) {
+            this->hasErrors = true;
+
+            if (diag.file != nullptr) {
+                if (CompilationUnitState *unit = findUnit(this->units, diag.file->id)) {
+                    // Check the type of the error
+                    const int phaseCode = std::abs(diag.code) / 100'000;
+                    switch (phaseCode) {
+                    case 1: // Lexer
+                    case 2: // Parser
+                    case 3: // Transformer
+                        unit->hasSyntaxErrors = true;
+                        break;
+                    case 4: // Semantic
+                        unit->hasSemanticErrors = true;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Trigger relevant events
+        if (this->hooks.onDiagnostic != nullptr) {
+            this->hooks.onDiagnostic(diag);
+        }
+    }
+
+    // Source & Dependency Registration (Called by JugDriver)
+    void Session::addEntryPoint(const File *file) {
+        if (file == nullptr) {
+            return;
+        }
+
+        // Only add to entryPoints if not already present
+        if (std::ranges::find(this->entryPoints, file->id) == this->entryPoints.end()) {
+            this->entryPoints.push_back(file->id);
+        }
+
+        // Update entry status
+        CompilationUnitState &unit = getOrCreateUnit(this->units, file);
+        unit.file = file;
+        unit.isEntryPoint = true;
+    }
+
     // Pipeline
     void Session::run() {
-        if (this->isRunning || this->configs.terminateAfter == Stage::Unprocessed) {
+        if (this->isRunning || this->env == nullptr || this->configs.terminateAfter == Stage::Unprocessed) {
             return;
         }
         this->isRunning = true;
@@ -294,6 +301,12 @@ namespace Session {
                 self->rejuvenate();
             }
         } cleanup{this};
+
+        // Check environment for changes
+        if (this->envRevision != this->env->version) {
+            this->envRevision = this->env->version;
+            this->invalidateCompilationUnits();
+        }
 
         // Refresh entry points
         this->refreshEntryPoints();
