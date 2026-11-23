@@ -41,9 +41,18 @@ namespace Capabilities {
 
             diagnostic.severity = internal_getSeverity(diag.severity);
 
+            // Diagnostic's content
             diagnostic.message = diag.message;
             diagnostic.code = diag.code;
             diagnostic.source = "Jug";
+
+            // Handle tags
+            if (diag.isUnnecessary) {
+                if (!diagnostic.tags) {
+                    diagnostic.tags.emplace();
+                }
+                diagnostic.tags->push_back(lsp::DiagnosticTag::Unnecessary);
+            }
 
             return diagnostic;
         }

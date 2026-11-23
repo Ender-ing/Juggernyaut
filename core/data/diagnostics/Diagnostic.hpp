@@ -68,15 +68,18 @@ namespace Data::Diagnostics {
 
     struct Diagnostic {
         // Source info
-        const File* file = nullptr; ///< @brief Originating source #File, or `nullptr` for component-wide diagnostics.
-        Range range;                ///< @brief Source #Range within #file where the issue occurred.
+        const File* file = nullptr; // Originating source #File, or `nullptr` for component-wide diagnostics.
+        Range range;                // Source #Range within #file where the issue occurred.
 
         // Content
-        std::string message = "";           ///< @brief Human-readable diagnostic message text.
-        int code = 1;                       ///< @brief Numeric diagnostic code (see `DiagCodes.hpp`).
-        Severity severity = Severity::Hint; ///< @brief Impact level of this diagnostic.
+        std::string message = "";           // Human-readable diagnostic message text.
+        int code = 1;                       // Numeric diagnostic code (see `DiagCodes.hpp`).
+        Severity severity = Severity::Hint; // Impact level of this diagnostic.
         // std::vector<Trace> stack;
         // std::vector<RelatedInformation> related;
+
+        // Flags
+        bool isUnnecessary = false; // Used to report unnecessary/unused source ranges
     };
 
     using Event = std::function<void(const Diagnostic&)>;
