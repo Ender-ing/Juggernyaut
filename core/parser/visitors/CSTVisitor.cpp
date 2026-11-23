@@ -74,7 +74,7 @@ namespace Parser::Visitors {
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
-        if (state != NodeState::Valid) {
+        if (state != NodeState::Valid || node.isExtra() || this->extraRootId != nullptr) {
             return;
         }
         if (this->onDiagnostic == nullptr || !(this->configs.reportUnusedCSTNodes)) {
@@ -109,14 +109,24 @@ namespace Parser::Visitors {
     }
     void CSTVisitor::visit(ts::Node root) {
         this->unusedStack.clear();
+        this->extraRootId = nullptr;
         if (!root.isNull()) {
             ts::visit(root, *this);
         }
         this->unusedStack.clear();
+        this->extraRootId = nullptr;
     }
 
     ts::VisitAction CSTVisitor::onEnter(ts::Node node) {
-        const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr;
+        const bool isExtra = node.isExtra();
+        if (this->extraRootId == nullptr && isExtra) {
+            this->extraRootId = node.impl.id;
+            if (!(this->unusedStack.empty())) {
+                this->unusedStack.back().hasUsedDescendant = true;
+            }
+        }
+
+        const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr && this->extraRootId == nullptr;
         if (trackUnused) {
             this->unusedStack.push_back(UnusedFrame{.nodeId = node.impl.id});
         }
@@ -139,14 +149,22 @@ namespace Parser::Visitors {
                 break;
         }
 
-        if (trackUnused && action == ts::VisitAction::SkipChildren) {
-            this->finalizeUnusedFrame(node);
+        if (action == ts::VisitAction::SkipChildren) {
+            if (trackUnused) {
+                this->finalizeUnusedFrame(node);
+            }
+            if (node.impl.id == this->extraRootId) {
+                this->extraRootId = nullptr;
+            }
         }
         return action;
     }
     void CSTVisitor::onLeave(ts::Node node) {
         if (!(this->unusedStack.empty()) && this->unusedStack.back().nodeId == node.impl.id) {
             this->finalizeUnusedFrame(node);
+        }
+        if (node.impl.id == this->extraRootId) {
+            this->extraRootId = nullptr;
         }
     }
 

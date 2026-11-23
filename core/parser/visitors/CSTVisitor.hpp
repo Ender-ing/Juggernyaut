@@ -43,6 +43,7 @@ namespace Parser::Visitors {
     // (via `ts::visit()`)
     class JUG_PARSER_API CSTVisitor {
         private:
+            // Tracking unused nodes
             struct UnusedFrame {
                 const void *nodeId = nullptr;
                 bool isUnused = false;
@@ -50,7 +51,9 @@ namespace Parser::Visitors {
                 std::vector<ts::Node> pending;
             };
             std::vector<UnusedFrame> unusedStack;
+            const void *extraRootId = nullptr;
 
+            // File details
             const File *file = nullptr;
             ModifiableEvent onDiagnostic;
             bool syntaxErrors = false;
