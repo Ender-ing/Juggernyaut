@@ -41,6 +41,7 @@ namespace Data {
         // (Internal )Debug
         struct DebugConfigs {
             bool reportCSTData = false;
+            bool reportUnusedCSTNodes = false;
         };
         // 'Environment' is derived from the 'jug.toml' configuration files!
         using EnvironmentId = uint32_t;

@@ -164,4 +164,9 @@ namespace Parser::Internal::CSTDiagnostics {
         }
         return buildUnexpectedDiagnostic(leaf, source, originFile);
     }
+
+    Diagnostic buildDiagnostic(ts::Node node, const File *originFile) {
+        Diagnostic diag{.file = originFile, .range = Helper::toRange(node)};
+        return diag;
+    }
 }

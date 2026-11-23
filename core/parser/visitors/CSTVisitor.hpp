@@ -36,16 +36,25 @@ namespace Parser::Visitors {
         Missing, // Parser-inserted zero-width `MISSING` token.
     };
 
+    struct CSTVisitorConfigs {
+        bool reportUnusedCSTNodes = false; // Debug flag
+    };
+
     // (via `ts::visit()`)
     class JUG_PARSER_API CSTVisitor {
         private:
             const File *file = nullptr;
             ModifiableEvent onDiagnostic;
             bool syntaxErrors = false;
+
+            // Configs
+            CSTVisitorConfigs configs;
+
         protected:
             // Diagnostics
             void emitDiagnostic(Diagnostic &diag) ;
             void reportSyntaxError(ts::Node node, NodeState state) ;
+            void reportUnusedNode(ts::Node node, NodeState state) ;
 
             // (#NodeState::Valid).
             // @return `ts::VisitAction::Continue` by default
@@ -61,8 +70,8 @@ namespace Parser::Visitors {
             virtual ts::VisitAction onMissing(ts::Node node) ;
 
         public:
-            CSTVisitor(const File *targetFile = nullptr, ModifiableEvent diagnosticCallback = nullptr) noexcept
-                : file(targetFile), onDiagnostic(std::move(diagnosticCallback)) {}
+            CSTVisitor(CSTVisitorConfigs configurations, const File *targetFile = nullptr, ModifiableEvent diagnosticCallback = nullptr) noexcept
+                : file(targetFile), onDiagnostic(std::move(diagnosticCallback)), configs(std::move(configurations)) {}
             virtual ~CSTVisitor() = default;
 
             CSTVisitor(const CSTVisitor&) noexcept = default;

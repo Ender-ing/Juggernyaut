@@ -163,7 +163,9 @@ namespace Parser {
 
         // TMP
         auto tree = std::static_pointer_cast<ts::Tree>(cst);
-        Visitors::CSTVisitor visitor(file, this->hooks.onDiagnostic);
+        Visitors::CSTVisitor visitor(Visitors::CSTVisitorConfigs{
+                .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes
+            }, file, this->hooks.onDiagnostic);
         if (tree != nullptr) {
             visitor.visit(*tree);
         }

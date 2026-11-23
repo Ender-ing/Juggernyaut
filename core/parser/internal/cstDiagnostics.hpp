@@ -26,4 +26,5 @@ namespace Parser::Internal::CSTDiagnostics {
     Diagnostic buildMissingDiagnostic(ts::Node node, std::string_view source, const File *originFile) ;
     Diagnostic buildUnexpectedDiagnostic(ts::Node node, std::string_view source, const File *originFile) ;
     Diagnostic buildErrorDiagnostic(ts::Node node, std::string_view source, const File *originFile) ;
+    Diagnostic buildDiagnostic(ts::Node node, const File *originFile) ;
 }

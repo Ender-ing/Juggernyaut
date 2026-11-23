@@ -29,8 +29,22 @@ namespace Parser::Visitors {
         Diagnostic diag = buildSyntaxDiagnostic(node, source, this->file);
         this->emitDiagnostic(diag);
     }
+    void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
+        if (state != NodeState::Valid) {
+            return;
+        }
 
-    ts::VisitAction CSTVisitor::onNode(ts::Node) {
+        if (this->onDiagnostic == nullptr || !(this->configs.reportUnusedCSTNodes)) {
+            return;
+        }
+
+        Diagnostic diag = Internal::CSTDiagnostics::buildDiagnostic(node, this->file) ;
+        USE_CODE(diag, Hint, 200009);
+        this->emitDiagnostic(diag);
+    }
+
+    ts::VisitAction CSTVisitor::onNode(ts::Node node) {
+        this->reportUnusedNode(node, NodeState::Valid);
         return ts::VisitAction::Continue;
     }
     ts::VisitAction CSTVisitor::onError(ts::Node node) {
