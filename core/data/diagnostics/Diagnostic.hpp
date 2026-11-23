@@ -79,7 +79,7 @@ namespace Data::Diagnostics {
         // std::vector<RelatedInformation> related;
 
         // Flags
-        bool isUnnecessary = false; // Used to report unnecessary/unused source ranges
+        bool isUnnecessary : 1 = false; // Used to report unnecessary/unused source ranges
     };
 
     using Event = std::function<void(const Diagnostic&)>;
