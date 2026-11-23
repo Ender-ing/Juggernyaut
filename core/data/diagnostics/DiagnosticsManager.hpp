@@ -185,9 +185,9 @@ namespace Data::Diagnostics {
                     }
                     this->emptyFlush(file->canonical);
                 };
-                /*frontEnd.driver.onRunFinished = [this]() { // This runs before 'onContextDetached'!
-                    // this->manualFlushAll(false);
-                };*/
+                frontEnd.driver.onRunFinished = [this]() {
+                    this->flushComponentDiagnostics(true);
+                };
             }
 
         public:
@@ -224,25 +224,48 @@ namespace Data::Diagnostics {
                 this->componentDiagnostics.clear();
             }
 
+            // Flush all queued component-wide diagnostics (diag.file == nullptr)
+            void flushComponentDiagnostics(bool clearAfter = true) {
+                std::vector<TargetDiag> toFlush;
+                {
+                    std::lock_guard<std::mutex> lock(this->hookMtx);
+                    if (this->componentDiagnostics.empty()) {
+                        return;
+                    }
+                    // Free up unused components
+                    if (this->callbacks.onComponentFlush == nullptr) {
+                        if (clearAfter) {
+                            std::vector<TargetDiag>{}.swap(this->componentDiagnostics);
+                        }
+                        return;
+                    }
+                    // Grab data for flushing
+                    if (clearAfter) {
+                        toFlush.swap(this->componentDiagnostics);
+                    } else {
+                        toFlush = this->componentDiagnostics;
+                    }
+                }
+                // Flush
+                for (const auto &compDiag : toFlush) {
+                    this->callbacks.onComponentFlush(compDiag);
+                }
+            }
+
             // Flush all grouped file diagnostics and component diagnostics
             void manualFlushAll(bool clearAll = true) {
-                std::lock_guard<std::mutex> lock(this->hookMtx);
-
-                if (this->callbacks.onFileFlush != nullptr) {
-                    for (const auto &[uri, state] : this->fileDiagnostics) {
-                        this->callbacks.onFileFlush(uri, state.diagnostics);
+                {
+                    std::lock_guard<std::mutex> lock(this->hookMtx);
+                    if (this->callbacks.onFileFlush != nullptr) {
+                        for (const auto &[uri, state] : this->fileDiagnostics) {
+                            this->callbacks.onFileFlush(uri, state.diagnostics);
+                        }
+                    }
+                    if (clearAll) {
+                        this->fileDiagnostics.clear();
                     }
                 }
-                if (this->callbacks.onComponentFlush != nullptr) {
-                    for (const auto &compDiag : this->componentDiagnostics) {
-                        this->callbacks.onComponentFlush(compDiag);
-                    }
-                }
-
-                if (clearAll) {
-                    this->fileDiagnostics.clear();
-                    this->componentDiagnostics.clear();
-                }
+                this->flushComponentDiagnostics(clearAll);
             }
     };
 }
