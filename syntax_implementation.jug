@@ -185,9 +185,8 @@ metadata       - Non-runtime metadata (debug info, TBAA, optimization hints).
 // there are built-in compiler functions and variables!
 // The built-in functions and variables belong to the _BUILT_IN_ namespace!
 
-_BUILT_IN_.SOME_VERY_EFFICENT_FUNCTION(...);
-
-_BUILT_IN_.TARGET;
+let a:int = _BUILT_IN_.SOME_VERY_EFFICENT_FUNCTION(),
+    b:bool = _BUILT_IN_.TARGET;
 
 // '@' directives aree always attached to the next valid statement!
 
