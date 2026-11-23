@@ -50,6 +50,7 @@ namespace Data::Diagnostics {
             struct FileDiagState {
                 std::vector<TargetDiag> diagnostics;
                 bool isDetached = false;
+                bool needsFlush = true; // Reset diagnostics by default!
             };
 
             std::mutex hookMtx;
@@ -69,7 +70,10 @@ namespace Data::Diagnostics {
                 std::lock_guard<std::mutex> lock(this->hookMtx);
 
                 if (diag.file != nullptr) {
-                    this->fileDiagnostics[diag.file->canonical].diagnostics.push_back(std::move(convertedDiag));
+                    FileDiagState &state = this->fileDiagnostics[diag.file->canonical];
+
+                    state.diagnostics.push_back(std::move(convertedDiag));
+                    state.needsFlush = true;
                 } else {
                     this->componentDiagnostics.push_back(std::move(convertedDiag));
                 }
@@ -86,7 +90,10 @@ namespace Data::Diagnostics {
 
                 auto it = this->fileDiagnostics.find(uri);
                 if (it != this->fileDiagnostics.end()) {
-                    this->callbacks.onFileFlush(uri, it->second.diagnostics);
+                    if (it->second.needsFlush) {
+                        this->callbacks.onFileFlush(uri, it->second.diagnostics);
+                        it->second.needsFlush = false;
+                    }
 
                     if (clearAfter) {
                         this->fileDiagnostics.erase(it); // Free memory after final stage!
@@ -129,9 +136,11 @@ namespace Data::Diagnostics {
                 };
 
                 // Handle Diagnostics Retention logic
+
                 // [jug.toml]
                 frontEnd.driver.onEnvironmentLoad = flushAndDiscard;
                 frontEnd.driver.onEnvironmentChange = flushAndDiscard;
+
                 // [*.jug]
                 frontEnd.unitSources.onContextStart = [this](const File *file) {
                     if (file == nullptr) {
@@ -139,13 +148,14 @@ namespace Data::Diagnostics {
                     }
                     std::lock_guard<std::mutex> lock(this->hookMtx);
 
-                    // Update state and reset diagnostics (unchanged client state!)
+                    // Update state and release previous vector capacity
                     FileDiagState &state = this->fileDiagnostics[file->canonical];
                     state.isDetached = false;
-                    state.diagnostics.clear();
+                    std::vector<TargetDiag>{}.swap(state.diagnostics); // Free up memory!
+                    state.needsFlush = true;
                 };
                 frontEnd.unitSources.onParserContextEnd = flushAndKeep;
-                frontEnd.unitSources.onContextEnd = flushAndKeep; // TMP
+                frontEnd.unitSources.onContextEnd = flushAndDiscard;
                 frontEnd.unitSources.onContextSkip = [this](const File *file) {
                     if (file == nullptr) {
                         return;
@@ -157,6 +167,7 @@ namespace Data::Diagnostics {
                         if (auto it = this->fileDiagnostics.find(file->canonical);
                             it != this->fileDiagnostics.end() && it->second.isDetached) {
                             it->second.isDetached = false;
+                            it->second.needsFlush = true;
                             shouldFlush = true;
                         }
                     }
