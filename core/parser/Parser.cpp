@@ -182,8 +182,6 @@ namespace Parser {
             visitor.visit(tree);
         }*/
 
-        result.hasSyntaxErrors = false;//diagListener.hasErrors();
-
         // TMP
         if (this->env->debug.sayMeow) {
             Data::Diagnostics::Diagnostic diag = {.message = "Meow ;3", .severity = Data::Diagnostics::Severity::Warning};

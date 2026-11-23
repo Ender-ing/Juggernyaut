@@ -152,7 +152,6 @@ namespace Session {
         }
 
         Parser::Parser parser = this->createConfiguredParser();
-        constexpr Stage targetStage = Stage::Parser; // TMP
 
         std::vector<SourceId> worklist = this->entryPoints; // Copy entry points!
 
@@ -178,7 +177,7 @@ namespace Session {
 
             // Skip parsing if the file revision and stage are already up-to-date
             const bool isUpToDate = (unit.contentRevision == file->version) &&
-                                    (unit.completedStage >= targetStage);
+                                    (unit.completedStage >= Stage::Parser);
             if (isUpToDate) {
                 // Trigger relevant events 
                 if (this->hooks.onContextSkip != nullptr) {
@@ -199,15 +198,13 @@ namespace Session {
 
             Parser::ParseResult result = parser.parse(file);
             unit.hasSyntaxErrors = result.hasSyntaxErrors;
-            unit.completedStage = targetStage;
+            unit.completedStage = Stage::Parser;
 
-            if constexpr (targetStage >= Stage::Parser) {
-                // Reserve capacity BEFORE taking `currentUnit` reference so `this->units` cannot reallocate inside `resolveUnitImports`
-                this->units.reserve(this->units.size() + result.imports.size());
-                CompilationUnitState &currentUnit = getOrCreateUnit(this->units, file);
-                currentUnit.astTable = std::move(result.ast);
-                this->resolveUnitImports(file, currentUnit, result.imports, worklist);
-            }
+            // Reserve capacity BEFORE taking `currentUnit` reference so `this->units` cannot reallocate inside `resolveUnitImports`
+            this->units.reserve(this->units.size() + result.imports.size());
+            CompilationUnitState &currentUnit = getOrCreateUnit(this->units, file);
+            currentUnit.astTable = std::move(result.ast);
+            this->resolveUnitImports(file, currentUnit, result.imports, worklist);
 
             // Trigger relevant events (a special case!)
             if (parser.hooks.onContextEnd != nullptr) {

@@ -49,8 +49,6 @@ namespace Data {
                 std::vector<FileByte> lineStarts{0};
                 FileByte totalBytes = 0;
 
-                std::string data; // REMOVE LATER
-
                 // Internal
                 void rebuildLineIndex() ;
 
