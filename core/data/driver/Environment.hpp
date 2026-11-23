@@ -38,8 +38,9 @@ namespace Data {
             std::string publisher = "";
             std::string version = "";
         };
-        // (Internal )Debug
+        // (Internal) Debug
         struct DebugConfigs {
+            bool sayMeow = false;
             bool reportCSTData = false;
             bool reportUnusedCSTNodes = false;
         };

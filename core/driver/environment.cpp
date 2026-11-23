@@ -278,6 +278,7 @@ namespace Driver {
         // [debug]
         void processDebugSection(const Data::Diagnostics::Event &emit, const File *file, const toml::table& tbl, DebugConfigs &debugConfigs) {
             static const std::unordered_map<std::string_view, bool DebugConfigs::*> debugMapping = {
+                { "say-meow", &DebugConfigs::sayMeow },
                 { "report-cst-data", &DebugConfigs::reportCSTData },
                 { "report-unused-cst-nodes", &DebugConfigs::reportUnusedCSTNodes }
             };

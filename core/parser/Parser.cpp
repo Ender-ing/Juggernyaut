@@ -149,7 +149,7 @@ namespace Parser {
 
     ParseResult Parser::parse(const File *file) const {
         ParseResult result;
-        if (file == nullptr) {
+        if (file == nullptr || this->env == nullptr) {
             return result;
         }
 
@@ -185,8 +185,10 @@ namespace Parser {
         result.hasSyntaxErrors = false;//diagListener.hasErrors();
 
         // TMP
-        Data::Diagnostics::Diagnostic diag = {.message = "Meow!", .severity = Data::Diagnostics::Severity::Warning};
-        this->emitDiagnostic(file, diag);
+        if (this->env->debug.sayMeow) {
+            Data::Diagnostics::Diagnostic diag = {.message = "Meow ;3", .severity = Data::Diagnostics::Severity::Warning};
+            this->emitDiagnostic(file, diag);
+        }
 
         if (this->hooks.onParserContextEnd != nullptr) {
             this->hooks.onParserContextEnd(file);
