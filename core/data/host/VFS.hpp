@@ -39,6 +39,7 @@ namespace Data {
                 const static uint8_t FILE_ID_OFFSET = 10; // A default file-id offset
 
                 // Multi-threaded safety
+                mutable std::shared_mutex cacheMtx; // Protects `index` and `cache` (acquire AFTER `pendingMtx`)
                 std::mutex pendingMtx;
                 std::atomic<uint32_t> safetyCount{0};
                 std::unordered_map<std::string, FileChangeRequest> pendingRequests;

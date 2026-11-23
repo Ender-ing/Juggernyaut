@@ -56,6 +56,8 @@ namespace Data {
             return file;
         }
         void VFS::setFileContent(const std::string& path, std::string &newContent) {
+            std::unique_lock<std::shared_mutex> writeLock(this->cacheMtx);
+
             File* file = getFilePtr(path);
 
             // Update content & internal state
@@ -74,6 +76,7 @@ namespace Data {
             if (edits.empty()) {
                 return;
             }
+            std::unique_lock<std::shared_mutex> writeLock(this->cacheMtx);
 
             File* file = getFilePtr(path);
 
@@ -108,14 +111,20 @@ namespace Data {
             }
         }
         void VFS::fetchLocalFileContent(const std::string& path) {
-            File* file = getFilePtr(path);
+            // Read from disk outside `cacheMtx`
+            const std::string canonicalUri = this->_canonical(path);
+            std::string newContent;
+            const bool isValid = this->_readFile(canonicalUri, newContent);
+
+            std::unique_lock<std::shared_mutex> writeLock(this->cacheMtx);
+
+            File* file = getFilePtr(canonicalUri);
 
             // Bump up the version
             file->version++;
 
             // Update content
-            std::string newContent;
-            file->isValid = this->_readFile(file->canonical, newContent);
+            file->isValid = isValid;
             file->content.setFullContent(newContent);
 
             // Update internal state
@@ -166,6 +175,8 @@ namespace Data {
             this->fetchLocalFileContent(path);
         }
         const std::string VFS::getURI(const FileId& id) {
+            std::shared_lock<std::shared_mutex> readLock(this->cacheMtx);
+
             const File* file = this->cache[id - this->FILE_ID_OFFSET].get();
             if (file == nullptr) {
                 return "";
@@ -192,11 +203,15 @@ namespace Data {
             // Clean up unneeded deltas
             // Note: Logic that uses this VFS should always run in safe mode!
             // Otherwise, you lose access to the deltas!
-            for (File* file : this->dirtyDeltaFiles) {
-                file->pendingDeltas.clear();
-                file->deltasBaseVersion = file->version;
+            {
+                std::unique_lock<std::shared_mutex> writeLock(this->cacheMtx);
+
+                for (File* file : this->dirtyDeltaFiles) {
+                    file->pendingDeltas.clear();
+                    file->deltasBaseVersion = file->version;
+                }
+                this->dirtyDeltaFiles.clear();
             }
-            this->dirtyDeltaFiles.clear();
 
             // Flush all queued (external) operations!
             for (auto& [path, op] : this->pendingRequests) {
@@ -223,32 +238,45 @@ namespace Data {
         const File* VFS::readFile(const std::string& path) {
             const std::string canonicalUri = this->_canonical(path);
 
-            // Check if the file already exists
+            // Fast path: shared lock lookup
+            {
+                std::shared_lock<std::shared_mutex> readLock(this->cacheMtx);
+                auto it = this->index.find(canonicalUri);
+                if (it != this->index.end()) {
+                    return this->cache[it->second - this->FILE_ID_OFFSET].get();
+                }
+            }
+
+            // Cache miss: perform disk I/O outside the lock
+            std::string newContent;
+            const bool isValid = this->_readFile(canonicalUri, newContent);
+
+            // Re-check under exclusive lock (another thread may have inserted it)
+            std::unique_lock<std::shared_mutex> writeLock(this->cacheMtx);
             auto it = this->index.find(canonicalUri);
             if (it != this->index.end()) {
-                auto fileId = it->second;
-
-                return this->cache[fileId - this->FILE_ID_OFFSET].get();
-            } else {
-                // Generate a file object
-                File* file = this->addEmptyFile(canonicalUri);
-
-                // Request and load the file!
-                // Diagnostic generation is handled by third parties!
-                std::string newContent;
-                file->isValid = this->_readFile(canonicalUri, newContent);
-                file->content.setFullContent(newContent);
-
-                // Bump up the version
-                file->version++;
-
-                // Update internal state
-                file->deltasBaseVersion = file->version;
-
-                return file;
+                return this->cache[it->second - this->FILE_ID_OFFSET].get();
             }
+
+            // Generate a file object
+            File* file = this->addEmptyFile(canonicalUri);
+
+            // Request and load the file!
+            // Diagnostic generation is handled by third parties!
+            file->isValid = isValid;
+            file->content.setFullContent(newContent);
+
+            // Bump up the version
+            file->version++;
+
+            // Update internal state
+            file->deltasBaseVersion = file->version;
+
+            return file;
         }
         const File* VFS::readFile(const FileId& id) {
+            std::shared_lock<std::shared_mutex> readLock(this->cacheMtx);
+
             FileId indx = id - this->FILE_ID_OFFSET;
             if (id >= this->FILE_ID_OFFSET &&  indx < this->cache.size()) {
                 return this->cache[indx].get();

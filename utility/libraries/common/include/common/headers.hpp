@@ -25,6 +25,7 @@
 #include <memory>
 #include <ranges>
 #include <mutex>
+#include <shared_mutex>
 #include <atomic>
 
 // TMP
