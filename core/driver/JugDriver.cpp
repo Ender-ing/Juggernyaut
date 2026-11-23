@@ -240,9 +240,6 @@ namespace Driver {
                 if(dirConfigLookup(driverHooks, vfs, path, path, configUri)) {
                     // Load the project
                     this->loadProject(configUri);
-                } else {
-                    SET_CODE(err, Error, 700002, path);
-                    this->emitDiagnostic(err);
                 }
             } else {
                 SET_CODE(err, Error, 700003, path);
