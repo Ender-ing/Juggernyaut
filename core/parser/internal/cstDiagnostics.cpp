@@ -19,17 +19,6 @@ namespace Parser::Internal::CSTDiagnostics {
             return Position{.line = pt.row, .character = pt.column};
         }
 
-        Range toRange(ts::Node node) noexcept {
-            const ts::Extent<ts::Point> pts = node.getPointRange();
-            return Range{.start = toPosition(pts.start), .end = toPosition(pts.end)};
-        }
-
-        Range toRange(ts::Node first, ts::Node last) noexcept {
-            const ts::Point startPt = first.getPointRange().start,
-                endPtr = last.getPointRange().end;
-            return Range{.start = toPosition(startPt), .end = toPosition(endPtr)};
-        }
-
         std::optional<ts::Node> findPrevSibling(ts::Node node) noexcept {
             std::optional<ts::Node> prev = node.getPreviousSibling();
             while (prev.has_value() && prev->isExtra()) {
@@ -126,6 +115,17 @@ namespace Parser::Internal::CSTDiagnostics {
         }
     }
 
+    Range toRange(ts::Node node) noexcept {
+        const ts::Extent<ts::Point> pts = node.getPointRange();
+        return Range{.start = Helper::toPosition(pts.start), .end = Helper::toPosition(pts.end)};
+    }
+    Range toRange(ts::Node first, ts::Node last) noexcept {
+        const ts::Point startPt = first.getPointRange().start,
+            endPtr = last.getPointRange().end;
+        return Range{.start = Helper::toPosition(startPt), .end = Helper::toPosition(endPtr)};
+    }
+
+
     Diagnostic buildMissingDiagnostic(ts::Node node, std::string_view source, const File *originFile) {
         Diagnostic diag{.file = originFile};
         const std::string expected = Helper::formatSymbol(node.getType(), node.isNamed());
@@ -139,7 +139,7 @@ namespace Parser::Internal::CSTDiagnostics {
                 return diag;
             }
         } else {
-            diag.range = Helper::toRange(node);
+            diag.range = toRange(node);
         }
 
         USE_CODE(diag, Error, 200003, expected);
@@ -147,7 +147,7 @@ namespace Parser::Internal::CSTDiagnostics {
     }
 
     Diagnostic buildUnexpectedDiagnostic(ts::Node node, std::string_view source, const File *originFile) {
-        Diagnostic diag{.file = originFile, .range = Helper::toRange(node)};
+        Diagnostic diag{.file = originFile, .range = toRange(node)};
         const std::string found = Helper::extractSnippet(node, source);
         if (found.empty()) {
             USE_CODE(diag, Error, 200005);
@@ -172,7 +172,7 @@ namespace Parser::Internal::CSTDiagnostics {
     }
 
     Diagnostic buildRangedDiagnostic(ts::Node first, ts::Node last, const File *originFile) {
-        Diagnostic diag{.file = originFile, .range = Helper::toRange(first, last)};
+        Diagnostic diag{.file = originFile, .range = toRange(first, last)};
         return diag;
     }
 }
