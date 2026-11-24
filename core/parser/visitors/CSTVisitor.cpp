@@ -210,7 +210,7 @@ namespace Parser::Visitors {
         return ts::VisitAction::SkipChildren;
     }
 
-    CSTVisitor::CSTVisitor(const ASTMapper *astMapper = nullptr) noexcept
+    CSTVisitor::CSTVisitor(const ASTMapper *astMapper) noexcept
         : mapper(astMapper) {}
 
     void CSTVisitor::configure(CSTVisitorConfigs configurations, const File *targetFile,
