@@ -8,6 +8,60 @@
 #include "../internal/cstDiagnostics.hpp"
 
 namespace Parser::Visitors {
+    // Internal AST helpers
+    void CSTVisitor::contaminateCurrentASTNode(ts::Node errorNode) {
+        if (!(this->configs.buildAST) || this->astStack.empty()) {
+            return;
+        }
+
+        ASTFrame &top = this->astStack.back();
+        if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
+            top.pendingChildren.emplace_back(
+                errorNode,
+                ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)}
+            );
+        } else {
+            top.astNode.kind = ASTKind::Dirty;
+        }
+    }
+    void CSTVisitor::finalizeASTFrame(ts::Node node, const NodeRule &rule) {
+        if (!(this->configs.buildAST) || this->astStack.empty() || this->astStack.back().cstNode.getID() != node.getID()) {
+            return;
+        }
+
+        // Grab stack
+        ASTFrame frame = std::move(this->astStack.back());
+        this->astStack.pop_back();
+
+        if (this->mapper != nullptr && rule.resolveChildRoles && !(frame.pendingChildren.empty())) {
+            for (auto &[childCst, childAst] : frame.pendingChildren) {
+                if (!childCst.isError() && !childCst.isMissing()) {
+                    childAst.role = this->mapper->resolveChildRole(childCst);
+                }
+            }
+        }
+
+        // Save pending children in the tree
+        if (!frame.pendingChildren.empty()) {
+            frame.astNode.firstChild = static_cast<uint32_t>(this->ast->nodes.size());
+            frame.astNode.childCount = static_cast<uint32_t>(frame.pendingChildren.size());
+            for (auto &[_, childAst] : frame.pendingChildren) {
+                this->ast->nodes.push_back(childAst);
+            }
+        }
+
+        if (rule.onLeaveHook != nullptr && frame.astNode.kind != ASTKind::Dirty) {
+            rule.onLeaveHook(*this, node, frame.astNode);
+        }
+
+        // Save ASTNode in the tree
+        if (!(this->astStack.empty())) {
+            this->astStack.back().pendingChildren.emplace_back(node, frame.astNode);
+        } else if (frame.hasReservedSlot) {
+            this->ast->nodes[frame.reservedSlot] = frame.astNode;
+        }
+    }
+
     // Diagnostics
     void CSTVisitor::emitDiagnostic(Diagnostic &diag) {
         diag.file = this->file;
@@ -31,6 +85,7 @@ namespace Parser::Visitors {
         }
 
         this->syntaxErrors = true;
+        this->contaminateCurrentASTNode(node);
         if (this->onDiagnostic == nullptr) {
             return;
         }
@@ -43,6 +98,8 @@ namespace Parser::Visitors {
         if (this->unusedStack.empty()) {
             return;
         }
+
+        // Report entire group of nodes from (unused) stack
         UnusedFrame frame = std::move(this->unusedStack.back());
         this->unusedStack.pop_back();
         if (frame.isUnused && !(frame.hasUsedDescendant)) {
@@ -53,6 +110,8 @@ namespace Parser::Visitors {
             }
             return;
         }
+
+        // Report unused separate nodes from (unused) stack
         if (!(this->unusedStack.empty())) {
             this->unusedStack.back().hasUsedDescendant = true;
         }
@@ -74,13 +133,13 @@ namespace Parser::Visitors {
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
-        if (state != NodeState::Valid || node.isExtra() || this->extraRootId != nullptr) {
+        if (state != NodeState::Valid || node.isExtra() || this->extraRootId != ts::NodeID{}) {
             return;
         }
         if (this->onDiagnostic == nullptr || !(this->configs.reportUnusedCSTNodes)) {
             return;
         }
-        if (!this->unusedStack.empty() && this->unusedStack.back().nodeId == node.impl.id) {
+        if (!this->unusedStack.empty() && this->unusedStack.back().nodeId == node.getID()) {
             this->unusedStack.back().isUnused = true;
             return;
         }
@@ -88,7 +147,54 @@ namespace Parser::Visitors {
     }
 
     ts::VisitAction CSTVisitor::onNode(ts::Node node) {
-        this->reportUnusedNode(node, NodeState::Valid);
+        // Ignore extra nodes
+        if (node.isExtra() || this->extraRootId != ts::NodeID{}) {
+            return ts::VisitAction::Continue;
+        }
+
+        // Report children of an unhandled parent
+        if (!(node.isNamed())) {
+            const bool parentHandled = !(this->handledStack.empty()) && this->handledStack.back();
+            this->handledStack.push_back(parentHandled);
+            if (!parentHandled) {
+                this->reportUnusedNode(node, NodeState::Valid);
+            }
+            return ts::VisitAction::Continue;
+        }
+
+        const NodeRule &rule = (this->mapper != nullptr)
+            ? this->mapper->lookupRule(node.getSymbol())
+            : ASTMapper::unhandledRule();
+        this->handledStack.push_back(rule.handled);
+
+        // Report new unhandled node
+        if (!rule.handled) {
+            this->reportUnusedNode(node, NodeState::Valid);
+            return ts::VisitAction::Continue;
+        }
+
+        // Build AST frame
+        if (this->configs.buildAST && rule.astKind != ASTKind::None) {
+            ASTFrame frame{
+                .cstNode = node,
+                .astNode = ASTNode{.kind = rule.astKind, .range = Internal::CSTDiagnostics::toRange(node)},
+            };
+
+            // Add a new AST stack
+            if (this->astStack.empty()) {
+                frame.reservedSlot = static_cast<uint32_t>(this->ast->nodes.size());
+                frame.hasReservedSlot = true;
+                this->ast->nodes.emplace_back();
+            }
+            if (rule.onEnterHook != nullptr) {
+                rule.onEnterHook(*this, node, frame.astNode);
+            }
+            this->astStack.push_back(std::move(frame));
+        } else if (rule.onEnterHook != nullptr) {
+            ASTNode dummy{};
+            rule.onEnterHook(*this, node, dummy);
+        }
+
         return ts::VisitAction::Continue;
     }
     ts::VisitAction CSTVisitor::onError(ts::Node node) {
@@ -108,66 +214,85 @@ namespace Parser::Visitors {
         this->visit(tree.getRootNode());
     }
     void CSTVisitor::visit(ts::Node root) {
+        // Reset data
         this->unusedStack.clear();
-        this->extraRootId = nullptr;
+        this->handledStack.clear();
+        this->astStack.clear();
+        this->extraRootId = ts::NodeID{};
+        this->ast = (this->configs.buildAST && !root.isNull()) ? std::make_unique<AST>() : nullptr;
+
         if (!root.isNull()) {
             ts::visit(root, *this);
         }
+
+        // Clear tracking data
         this->unusedStack.clear();
-        this->extraRootId = nullptr;
+        this->handledStack.clear();
+        this->astStack.clear();
+        this->extraRootId = ts::NodeID{};
     }
 
     ts::VisitAction CSTVisitor::onEnter(ts::Node node) {
+        // Track extra nodes (for exclusion from unused node tracking)
         const bool isExtra = node.isExtra();
-        if (this->extraRootId == nullptr && isExtra) {
-            this->extraRootId = node.impl.id;
+        if (this->extraRootId == ts::NodeID{} && isExtra) {
+            this->extraRootId = node.getID();
             if (!(this->unusedStack.empty())) {
                 this->unusedStack.back().hasUsedDescendant = true;
             }
         }
 
-        const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr && this->extraRootId == nullptr;
+        // Mark non-extra nodes as "unused" by default
+        const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr && this->extraRootId == ts::NodeID{};
         if (trackUnused) {
-            this->unusedStack.push_back(UnusedFrame{.nodeId = node.impl.id});
+            this->unusedStack.push_back(UnusedFrame{.nodeId = node.getID()});
         }
 
-        ts::VisitAction action = ts::VisitAction::Continue;
+        // Classify tree-sitter nodes
         switch (classify(node)) {
             case NodeState::Valid:
-                action = this->onNode(node);
-                break;
+                return this->onNode(node);
             case NodeState::Error:
-                action = this->onError(node);
-                break;
+                return this->onError(node);
             case NodeState::Unexpected:
-                action = this->onUnexpected(node);
-                break;
+                return this->onUnexpected(node);
             case NodeState::Missing:
-                action = this->onMissing(node);
-                break;
+                return this->onMissing(node);
             default:
-                break;
+                return ts::VisitAction::Continue;
         }
-
-        if (action == ts::VisitAction::SkipChildren) {
-            if (trackUnused) {
-                this->finalizeUnusedFrame(node);
-            }
-            if (node.impl.id == this->extraRootId) {
-                this->extraRootId = nullptr;
-            }
-        }
-        return action;
     }
     void CSTVisitor::onLeave(ts::Node node) {
-        if (!(this->unusedStack.empty()) && this->unusedStack.back().nodeId == node.impl.id) {
+        // Handle AST node logic for valid nodes
+        if (classify(node) == NodeState::Valid && !node.isExtra() && this->extraRootId == ts::NodeID{}) {
+            if (node.isNamed()) {
+                const NodeRule &rule = (this->mapper != nullptr)
+                    ? this->mapper->lookupRule(node.getSymbol())
+                    : ASTMapper::unhandledRule();
+                if (rule.handled) {
+                    if (rule.astKind != ASTKind::None) {
+                        this->finalizeASTFrame(node, rule);
+                    } else if (rule.onLeaveHook != nullptr && !node.hasError()) {
+                        ASTNode dummy{};
+                        rule.onLeaveHook(*this, node, dummy);
+                    }
+                }
+            }
+            if (!this->handledStack.empty()) {
+                this->handledStack.pop_back();
+            }
+        }
+
+        // Handle unused nodes
+        if (!(this->unusedStack.empty()) && this->unusedStack.back().nodeId == node.getID()) {
             this->finalizeUnusedFrame(node);
         }
-        if (node.impl.id == this->extraRootId) {
-            this->extraRootId = nullptr;
+        if (node.getID() == this->extraRootId) {
+            this->extraRootId = ts::NodeID{};
         }
     }
 
+    // Static helpers
     NodeState CSTVisitor::classify(ts::Node node) noexcept {
         if (node.isNull()) {
             return NodeState::Error;
@@ -199,5 +324,13 @@ namespace Parser::Visitors {
             default:
                 return Internal::CSTDiagnostics::buildErrorDiagnostic(node, source, originFile);
         }
+    }
+
+    // Queries & Output
+    bool CSTVisitor::hasSyntaxErrors() const noexcept {
+        return this->syntaxErrors;
+    }
+    std::unique_ptr<AST> CSTVisitor::takeAST() noexcept {
+        return std::move(this->ast);
     }
 }

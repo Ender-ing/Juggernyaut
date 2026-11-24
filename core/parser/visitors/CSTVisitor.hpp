@@ -11,9 +11,13 @@
 // Tree-sitter
 #include "../tree-sitter.hpp"
 
-// Host & Diagnostics
+// Host, Diagnostics & AST
 #include "../../data/host/VFS.hpp"
 #include "../../data/diagnostics/Diagnostic.hpp"
+#include "../../data/parser/AST.hpp"
+
+// AST logic
+#include "ASTMapper.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -28,6 +32,12 @@ namespace Parser::Visitors {
     using Diagnostic = Data::Diagnostics::Diagnostic;
     using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
+    // AST
+    using AST = Data::Parser::AST;
+    using ASTNode = Data::Parser::ASTNode;
+    using ASTKind = Data::Parser::ASTKind;
+    using ASTRole = Data::Parser::ASTRole;
+
     // Tree-sitter node state classification
     enum class NodeState : uint8_t {
         Valid, // Standard language CST node.
@@ -38,6 +48,7 @@ namespace Parser::Visitors {
 
     struct CSTVisitorConfigs {
         bool reportUnusedCSTNodes = false; // Debug flag
+        bool buildAST = true;
     };
 
     // (via `ts::visit()`)
@@ -45,13 +56,28 @@ namespace Parser::Visitors {
         private:
             // Tracking unused nodes
             struct UnusedFrame {
-                const void *nodeId = nullptr;
+                ts::NodeID nodeId{};
                 bool isUnused = false;
                 bool hasUsedDescendant = false;
                 std::vector<ts::Node> pending;
             };
             std::vector<UnusedFrame> unusedStack;
-            const void *extraRootId = nullptr;
+            ts::NodeID extraRootId{};
+
+            // AST builder frame
+            struct ASTFrame {
+                ts::Node cstNode;
+                uint32_t reservedSlot = 0;
+                bool hasReservedSlot = false;
+                ASTNode astNode{};
+                std::vector<std::pair<ts::Node, ASTNode>> pendingChildren;
+            };
+            std::vector<bool> handledStack;
+            std::vector<ASTFrame> astStack;
+
+            // AST
+            const ASTMapper *mapper = nullptr;
+            std::unique_ptr<AST> ast = nullptr;
 
             // File details
             const File *file = nullptr;
@@ -61,6 +87,9 @@ namespace Parser::Visitors {
             // Configs
             CSTVisitorConfigs configs;
 
+            // Internal AST helpers
+            void contaminateCurrentASTNode(ts::Node errorNode) ;
+            void finalizeASTFrame(ts::Node node, const NodeRule &rule) ;
         protected:
             // Diagnostics
             void emitDiagnostic(Diagnostic &diag) ;
@@ -70,25 +99,23 @@ namespace Parser::Visitors {
             void reportUnusedNode(ts::Node node, NodeState state) ;
 
             // (#NodeState::Valid).
-            // @return `ts::VisitAction::Continue` by default
             virtual ts::VisitAction onNode(ts::Node node) ;
-            // Called upon entering a compound/recovery `ERROR` node (#NodeState::Error)
-            // @return `ts::VisitAction::SkipChildren` by default
+            // (#NodeState::Error)
             virtual ts::VisitAction onError(ts::Node node) ;
-            // Called upon entering a leaf `UNEXPECTED` error node (#NodeState::Unexpected)
-            // @return `ts::VisitAction::SkipChildren` by default
+            // (#NodeState::Unexpected)
             virtual ts::VisitAction onUnexpected(ts::Node node) ;
-            // Called upon entering a parser-synthesized `MISSING` node (#NodeState::Missing)
-            // @return `ts::VisitAction::SkipChildren` by default
+            // (#NodeState::Missing)
             virtual ts::VisitAction onMissing(ts::Node node) ;
 
         public:
-            CSTVisitor(CSTVisitorConfigs configurations, const File *targetFile = nullptr, ModifiableEvent diagnosticCallback = nullptr) noexcept
-                : file(targetFile), onDiagnostic(std::move(diagnosticCallback)), configs(std::move(configurations)) {}
+            CSTVisitor(CSTVisitorConfigs configurations, const File *targetFile = nullptr,
+                ModifiableEvent diagnosticCallback = nullptr,
+                const ASTMapper *astMapper = nullptr) noexcept
+                : mapper(astMapper), file(targetFile), onDiagnostic(std::move(diagnosticCallback)), configs(std::move(configurations)) {}
             virtual ~CSTVisitor() = default;
 
-            CSTVisitor(const CSTVisitor&) noexcept = default;
-            CSTVisitor& operator=(const CSTVisitor&) noexcept = default;
+            CSTVisitor(const CSTVisitor&) noexcept = delete;
+            CSTVisitor& operator=(const CSTVisitor&) noexcept = delete;
             CSTVisitor(CSTVisitor&&) noexcept = default;
             CSTVisitor& operator=(CSTVisitor&&) noexcept = default;
 
@@ -97,23 +124,21 @@ namespace Parser::Visitors {
             // Iteratively visits the subtree rooted at `root`.
             void visit(ts::Node root) ;
 
-            // Entry hook required by `ts::TreeVisitor`; routes `node` by its #NodeState
-            // @return Traversal directive (`Continue`, `SkipChildren`, or `Stop`)
+            // Entry hook required by `ts::TreeVisitor`
             [[nodiscard]] ts::VisitAction onEnter(ts::Node node) ;
-            // Post-order hook required by `ts::LeavingTreeVisitor` (no-op by default)
+            // Post-order hook required by `ts::LeavingTreeVisitor`
             virtual void onLeave(ts::Node node) ;
 
-            // Classifies `node` as `Valid`, `Error`, `Unexpected`, or `Missing`.
-            // @return #NodeState of `node` (`NodeState::Error` if `node.isNull()`)
+            // Static helpers
             [[nodiscard]] static NodeState classify(ts::Node node) noexcept;
-            // Builds a concise, pinpoint syntax Diagnostic for an `Error`, `Unexpected`, or `Missing` node
             [[nodiscard]] static Diagnostic buildSyntaxDiagnostic(
                 ts::Node node,
                 std::string_view source = "",
                 const File *originFile = nullptr) ;
 
-            // Queries
-            [[nodiscard]] bool hasSyntaxErrors() const noexcept { return this->syntaxErrors; }
+            // Queries & Output
+            [[nodiscard]] bool hasSyntaxErrors() const noexcept ;
+            [[nodiscard]] std::unique_ptr<AST> takeAST() noexcept ;
     };
 
 }
