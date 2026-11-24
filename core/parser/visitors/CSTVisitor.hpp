@@ -81,7 +81,7 @@ namespace Parser::Visitors {
 
             // File details
             const File *file = nullptr;
-            ModifiableEvent onDiagnostic;
+            const ModifiableEvent *onDiagnostic = nullptr;
             bool syntaxErrors = false;
 
             // Configs
@@ -108,16 +108,15 @@ namespace Parser::Visitors {
             virtual ts::VisitAction onMissing(ts::Node node) ;
 
         public:
-            CSTVisitor(CSTVisitorConfigs configurations, const File *targetFile = nullptr,
-                ModifiableEvent diagnosticCallback = nullptr,
-                const ASTMapper *astMapper = nullptr) noexcept
-                : mapper(astMapper), file(targetFile), onDiagnostic(std::move(diagnosticCallback)), configs(std::move(configurations)) {}
+            explicit CSTVisitor(const ASTMapper *astMapper = nullptr) noexcept ;
             virtual ~CSTVisitor() = default;
 
             CSTVisitor(const CSTVisitor&) noexcept = delete;
             CSTVisitor& operator=(const CSTVisitor&) noexcept = delete;
             CSTVisitor(CSTVisitor&&) noexcept = default;
             CSTVisitor& operator=(CSTVisitor&&) noexcept = default;
+
+            void configure(CSTVisitorConfigs configurations, const File *targetFile, const ModifiableEvent *diagnosticCallback) noexcept ;
 
             // Iteratively visits `tree`, starting at its root node
             void visit(const ts::Tree& tree) ;

@@ -66,7 +66,7 @@ namespace Parser::Visitors {
     void CSTVisitor::emitDiagnostic(Diagnostic &diag) {
         diag.file = this->file;
         if (this->onDiagnostic != nullptr) {
-            this->onDiagnostic(diag);
+            (*this->onDiagnostic)(diag);
         }
     }
     void CSTVisitor::emitUnusedNodeDiagnostic(ts::Node first, ts::Node last) {
@@ -210,6 +210,18 @@ namespace Parser::Visitors {
         return ts::VisitAction::SkipChildren;
     }
 
+    CSTVisitor::CSTVisitor(const ASTMapper *astMapper = nullptr) noexcept
+        : mapper(astMapper) {}
+
+    void CSTVisitor::configure(CSTVisitorConfigs configurations, const File *targetFile,
+        const ModifiableEvent *diagnosticCallback) noexcept {
+        this->configs = configurations;
+        this->file = targetFile;
+        this->onDiagnostic = (diagnosticCallback != nullptr && *diagnosticCallback != nullptr)
+            ? diagnosticCallback
+            : nullptr;
+    }
+
     void CSTVisitor::visit(const ts::Tree& tree) {
         this->visit(tree.getRootNode());
     }
@@ -220,6 +232,7 @@ namespace Parser::Visitors {
         this->astStack.clear();
         this->extraRootId = ts::NodeID{};
         this->ast = (this->configs.buildAST && !root.isNull()) ? std::make_unique<AST>() : nullptr;
+        this->syntaxErrors = false;
 
         if (!root.isNull()) {
             ts::visit(root, *this);
