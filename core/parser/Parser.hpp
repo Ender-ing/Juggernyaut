@@ -38,7 +38,7 @@ namespace Parser {
     // Parser
     using SharedCSTCache = Data::Parser::SharedCSTCache;
     using InternalCSTHandle = Data::Parser::CSTHandle;
-    using ASTNode = Data::Parser::ASTNode;
+    using AST = Data::Parser::AST;
     
 
     struct ImportRequest {
@@ -50,7 +50,7 @@ namespace Parser {
     };
 
     struct ParseResult {
-        std::unique_ptr<ASTNode> ast = nullptr;
+        std::unique_ptr<AST> ast = nullptr;
         std::vector<ImportRequest> imports;
         bool hasSyntaxErrors = false;
     };

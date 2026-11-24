@@ -16,7 +16,8 @@
 // tree-sitter
 #include "tree-sitter.hpp"
 
-// Listeners & Visitors
+// Visitors & rules
+#include "rules/JugASTMapper.hpp"
 #include "visitors/CSTVisitor.hpp"
 
 // Grab tree sitter language
@@ -37,6 +38,11 @@ namespace Parser {
 
             thread_local auto tsParser = ts::Parser::create(ts::Language{tree_sitter_jug()});
             return tsParser;
+        }
+        static Visitors::CSTVisitor& getCSTVisitor() {
+            // Bound to JugASTMapper once per thread
+            thread_local Visitors::CSTVisitor visitor(&Rules::getJugASTMapper(ts::Language{tree_sitter_jug()}));
+            return visitor;
         }
     }
 
@@ -161,26 +167,28 @@ namespace Parser {
         // Generate/Update CST
         InternalCSTHandle cst = this->updateCST(file);
 
-        // TMP
-        auto tree = std::static_pointer_cast<ts::Tree>(cst);
-        Visitors::CSTVisitor visitor(Visitors::CSTVisitorConfigs{
-                .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes
-            }, file, this->hooks.onDiagnostic);
-        if (tree != nullptr) {
+        // Borrow raw pointer — avoids atomic shared_ptr refcount increment/decrement
+        if (const auto *tree = static_cast<const ts::Tree*>(cst.get()); tree != nullptr) {
+            Visitors::CSTVisitor &visitor = Internal::getCSTVisitor();
+
+            // Configure CST visitor to handle the current file
+            visitor.configure(
+                Visitors::CSTVisitorConfigs{
+                    .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes,
+                    .buildAST = true,
+                },
+                file,
+                &this->hooks.onDiagnostic
+            );
             visitor.visit(*tree);
+
+            // Update result
+            result.hasSyntaxErrors = visitor.hasSyntaxErrors();
+            result.ast = visitor.takeAST();
         }
-        result.hasSyntaxErrors = visitor.hasSyntaxErrors();
 
-        // ...
-
-        // Handle post CST-logic
+        // Handle CST cache
         this->negotiateCSTCache(file, cst);
-
-        // [STAGE 3] AST & Import Extraction
-        /*if (tree != nullptr) {
-            Visitors::ASTGenVisitor visitor(file, this->hooks.onDiagnostic, result);
-            visitor.visit(tree);
-        }*/
 
         // TMP
         if (this->env->debug.sayMeow) {
