@@ -36,11 +36,14 @@ namespace Session {
     using Environment = Data::Driver::Environment;
     using EnvironmentVersion = Data::Driver::EnvironmentVersion;
 
+    // Diagnostics
+    using Diagnostic = Data::Diagnostics::Diagnostic;
+
     // Parser
     using SharedCSTCache = Data::Parser::SharedCSTCache;
+    using AST = Data::Parser::AST;
 
-    using Diagnostic = Data::Diagnostics::Diagnostic;
-    using ASTNode = Data::Parser::ASTNode;
+    // Semantic
     using SymbolTable = bool; // TO-DO
 
     struct ExternalPackage {
@@ -52,7 +55,7 @@ namespace Session {
         const File *file = nullptr;
 
         // Data
-        std::unique_ptr<ASTNode> astTable = nullptr;
+        std::unique_ptr<AST> astTable = nullptr;
 
         // (CompilationUnitState) relation tracking
         std::vector<SourceId> dependencies;
