@@ -28,10 +28,12 @@ namespace Data::Parser {
         None = 0 // Positional / unfielded child
     };
 
-    // Final node
+    // Final node (28B exact: 4B header + 16B range + 8B child slice)
     struct ASTNode {
         ASTKind kind = ASTKind::None;
         ASTRole role = ASTRole::None;
+        uint8_t subKind = 0;
+        uint8_t flags = 0;
         Range range{};
         uint32_t firstChild = 0;
         uint32_t childCount = 0;
