@@ -91,7 +91,8 @@ namespace Parser::Lowering {
             [[nodiscard]] std::span<ASTNode> childrenOf(const ASTNode &parent) noexcept;
             void pushImport(ImportRequest &&request) ;
 
-            // Output extraction (clears transient per-file pointers/stacks)
+            // Output extraction
+            // (clears transient per-file pointers/stacks)
             [[nodiscard]] std::unique_ptr<AST> takeAST() noexcept;
     };
 }
