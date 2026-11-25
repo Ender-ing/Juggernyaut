@@ -119,7 +119,10 @@ namespace Parser::Visitors {
         // Report entire group of nodes from (unused) stack
         if (frame.isUnused && !(frame.hasUsedDescendant)) {
             if (total > start) {
-                this->unusedPendingNodes.resize(start);
+                this->unusedPendingNodes.erase(
+                    this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
+                    this->unusedPendingNodes.end()
+                );
             }
             if (!(this->unusedStack.empty())) {
                 this->unusedPendingNodes.push_back(node);
@@ -150,7 +153,10 @@ namespace Parser::Visitors {
             }
             this->emitUnusedNodeDiagnostic(runStart, runEnd);
 
-            this->unusedPendingNodes.resize(start);
+            this->unusedPendingNodes.erase(
+                this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
+                this->unusedPendingNodes.end()
+            );
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
