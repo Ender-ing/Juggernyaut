@@ -37,7 +37,7 @@ namespace Parser::Lowering {
 
             // Process the children of the current node
             if (this->table != nullptr && rule.resolveChildRoles) {
-                const ASTKind roleOwner = (frame.astNode.kind != ASTKind::Dirty) ? frame.astNode.kind : rule.astKind;
+                const ASTKind roleOwner = (frame.astNode.kind != ASTKind::Dirty) ? frame.astNode.kind : rule.astKind; // Fallback to the rule's 'astKind' for dirty nodes
                 for (PendingASTChild &child : children) {
                     if (child.cstFieldId != ts::FieldId::None) {
                         // Process children's role
@@ -95,7 +95,21 @@ namespace Parser::Lowering {
         return;
     }
     void ASTBuilder::onSyntaxError(ts::Node errorNode) {
-        return;
+        if (this->astStack.empty()) {
+            return;
+        }
+
+        // Keep syntax-error-affected nodes
+        // (This is done to allow for some degree of useful extra analysis in later stages)
+        ASTFrame &top = this->astStack.back();
+        if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
+            this->astPendingChildren.push_back(PendingASTChild{
+                .astNode = ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)},
+                .cstFieldId = ts::FieldId::None,
+            });
+        } else {
+            top.astNode.kind = ASTKind::Dirty;
+        }
     }
 
     // Context helpers exposed to `SymbolRule::Hook`
