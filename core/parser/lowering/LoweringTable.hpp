@@ -61,7 +61,7 @@ namespace Parser::Lowering {
 
         public:
             // Pre-allocates symbol and default-role tables from `language`.
-            // Build once (e.g. as a `static const` singleton) and share read-only across threads.
+            // Build once and share read-only across threads.
             explicit LoweringTable(ts::Language language) ;
             ~LoweringTable() = default;
 

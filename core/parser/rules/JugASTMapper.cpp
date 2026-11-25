@@ -12,6 +12,7 @@ namespace Parser::Rules {
     }
 
     const Lowering::LoweringTable& getJugLoweringTable(ts::Language lang) {
+        // Read-only shared instance
         static const Lowering::LoweringTable instance = [&]() {
             Lowering::LoweringTable t(lang);
             registerScopes(t);
