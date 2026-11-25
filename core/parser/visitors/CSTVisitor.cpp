@@ -16,16 +16,16 @@ namespace Parser::Visitors {
 
         ASTFrame &top = this->astStack.back();
         if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
-            top.pendingChildren.emplace_back(
-                ts::FieldId::None,
-                ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)}
-            );
+            this->astPendingChildren.push_back(PendingASTChild{
+                .astNode = ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)},
+                .cstFieldId = ts::FieldId::None,
+            });
         } else {
             top.astNode.kind = ASTKind::Dirty;
         }
     }
     void CSTVisitor::finalizeASTFrame(ts::Node node, const NodeRule &rule) {
-        if (!(this->configs.buildAST) || this->astStack.empty() || this->astStack.back().cstNode.getID() != node.getID()) {
+        if (!(this->configs.buildAST) || this->astStack.empty() || this->astStack.back().nodeId != node.getID()) {
             return;
         }
 
@@ -33,21 +33,29 @@ namespace Parser::Visitors {
         ASTFrame frame = std::move(this->astStack.back());
         this->astStack.pop_back();
 
-        if (this->mapper != nullptr && rule.resolveChildRoles && !(frame.pendingChildren.empty())) {
-            for (auto &[childFieldId, childAst] : frame.pendingChildren) {
-                if (childFieldId != ts::FieldId::None) {
-                    childAst.role = this->mapper->lookupFieldRole(childFieldId);
+        // Save pending children in the tree
+        const size_t start = frame.pendingStart;
+        const size_t total = this->astPendingChildren.size();
+        if (total > start) {
+            const size_t count = total - start;
+            std::span<PendingASTChild> children(this->astPendingChildren.data() + start, count);
+
+            if (this->mapper != nullptr && rule.resolveChildRoles) {
+                for (PendingASTChild &child : children) {
+                    if (child.cstFieldId != ts::FieldId::None) {
+                        child.astNode.role = this->mapper->lookupFieldRole(child.cstFieldId);
+                    }
                 }
             }
-        }
 
-        // Save pending children in the tree
-        if (!frame.pendingChildren.empty()) {
+            // Save pending children in the tree
             frame.astNode.firstChild = static_cast<uint32_t>(this->ast->nodes.size());
-            frame.astNode.childCount = static_cast<uint32_t>(frame.pendingChildren.size());
-            for (auto &[_, childAst] : frame.pendingChildren) {
-                this->ast->nodes.push_back(childAst);
+            frame.astNode.childCount = static_cast<uint32_t>(count);
+            for (const PendingASTChild &child : children) {
+                this->ast->nodes.push_back(child.astNode);
             }
+
+            this->astPendingChildren.resize(start);
         }
 
         if (rule.onLeaveHook != nullptr && frame.astNode.kind != ASTKind::Dirty) {
@@ -56,8 +64,11 @@ namespace Parser::Visitors {
 
         // Save ASTNode in the tree
         if (!(this->astStack.empty())) {
-            this->astStack.back().pendingChildren.emplace_back(frame.cstFieldId, frame.astNode);
-        } else if (frame.hasReservedSlot) {
+            this->astPendingChildren.push_back(PendingASTChild{
+                .astNode = frame.astNode,
+                .cstFieldId = frame.cstFieldId,
+            });
+        } else if (frame.reservedSlot != ASTFrame::NO_SLOT) {
             this->ast->nodes[frame.reservedSlot] = frame.astNode;
         }
     }
@@ -99,12 +110,19 @@ namespace Parser::Visitors {
             return;
         }
 
-        // Report entire group of nodes from (unused) stack
         UnusedFrame frame = std::move(this->unusedStack.back());
         this->unusedStack.pop_back();
+
+        const size_t start = frame.pendingStart;
+        const size_t total = this->unusedPendingNodes.size();
+
+        // Report entire group of nodes from (unused) stack
         if (frame.isUnused && !(frame.hasUsedDescendant)) {
+            if (total > start) {
+                this->unusedPendingNodes.resize(start);
+            }
             if (!(this->unusedStack.empty())) {
-                this->unusedStack.back().pending.push_back(node);
+                this->unusedPendingNodes.push_back(node);
             } else {
                 this->emitUnusedNodeDiagnostic(node, node);
             }
@@ -115,11 +133,12 @@ namespace Parser::Visitors {
         if (!(this->unusedStack.empty())) {
             this->unusedStack.back().hasUsedDescendant = true;
         }
-        if (!frame.pending.empty()) {
-            ts::Node runStart = frame.pending.front();
+        if (total > start) {
+            std::span<const ts::Node> pending(this->unusedPendingNodes.data() + start, total - start);
+            ts::Node runStart = pending.front();
             ts::Node runEnd = runStart;
-            for (size_t i = 1; i < frame.pending.size(); ++i) {
-                ts::Node curr = frame.pending[i];
+            for (size_t i = 1; i < pending.size(); ++i) {
+                const ts::Node curr = pending[i];
                 const std::optional<ts::Node> next = runEnd.getNextSibling();
                 if (next.has_value() && next->impl.id == curr.impl.id) {
                     runEnd = curr;
@@ -130,6 +149,8 @@ namespace Parser::Visitors {
                 }
             }
             this->emitUnusedNodeDiagnostic(runStart, runEnd);
+
+            this->unusedPendingNodes.resize(start);
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
@@ -176,24 +197,21 @@ namespace Parser::Visitors {
         // Build AST frame
         if (this->configs.buildAST && rule.astKind != ASTKind::None) {
             ASTFrame frame{
-                .cstNode = node,
-                .cstFieldId = this->currentFieldId,
+                .nodeId = node.getID(),
                 .astNode = ASTNode{.kind = rule.astKind, .range = Internal::CSTDiagnostics::toRange(node)},
+                .pendingStart = static_cast<uint32_t>(this->astPendingChildren.size()),
+                .cstFieldId = this->currentFieldId,
             };
 
             // Add a new AST stack
             if (this->astStack.empty()) {
                 frame.reservedSlot = static_cast<uint32_t>(this->ast->nodes.size());
-                frame.hasReservedSlot = true;
                 this->ast->nodes.emplace_back();
             }
             if (rule.onEnterHook != nullptr) {
                 rule.onEnterHook(*this, node, frame.astNode);
             }
-            this->astStack.push_back(std::move(frame));
-        } else if (rule.onEnterHook != nullptr) {
-            ASTNode dummy{};
-            rule.onEnterHook(*this, node, dummy);
+            this->astStack.push_back(frame);
         }
 
         return ts::VisitAction::Continue;
@@ -231,6 +249,8 @@ namespace Parser::Visitors {
         this->unusedStack.clear();
         this->handledStack.clear();
         this->astStack.clear();
+        this->unusedPendingNodes.clear();
+        this->astPendingChildren.clear();
         this->extraRootId = ts::NodeID{};
         this->currentFieldId = ts::FieldId::None;
         this->ast = (this->configs.buildAST && !root.isNull()) ? std::make_unique<AST>() : nullptr;
@@ -244,6 +264,8 @@ namespace Parser::Visitors {
         this->unusedStack.clear();
         this->handledStack.clear();
         this->astStack.clear();
+        this->unusedPendingNodes.clear();
+        this->astPendingChildren.clear();
         this->extraRootId = ts::NodeID{};
         this->currentFieldId = ts::FieldId::None;
     }
@@ -266,7 +288,10 @@ namespace Parser::Visitors {
         // Mark non-extra nodes as "unused" by default
         const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr && this->extraRootId == ts::NodeID{};
         if (trackUnused) {
-            this->unusedStack.push_back(UnusedFrame{.nodeId = node.getID()});
+            this->unusedStack.push_back(UnusedFrame{
+                .nodeId = node.getID(),
+                .pendingStart = static_cast<uint32_t>(this->unusedPendingNodes.size()),
+            });
         }
 
         // Classify tree-sitter nodes

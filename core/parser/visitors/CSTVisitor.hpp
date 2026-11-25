@@ -57,24 +57,31 @@ namespace Parser::Visitors {
             // Tracking unused nodes
             struct UnusedFrame {
                 ts::NodeID nodeId{};
+                uint32_t pendingStart = 0;
                 bool isUnused = false;
                 bool hasUsedDescendant = false;
-                std::vector<ts::Node> pending;
             };
             std::vector<UnusedFrame> unusedStack;
+            std::vector<ts::Node> unusedPendingNodes;
             ts::NodeID extraRootId{};
 
             // AST builder frame
             struct ASTFrame {
-                ts::Node cstNode;
-                ts::FieldId cstFieldId = ts::FieldId::None;
-                uint32_t reservedSlot = 0;
-                bool hasReservedSlot = false;
+                static constexpr uint32_t NO_SLOT = ~uint32_t{0};
+
+                ts::NodeID nodeId{};
                 ASTNode astNode{};
-                std::vector<std::pair<ts::FieldId, ASTNode>> pendingChildren;
+                uint32_t pendingStart = 0;
+                uint32_t reservedSlot = NO_SLOT;
+                ts::FieldId cstFieldId = ts::FieldId::None;
+            };
+            struct PendingASTChild {
+                ASTNode astNode{};
+                ts::FieldId cstFieldId = ts::FieldId::None;
             };
             std::vector<bool> handledStack;
             std::vector<ASTFrame> astStack;
+            std::vector<PendingASTChild> astPendingChildren;
             ts::FieldId currentFieldId = ts::FieldId::None;
 
             // AST
