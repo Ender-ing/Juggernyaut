@@ -16,7 +16,9 @@
 // tree-sitter
 #include "tree-sitter.hpp"
 
-// Visitors
+// Visitors, lowering & rules
+#include "lowering/ASTBuilder.hpp"
+#include "rules/JugASTMapper.hpp"
 #include "visitors/CSTVisitor.hpp"
 
 // Grab tree sitter language
@@ -39,9 +41,12 @@ namespace Parser {
             return tsParser;
         }
         static Visitors::CSTVisitor& getCSTVisitor() {
-            // Bind ASTVisitor once per thread
-            thread_local Visitors::CSTVisitor visitor{};
+            thread_local Visitors::CSTVisitor visitor;
             return visitor;
+        }
+        static Lowering::ASTBuilder& getASTBuilder() {
+            thread_local Lowering::ASTBuilder builder(&Rules::getJugLoweringTable(ts::Language{tree_sitter_jug()}));
+            return builder;
         }
     }
 
@@ -165,23 +170,24 @@ namespace Parser {
 
         // Generate/Update CST
         InternalCSTHandle cst = this->updateCST(file);
-
+        
         // Borrow raw pointer — avoids atomic shared_ptr refcount increment/decrement
         if (const auto *tree = static_cast<const ts::Tree*>(cst.get()); tree != nullptr) {
             Visitors::CSTVisitor &visitor = Internal::getCSTVisitor();
+            Lowering::ASTBuilder &builder = Internal::getASTBuilder();
 
-            // Configure CST visitor to handle the current file
+            builder.reset(file, &result.imports);
             visitor.configure(
                 Visitors::CSTVisitorConfigs{
-                    .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes
+                    .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes,
                 },
                 file,
                 &this->hooks.onDiagnostic
             );
-            visitor.visit(*tree); // TMP (use a CSTConsumer later on)
+            visitor.visit(*tree, builder);
 
-            // Update result
             result.hasSyntaxErrors = visitor.hasSyntaxErrors();
+            result.ast = builder.takeAST();
         }
 
         // Handle CST cache
