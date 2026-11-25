@@ -41,7 +41,7 @@ namespace Parser::Visitors {
     concept CSTConsumer = requires(C &consumer, ts::Node node, ts::FieldId fieldId) {
         { consumer.onValidEnter(node, fieldId) } -> std::same_as<bool>;
         { consumer.onValidLeave(node) } -> std::same_as<void>;
-        { consumer.onSyntaxError(node) } -> std::same_as<void>;
+        { consumer.onSyntaxError(node) } -> std::same_as<void>; // Watch out: The visitor already reports syntax errors!
     };
 
     struct CSTVisitorConfigs {
