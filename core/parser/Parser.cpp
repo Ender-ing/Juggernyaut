@@ -40,8 +40,8 @@ namespace Parser {
             return tsParser;
         }
         static Visitors::CSTVisitor& getCSTVisitor() {
-            // Bound to JugASTMapper once per thread
-            thread_local Visitors::CSTVisitor visitor(&Rules::getJugASTMapper(ts::Language{tree_sitter_jug()}));
+            // Bind ASTVisitor once per thread
+            thread_local Visitors::CSTVisitor visitor{};
             return visitor;
         }
     }
@@ -174,17 +174,15 @@ namespace Parser {
             // Configure CST visitor to handle the current file
             visitor.configure(
                 Visitors::CSTVisitorConfigs{
-                    .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes,
-                    .buildAST = true,
+                    .reportUnusedCSTNodes = this->env->debug.reportUnusedCSTNodes
                 },
                 file,
                 &this->hooks.onDiagnostic
             );
-            visitor.visit(*tree);
+            visitor.visit(*tree); // TMP (use a CSTConsumer later on)
 
             // Update result
             result.hasSyntaxErrors = visitor.hasSyntaxErrors();
-            result.ast = visitor.takeAST();
         }
 
         // Handle CST cache

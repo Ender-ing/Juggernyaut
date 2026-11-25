@@ -1,6 +1,6 @@
 /**
  * @brief 
- * A basic tree-sitter CST visitors
+ * Tree-sitter CST walker, syntax error reporter, and CSTConsumer driver
 **/
 
 #pragma once
@@ -11,13 +11,9 @@
 // Tree-sitter
 #include "../tree-sitter.hpp"
 
-// Host, Diagnostics & AST
+// Host & Diagnostics
 #include "../../data/host/VFS.hpp"
 #include "../../data/diagnostics/Diagnostic.hpp"
-#include "../../data/parser/AST.hpp"
-
-// AST logic
-#include "ASTMapper.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -32,29 +28,53 @@ namespace Parser::Visitors {
     using Diagnostic = Data::Diagnostics::Diagnostic;
     using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
-    // AST
-    using AST = Data::Parser::AST;
-    using ASTNode = Data::Parser::ASTNode;
-    using ASTKind = Data::Parser::ASTKind;
-    using ASTRole = Data::Parser::ASTRole;
-
     // Tree-sitter node state classification
     enum class NodeState : uint8_t {
-        Valid, // Standard language CST node.
-        Error, // Built-in Tree-sitter `ERROR` recovery span.
+        Valid,      // Standard language CST node.
+        Error,      // Built-in Tree-sitter `ERROR` recovery span.
         Unexpected, // Leaf `ERROR` node covering unexpected bytes (`(UNEXPECTED ...)`).
-        Missing, // Parser-inserted zero-width `MISSING` token.
+        Missing     // Parser-inserted zero-width `MISSING` token.
+    };
+
+    // Downstream sink notified of valid CST nodes and syntax error spans during `CSTVisitor::visit`
+    template <typename C>
+    concept CSTConsumer = requires(C &consumer, ts::Node node, ts::FieldId fieldId) {
+        { consumer.onValidEnter(node, fieldId) } -> std::same_as<bool>;
+        { consumer.onValidLeave(node) } -> std::same_as<void>;
+        { consumer.onSyntaxError(node) } -> std::same_as<void>;
     };
 
     struct CSTVisitorConfigs {
         bool reportUnusedCSTNodes = false; // Debug flag
-        bool buildAST = true;
     };
 
-    // (via `ts::visit()`)
     class JUG_PARSER_API CSTVisitor {
         private:
-            // Tracking unused nodes
+            // Non-owning type-erased binding active only during `visitImpl`
+            struct ConsumerBridge {
+                void *ctx = nullptr;
+                bool (*onValidEnter)(void*, ts::Node, ts::FieldId) = nullptr;
+                void (*onValidLeave)(void*, ts::Node) = nullptr;
+                void (*onSyntaxError)(void*, ts::Node) = nullptr;
+
+                template <CSTConsumer C>
+                [[nodiscard]] static ConsumerBridge bind(C &target) noexcept {
+                    return ConsumerBridge{
+                        .ctx = std::addressof(target),
+                        .onValidEnter = [](void *p, ts::Node n, ts::FieldId fid) -> bool {
+                            return static_cast<C*>(p)->onValidEnter(n, fid);
+                        },
+                        .onValidLeave = [](void *p, ts::Node n) -> void {
+                            static_cast<C*>(p)->onValidLeave(n);
+                        },
+                        .onSyntaxError = [](void *p, ts::Node n) -> void {
+                            static_cast<C*>(p)->onSyntaxError(n);
+                        },
+                    };
+                }
+            };
+
+            // Unused-node LIFO frame (16B, trivially copyable; children live in `unusedPendingNodes`)
             struct UnusedFrame {
                 ts::NodeID nodeId{};
                 uint32_t pendingStart = 0;
@@ -65,40 +85,22 @@ namespace Parser::Visitors {
             std::vector<ts::Node> unusedPendingNodes;
             ts::NodeID extraRootId{};
 
-            // AST builder frame
-            struct ASTFrame {
-                static constexpr uint32_t NO_SLOT = ~uint32_t{0};
-
-                ts::NodeID nodeId{};
-                ASTNode astNode{};
-                uint32_t pendingStart = 0;
-                uint32_t reservedSlot = NO_SLOT;
-                ts::FieldId cstFieldId = ts::FieldId::None;
-            };
-            struct PendingASTChild {
-                ASTNode astNode{};
-                ts::FieldId cstFieldId = ts::FieldId::None;
-            };
-            std::vector<bool> handledStack;
-            std::vector<ASTFrame> astStack;
-            std::vector<PendingASTChild> astPendingChildren;
+            // Active traversal state
+            std::vector<uint8_t> handledStack;
             ts::FieldId currentFieldId = ts::FieldId::None;
+            ConsumerBridge consumer{};
 
-            // AST
-            const ASTMapper *mapper = nullptr;
-            std::unique_ptr<AST> ast = nullptr;
-
-            // File details
+            // File & diagnostic state
             const File *file = nullptr;
             const ModifiableEvent *onDiagnostic = nullptr;
             bool syntaxErrors = false;
 
             // Configs
-            CSTVisitorConfigs configs;
+            CSTVisitorConfigs configs{};
 
-            // Internal AST helpers
-            void contaminateCurrentASTNode(ts::Node errorNode) ;
-            void finalizeASTFrame(ts::Node node, const NodeRule &rule) ;
+            void resetState() noexcept;
+            void visitImpl(ts::Node root, ConsumerBridge boundConsumer) ;
+
         protected:
             // Diagnostics
             void emitDiagnostic(Diagnostic &diag) ;
@@ -107,17 +109,14 @@ namespace Parser::Visitors {
             void finalizeUnusedFrame(ts::Node node) ;
             void reportUnusedNode(ts::Node node, NodeState state) ;
 
-            // (#NodeState::Valid).
+            // Node dispatch hooks
             virtual ts::VisitAction onNode(ts::Node node) ;
-            // (#NodeState::Error)
             virtual ts::VisitAction onError(ts::Node node) ;
-            // (#NodeState::Unexpected)
             virtual ts::VisitAction onUnexpected(ts::Node node) ;
-            // (#NodeState::Missing)
             virtual ts::VisitAction onMissing(ts::Node node) ;
 
         public:
-            explicit CSTVisitor(const ASTMapper *astMapper = nullptr) noexcept ;
+            CSTVisitor() noexcept = default;
             virtual ~CSTVisitor() = default;
 
             CSTVisitor(const CSTVisitor&) noexcept = delete;
@@ -125,17 +124,25 @@ namespace Parser::Visitors {
             CSTVisitor(CSTVisitor&&) noexcept = default;
             CSTVisitor& operator=(CSTVisitor&&) noexcept = default;
 
-            void configure(CSTVisitorConfigs configurations, const File *targetFile, const ModifiableEvent *diagnosticCallback) noexcept ;
+            void configure(CSTVisitorConfigs configurations, const File *targetFile, const ModifiableEvent *diagnosticCallback) noexcept;
 
-            // Iteratively visits `tree`, starting at its root node
-            void visit(const ts::Tree& tree) ;
-            // Iteratively visits the subtree rooted at `root`.
+            // Standalone CST walk (syntax & unused-node diagnostics only)
+            void visit(const ts::Tree &tree) ;
             void visit(ts::Node root) ;
 
-            // Entry hooks (`onEnter(node)` satisfies `ts::TreeVisitor`)
+            // Consumer-driven CST walk
+            template <CSTConsumer C>
+            void visit(const ts::Tree &tree, C &targetConsumer) {
+                this->visitImpl(tree.getRootNode(), ConsumerBridge::bind(targetConsumer));
+            }
+            template <CSTConsumer C>
+            void visit(ts::Node root, C &targetConsumer) {
+                this->visitImpl(root, ConsumerBridge::bind(targetConsumer));
+            }
+
+            // Entry & post-order hooks (`ts::FieldTreeVisitor` / `ts::LeavingTreeVisitor`)
             [[nodiscard]] ts::VisitAction onEnter(ts::Node node) ;
             [[nodiscard]] ts::VisitAction onEnter(ts::Node node, ts::FieldId fieldId) ;
-            // Post-order hook required by `ts::LeavingTreeVisitor`
             virtual void onLeave(ts::Node node) ;
 
             // Static helpers
@@ -145,11 +152,9 @@ namespace Parser::Visitors {
                 std::string_view source = "",
                 const File *originFile = nullptr) ;
 
-            // Queries & Output
-            [[nodiscard]] bool hasSyntaxErrors() const noexcept ;
-            [[nodiscard]] std::unique_ptr<AST> takeAST() noexcept ;
+            // Queries
+            [[nodiscard]] bool hasSyntaxErrors() const noexcept;
     };
-
 }
 
 #ifdef _MSC_VER

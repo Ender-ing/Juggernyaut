@@ -1,6 +1,6 @@
 /**
  * @brief 
- * A basic tree-sitter CST visitors
+ * Tree-sitter CST walker, syntax error reporter, and CSTConsumer driver
 **/
 
 #include "CSTVisitor.hpp"
@@ -8,68 +8,28 @@
 #include "../internal/cstDiagnostics.hpp"
 
 namespace Parser::Visitors {
-    // Internal AST helpers
-    void CSTVisitor::contaminateCurrentASTNode(ts::Node errorNode) {
-        if (!(this->configs.buildAST) || this->astStack.empty()) {
-            return;
-        }
-
-        ASTFrame &top = this->astStack.back();
-        if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
-            this->astPendingChildren.push_back(PendingASTChild{
-                .astNode = ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)},
-                .cstFieldId = ts::FieldId::None,
-            });
-        } else {
-            top.astNode.kind = ASTKind::Dirty;
-        }
+    void CSTVisitor::resetState() noexcept {
+        this->unusedStack.clear();
+        this->unusedPendingNodes.clear();
+        this->handledStack.clear();
+        this->extraRootId = ts::NodeID{};
+        this->currentFieldId = ts::FieldId::None;
+        this->consumer = ConsumerBridge{};
     }
-    void CSTVisitor::finalizeASTFrame(ts::Node node, const NodeRule &rule) {
-        if (!(this->configs.buildAST) || this->astStack.empty() || this->astStack.back().nodeId != node.getID()) {
-            return;
-        }
-
-        // Grab stack
-        ASTFrame frame = std::move(this->astStack.back());
-        this->astStack.pop_back();
-
-        // Save pending children in the tree
-        const size_t start = frame.pendingStart;
-        const size_t total = this->astPendingChildren.size();
-        if (total > start) {
-            const size_t count = total - start;
-            std::span<PendingASTChild> children(this->astPendingChildren.data() + start, count);
-
-            if (this->mapper != nullptr && rule.resolveChildRoles) {
-                for (PendingASTChild &child : children) {
-                    if (child.cstFieldId != ts::FieldId::None) {
-                        child.astNode.role = this->mapper->lookupFieldRole(child.cstFieldId);
-                    }
-                }
+    void CSTVisitor::visitImpl(ts::Node root, ConsumerBridge boundConsumer) {
+        struct VisitScopeGuard {
+            CSTVisitor *self;
+            ~VisitScopeGuard() noexcept {
+                self->resetState();
             }
+        } guard{this};
 
-            // Save pending children in the tree
-            frame.astNode.firstChild = static_cast<uint32_t>(this->ast->nodes.size());
-            frame.astNode.childCount = static_cast<uint32_t>(count);
-            for (const PendingASTChild &child : children) {
-                this->ast->nodes.push_back(child.astNode);
-            }
+        this->resetState();
+        this->consumer = boundConsumer;
+        this->syntaxErrors = false;
 
-            this->astPendingChildren.resize(start);
-        }
-
-        if (rule.onLeaveHook != nullptr && frame.astNode.kind != ASTKind::Dirty) {
-            rule.onLeaveHook(*this, node, frame.astNode);
-        }
-
-        // Save ASTNode in the tree
-        if (!(this->astStack.empty())) {
-            this->astPendingChildren.push_back(PendingASTChild{
-                .astNode = frame.astNode,
-                .cstFieldId = frame.cstFieldId,
-            });
-        } else if (frame.reservedSlot != ASTFrame::NO_SLOT) {
-            this->ast->nodes[frame.reservedSlot] = frame.astNode;
+        if (!root.isNull()) {
+            ts::visitWithFields(root, *this);
         }
     }
 
@@ -96,7 +56,9 @@ namespace Parser::Visitors {
         }
 
         this->syntaxErrors = true;
-        this->contaminateCurrentASTNode(node);
+        if (this->consumer.onSyntaxError != nullptr) {
+            this->consumer.onSyntaxError(this->consumer.ctx, node);
+        }
         if (this->onDiagnostic == nullptr) {
             return;
         }
@@ -110,13 +72,13 @@ namespace Parser::Visitors {
             return;
         }
 
-        UnusedFrame frame = std::move(this->unusedStack.back());
+        const UnusedFrame frame = this->unusedStack.back();
         this->unusedStack.pop_back();
 
         const size_t start = frame.pendingStart;
         const size_t total = this->unusedPendingNodes.size();
 
-        // Report entire group of nodes from (unused) stack
+        // Collapse entire unhandled subtree into its parent node
         if (frame.isUnused && !(frame.hasUsedDescendant)) {
             if (total > start) {
                 this->unusedPendingNodes.erase(
@@ -132,7 +94,7 @@ namespace Parser::Visitors {
             return;
         }
 
-        // Report unused separate nodes from (unused) stack
+        // Coalesce contiguous unused sibling runs
         if (!(this->unusedStack.empty())) {
             this->unusedStack.back().hasUsedDescendant = true;
         }
@@ -174,50 +136,22 @@ namespace Parser::Visitors {
     }
 
     ts::VisitAction CSTVisitor::onNode(ts::Node node) {
-        // Ignore extra nodes
+        // Ignore extra nodes (comments / trivia)
         if (node.isExtra() || this->extraRootId != ts::NodeID{}) {
             return ts::VisitAction::Continue;
         }
 
-        // Report children of an unhandled parent
-        if (!(node.isNamed())) {
-            const bool parentHandled = !(this->handledStack.empty()) && this->handledStack.back();
-            this->handledStack.push_back(parentHandled);
-            if (!parentHandled) {
-                this->reportUnusedNode(node, NodeState::Valid);
-            }
-            return ts::VisitAction::Continue;
-        }
+        const bool parentHandled = !(this->handledStack.empty()) && (this->handledStack.back() != 0u);
+        const bool consumerHandled = (this->consumer.onValidEnter != nullptr)
+            ? this->consumer.onValidEnter(this->consumer.ctx, node, this->currentFieldId)
+            : false;
 
-        const NodeRule &rule = (this->mapper != nullptr)
-            ? this->mapper->lookupRule(node.getSymbol())
-            : ASTMapper::unhandledRule();
-        this->handledStack.push_back(rule.handled);
+        // Unnamed punctuation/keywords inherit handled status from their enclosing named CST rule
+        const bool effectiveHandled = node.isNamed() ? consumerHandled : (consumerHandled || parentHandled);
+        this->handledStack.push_back(effectiveHandled ? uint8_t{1} : uint8_t{0});
 
-        // Report new unhandled node
-        if (!rule.handled) {
+        if (!effectiveHandled) {
             this->reportUnusedNode(node, NodeState::Valid);
-            return ts::VisitAction::Continue;
-        }
-
-        // Build AST frame
-        if (this->configs.buildAST && rule.astKind != ASTKind::None) {
-            ASTFrame frame{
-                .nodeId = node.getID(),
-                .astNode = ASTNode{.kind = rule.astKind, .range = Internal::CSTDiagnostics::toRange(node)},
-                .pendingStart = static_cast<uint32_t>(this->astPendingChildren.size()),
-                .cstFieldId = this->currentFieldId,
-            };
-
-            // Add a new AST stack
-            if (this->astStack.empty()) {
-                frame.reservedSlot = static_cast<uint32_t>(this->ast->nodes.size());
-                this->ast->nodes.emplace_back();
-            }
-            if (rule.onEnterHook != nullptr) {
-                rule.onEnterHook(*this, node, frame.astNode);
-            }
-            this->astStack.push_back(frame);
         }
 
         return ts::VisitAction::Continue;
@@ -235,9 +169,6 @@ namespace Parser::Visitors {
         return ts::VisitAction::SkipChildren;
     }
 
-    CSTVisitor::CSTVisitor(const ASTMapper *astMapper) noexcept
-        : mapper(astMapper) {}
-
     void CSTVisitor::configure(CSTVisitorConfigs configurations, const File *targetFile,
         const ModifiableEvent *diagnosticCallback) noexcept {
         this->configs = configurations;
@@ -247,33 +178,11 @@ namespace Parser::Visitors {
             : nullptr;
     }
 
-    void CSTVisitor::visit(const ts::Tree& tree) {
-        this->visit(tree.getRootNode());
+    void CSTVisitor::visit(const ts::Tree &tree) {
+        this->visitImpl(tree.getRootNode(), ConsumerBridge{});
     }
     void CSTVisitor::visit(ts::Node root) {
-        // Reset data
-        this->unusedStack.clear();
-        this->handledStack.clear();
-        this->astStack.clear();
-        this->unusedPendingNodes.clear();
-        this->astPendingChildren.clear();
-        this->extraRootId = ts::NodeID{};
-        this->currentFieldId = ts::FieldId::None;
-        this->ast = (this->configs.buildAST && !root.isNull()) ? std::make_unique<AST>() : nullptr;
-        this->syntaxErrors = false;
-
-        if (!root.isNull()) {
-            ts::visitWithFields(root, *this);
-        }
-
-        // Clear tracking data
-        this->unusedStack.clear();
-        this->handledStack.clear();
-        this->astStack.clear();
-        this->unusedPendingNodes.clear();
-        this->astPendingChildren.clear();
-        this->extraRootId = ts::NodeID{};
-        this->currentFieldId = ts::FieldId::None;
+        this->visitImpl(root, ConsumerBridge{});
     }
 
     ts::VisitAction CSTVisitor::onEnter(ts::Node node) {
@@ -282,7 +191,7 @@ namespace Parser::Visitors {
     ts::VisitAction CSTVisitor::onEnter(ts::Node node, ts::FieldId fieldId) {
         this->currentFieldId = fieldId;
 
-        // Track extra nodes (for exclusion from unused node tracking)
+        // Track extra subtrees (for exclusion from unused-node tracking)
         const bool isExtra = node.isExtra();
         if (this->extraRootId == ts::NodeID{} && isExtra) {
             this->extraRootId = node.getID();
@@ -291,8 +200,9 @@ namespace Parser::Visitors {
             }
         }
 
-        // Mark non-extra nodes as "unused" by default
-        const bool trackUnused = this->configs.reportUnusedCSTNodes && this->onDiagnostic != nullptr && this->extraRootId == ts::NodeID{};
+        const bool trackUnused = this->configs.reportUnusedCSTNodes &&
+            this->onDiagnostic != nullptr &&
+            this->extraRootId == ts::NodeID{};
         if (trackUnused) {
             this->unusedStack.push_back(UnusedFrame{
                 .nodeId = node.getID(),
@@ -300,7 +210,6 @@ namespace Parser::Visitors {
             });
         }
 
-        // Classify tree-sitter nodes
         switch (classify(node)) {
             case NodeState::Valid:
                 return this->onNode(node);
@@ -315,27 +224,15 @@ namespace Parser::Visitors {
         }
     }
     void CSTVisitor::onLeave(ts::Node node) {
-        // Handle AST node logic for valid nodes
         if (classify(node) == NodeState::Valid && !node.isExtra() && this->extraRootId == ts::NodeID{}) {
-            if (node.isNamed()) {
-                const NodeRule &rule = (this->mapper != nullptr)
-                    ? this->mapper->lookupRule(node.getSymbol())
-                    : ASTMapper::unhandledRule();
-                if (rule.handled) {
-                    if (rule.astKind != ASTKind::None) {
-                        this->finalizeASTFrame(node, rule);
-                    } else if (rule.onLeaveHook != nullptr && !node.hasError()) {
-                        ASTNode dummy{};
-                        rule.onLeaveHook(*this, node, dummy);
-                    }
-                }
+            if (this->consumer.onValidLeave != nullptr) {
+                this->consumer.onValidLeave(this->consumer.ctx, node);
             }
             if (!this->handledStack.empty()) {
                 this->handledStack.pop_back();
             }
         }
 
-        // Handle unused nodes
         if (!(this->unusedStack.empty()) && this->unusedStack.back().nodeId == node.getID()) {
             this->finalizeUnusedFrame(node);
         }
@@ -378,11 +275,7 @@ namespace Parser::Visitors {
         }
     }
 
-    // Queries & Output
     bool CSTVisitor::hasSyntaxErrors() const noexcept {
         return this->syntaxErrors;
-    }
-    std::unique_ptr<AST> CSTVisitor::takeAST() noexcept {
-        return std::move(this->ast);
     }
 }
