@@ -189,7 +189,37 @@ namespace Parser::Lowering {
         }
     }
     void ASTBuilder::onValidLeave(ts::Node node) {
-        return;
+        if (this->table == nullptr) {
+            return;
+        }
+
+        // Restore original field
+        if (!(this->forwardedFieldStack.empty()) &&
+            this->forwardedFieldStack.back().nodeId == node.getID()) {
+            const ts::FieldId restored = this->forwardedFieldStack.back().prevField;
+            this->forwardedFieldStack.pop_back();
+            if (!(this->astStack.empty())) {
+                this->astStack.back().activeForwardedField = restored;
+            }
+        }
+
+        const SymbolRule &rule = this->table->lookupSymbol(node.getSymbol());
+        if (rule.op == LoweringOp::EmitNode) {
+            // Inject final ASTNode
+            this->finalizeFrame(node, rule);
+        } else if (rule.op != LoweringOp::Unhandled && rule.onLeave != nullptr && !node.hasError()) {
+            if (rule.op == LoweringOp::MutateParent) {
+                if (!(this->astStack.empty())) {
+                    ASTFrame &parent = this->astStack.back();
+                    if (rule.targetParent == ASTKind::None || parent.astNode.kind == rule.targetParent) {
+                        rule.onLeave(*this, node, parent.astNode);
+                    }
+                }
+            } else {
+                ASTNode dummy{};
+                rule.onLeave(*this, node, dummy);
+            }
+        }
     }
     void ASTBuilder::onSyntaxError(ts::Node errorNode) {
         if (this->astStack.empty()) {
