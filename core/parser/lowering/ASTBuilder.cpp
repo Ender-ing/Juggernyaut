@@ -88,6 +88,40 @@ namespace Parser::Lowering {
         }
     }
 
+    // Context helpers exposed to `SymbolRule::Hook`
+    const File* ASTBuilder::currentFile() const noexcept {
+        return this->file;
+    }
+    AST* ASTBuilder::currentAST() noexcept {
+        return this->ast.get();
+    }
+    std::string_view ASTBuilder::sourceText(ts::Node node) const noexcept {
+        if (this->file == nullptr || node.isNull()) {
+            return {};
+        }
+
+        const std::string_view src = this->file->content.view();
+        const ts::Extent<uint32_t> bytes = node.getByteRange();
+        if (bytes.start >= src.size() || bytes.end <= bytes.start) {
+            return {};
+        }
+
+        const size_t length = std::min<size_t>(bytes.end - bytes.start, src.size() - bytes.start);
+        return src.substr(bytes.start, length);
+    }
+    std::span<ASTNode> ASTBuilder::childrenOf(const ASTNode &parent) noexcept {
+        if (this->ast == nullptr || parent.childCount == 0u ||
+            (static_cast<size_t>(parent.firstChild) + parent.childCount) > this->ast->nodes.size()) {
+            return {};
+        }
+        return std::span<ASTNode>(this->ast->nodes.data() + parent.firstChild, parent.childCount);
+    }
+    void ASTBuilder::pushImport(ImportRequest &&request) {
+        if (this->imports != nullptr) {
+            this->imports->push_back(std::move(request));
+        }
+    }
+
     // Output extraction
     std::unique_ptr<AST> ASTBuilder::takeAST() noexcept {
         this->clearScratch();
