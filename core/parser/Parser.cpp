@@ -16,8 +16,7 @@
 // tree-sitter
 #include "tree-sitter.hpp"
 
-// Visitors & rules
-#include "rules/JugASTMapper.hpp"
+// Visitors
 #include "visitors/CSTVisitor.hpp"
 
 // Grab tree sitter language
