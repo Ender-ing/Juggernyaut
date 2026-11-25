@@ -28,6 +28,37 @@ namespace Parser::Lowering {
     using File = Data::Host::File;
     using AST = Data::Parser::AST;
 
+    // Workflow & Lifecycle:
+    // 1. Setup (`reset`):
+    //    Binds the target `File` and `ImportRequest` sink, allocates a fresh `AST` (with node
+    //    capacity pre-reserved from file byte length), and clears LIFO scratch stacks while
+    //    retaining their heap capacities across parses on `thread_local` instances.
+    //
+    // 2. Pre-order (`onValidEnter` <- `CSTVisitor`):
+    //    Looks up `SymbolRule` in `LoweringTable` in O(1) by `ts::Symbol`:
+    //    - `EmitNode`: Reserves `AST::nodes[0]` if root, records `pendingStart` in
+    //      `astPendingChildren`, runs `rule.onEnter(*this, ...)`, and pushes an `ASTFrame`.
+    //    - `PassThrough`: Emits no frame; if `forwardField` is set, forwards its `ts::FieldId`
+    //      to unwrapped children via `activeForwardedField` (restored via `forwardedFieldStack`).
+    //    - `MutateParent`: Stamps `astKind`, `subKind`, and `flags` onto `astStack.back()`
+    //      (guarded by `targetParent`) and runs `rule.onEnter`.
+    //    - `Ignore` / `Unhandled`: Returns `true` (handled) or `false` (unhandled) with no AST node.
+    //
+    // 3. Error recovery (`onSyntaxError` <- `CSTVisitor`):
+    //    Appends an isolated `ASTKind::Dirty` child inside `Program` / `Block` scopes so valid
+    //    sibling statements are preserved, or marks any narrower enclosing `ASTFrame` as `Dirty`.
+    //
+    // 4. Post-order (`onValidLeave` -> `finalizeFrame`):
+    //    Pops the `ASTFrame` and consumes its contiguous tail slice `astPendingChildren[pendingStart..]`:
+    //    - Resolves child `ASTRole`s in O(1) via `LoweringTable::lookupRole` when `resolveChildRoles` is set.
+    //    - Commits children contiguously into `AST::nodes` (`firstChild` + `childCount`) and truncates
+    //      `astPendingChildren` back to `pendingStart`.
+    //    - Runs `rule.onLeave(*this, node, frame.astNode)` (unless `Dirty`), where hooks can inspect
+    //      finalized `childrenOf(astNode)`, slice `sourceText(node)`, or call `pushImport(...)`.
+    //    - Stages `frame.astNode` into the parent's pending slice (or writes `reservedSlot` at the root).
+    //
+    // 5. Extraction (`takeAST`):
+    //    Detaches per-file pointers, clears scratch stacks, and transfers ownership of the built `AST`.
     class JUG_PARSER_API ASTBuilder {
         private:
             // Active parent AST node under construction (48B exact, zero padding, trivially copyable)
