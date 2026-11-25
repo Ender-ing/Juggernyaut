@@ -86,10 +86,55 @@ namespace Parser::Lowering {
         return this->bindSymbol(symbolName, SymbolRule{.op = LoweringOp::Ignore}, isNamed);
     }
 
+    // Field Role Registration API
+    bool LoweringTable::bindDefaultRole(std::string_view fieldName, ASTRole role) {
+        return this->bindScopedRole(ASTKind::None, fieldName, role);
+    }
+    bool LoweringTable::bindScopedRole(ASTKind parentKind, std::string_view fieldName, ASTRole role) {
+        if (this->lang.impl == nullptr || this->fieldStride == 0u) {
+            return false;
+        }
+
+        const std::optional<ts::FieldId> fid = this->lang.getFieldId(fieldName);
+        if (!fid.has_value()) {
+            return false;
+        }
+
+        const size_t col = std::to_underlying(*fid);
+        if (col == 0u || col >= this->fieldStride) {
+            return false;
+        }
+
+        const size_t row = std::to_underlying(parentKind);
+        if (row >= this->roleRows) {
+            const uint32_t nextRows = static_cast<uint32_t>(row + 1u);
+            this->roleMatrix.resize(static_cast<size_t>(nextRows) * this->fieldStride, ASTRole::None);
+            this->roleRows = nextRows;
+        }
+
+        this->roleMatrix[row * this->fieldStride + col] = role;
+        return true;
+    }
+
     // Hot-Path O(1) Lookups
     const SymbolRule& LoweringTable::lookupSymbol(ts::Symbol symbol) const noexcept {
         const size_t idx = std::to_underlying(symbol);
         return idx < this->symbolRules.size() ? this->symbolRules[idx] : unhandledRule();
+    }
+    ASTRole LoweringTable::lookupRole(ASTKind parentKind, ts::FieldId fieldId) const noexcept {
+        const size_t col = std::to_underlying(fieldId);
+        if (col == 0u || col >= this->fieldStride) {
+            return ASTRole::None;
+        }
+
+        const size_t row = std::to_underlying(parentKind);
+        if (row > 0u && row < this->roleRows) {
+            const ASTRole scoped = this->roleMatrix[row * this->fieldStride + col];
+            if (scoped != ASTRole::None) {
+                return scoped;
+            }
+        }
+        return this->roleMatrix[col]; // Row 0: global default role
     }
 
     const SymbolRule& LoweringTable::unhandledRule() noexcept {
