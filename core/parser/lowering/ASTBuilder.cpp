@@ -89,7 +89,104 @@ namespace Parser::Lowering {
     }
 
     bool ASTBuilder::onValidEnter(ts::Node node, ts::FieldId fieldId) {
-        return false;
+        if (this->table == nullptr) {
+            return false;
+        }
+
+        const SymbolRule &rule = this->table->lookupSymbol(node.getSymbol());
+        switch (rule.op) {
+            case LoweringOp::Unhandled:
+                return false;
+
+            case LoweringOp::Ignore: {
+                if (rule.onEnter != nullptr) {
+                    ASTNode dummy{};
+                    rule.onEnter(*this, node, dummy);
+                }
+                return true;
+            }
+
+            case LoweringOp::MutateParent: {
+                if (!(this->astStack.empty())) {
+                    ASTFrame &parent = this->astStack.back();
+                    if (rule.targetParent == ASTKind::None || parent.astNode.kind == rule.targetParent) {
+                        if (rule.astKind != ASTKind::None && parent.astNode.kind != ASTKind::Dirty) {
+                            parent.astNode.kind = rule.astKind;
+                        }
+                        if (rule.subKind != 0u) {
+                            parent.astNode.subKind = rule.subKind;
+                        }
+                        parent.astNode.flags |= rule.flags; // Only respect triggered flags
+                        if (rule.onEnter != nullptr) {
+                            rule.onEnter(*this, node, parent.astNode);
+                        }
+                    }
+                }
+                return true;
+            }
+
+            case LoweringOp::PassThrough: {
+                if (!(this->astStack.empty())) {
+                    ASTFrame &parent = this->astStack.back();
+                    // Pass on the current node's field
+                    const ts::FieldId prev = parent.activeForwardedField;
+                    const ts::FieldId next = rule.forwardField
+                        ? ((fieldId != ts::FieldId::None) ? fieldId : prev)
+                        : ts::FieldId::None;
+                    if (next != prev) {
+                        this->forwardedFieldStack.push_back(ForwardedFieldFrame{
+                            .nodeId = node.getID(),
+                            .prevField = prev,
+                        });
+                        parent.activeForwardedField = next;
+                    }
+                }
+                if (rule.onEnter != nullptr) {
+                    ASTNode dummy{};
+                    rule.onEnter(*this, node, dummy);
+                }
+                return true;
+            }
+
+            case LoweringOp::EmitNode: {
+                if (this->ast == nullptr) {
+                    this->ast = std::make_unique<AST>();
+                }
+
+                // Use forwarded fields (when there's the current node has no field value)
+                ts::FieldId effectiveField = fieldId;
+                if (effectiveField == ts::FieldId::None && !(this->astStack.empty())) {
+                    effectiveField = this->astStack.back().activeForwardedField;
+                }
+
+                // Generate inital ASTFrame
+                ASTFrame frame{
+                    .nodeId = node.getID(),
+                    .astNode = ASTNode{
+                        .kind = rule.astKind,
+                        .subKind = rule.subKind,
+                        .flags = rule.flags,
+                        .range = Internal::CSTDiagnostics::toRange(node),
+                    },
+                    .pendingStart = static_cast<uint32_t>(this->astPendingChildren.size()),
+                    .cstFieldId = effectiveField,
+                };
+
+                // Push the frame into the stack
+                if (this->astStack.empty()) {
+                    frame.reservedSlot = static_cast<uint32_t>(this->ast->nodes.size());
+                    this->ast->nodes.emplace_back();
+                }
+                if (rule.onEnter != nullptr) {
+                    rule.onEnter(*this, node, frame.astNode);
+                }
+                this->astStack.push_back(frame);
+                return true;
+            }
+
+            default:
+                return false;
+        }
     }
     void ASTBuilder::onValidLeave(ts::Node node) {
         return;

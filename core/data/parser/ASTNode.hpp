@@ -33,7 +33,7 @@ namespace Data::Parser {
         ASTKind kind = ASTKind::None;
         ASTRole role = ASTRole::None;
         uint8_t subKind = 0;
-        uint8_t flags = 0;
+        uint8_t flags = 0; // Bit flags
         Range range{};
         uint32_t firstChild = 0;
         uint32_t childCount = 0;
