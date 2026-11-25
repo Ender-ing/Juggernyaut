@@ -88,6 +88,16 @@ namespace Parser::Lowering {
         }
     }
 
+    bool ASTBuilder::onValidEnter(ts::Node node, ts::FieldId fieldId) {
+        return false;
+    }
+    void ASTBuilder::onValidLeave(ts::Node node) {
+        return;
+    }
+    void ASTBuilder::onSyntaxError(ts::Node errorNode) {
+        return;
+    }
+
     // Context helpers exposed to `SymbolRule::Hook`
     const File* ASTBuilder::currentFile() const noexcept {
         return this->file;
