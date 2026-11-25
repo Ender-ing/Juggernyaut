@@ -17,7 +17,7 @@ namespace Parser::Visitors {
         ASTFrame &top = this->astStack.back();
         if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
             top.pendingChildren.emplace_back(
-                errorNode,
+                ts::FieldId::None,
                 ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)}
             );
         } else {
@@ -34,9 +34,9 @@ namespace Parser::Visitors {
         this->astStack.pop_back();
 
         if (this->mapper != nullptr && rule.resolveChildRoles && !(frame.pendingChildren.empty())) {
-            for (auto &[childCst, childAst] : frame.pendingChildren) {
-                if (!childCst.isError() && !childCst.isMissing()) {
-                    childAst.role = this->mapper->resolveChildRole(childCst);
+            for (auto &[childFieldId, childAst] : frame.pendingChildren) {
+                if (childFieldId != ts::FieldId::None) {
+                    childAst.role = this->mapper->lookupFieldRole(childFieldId);
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Parser::Visitors {
 
         // Save ASTNode in the tree
         if (!(this->astStack.empty())) {
-            this->astStack.back().pendingChildren.emplace_back(node, frame.astNode);
+            this->astStack.back().pendingChildren.emplace_back(frame.cstFieldId, frame.astNode);
         } else if (frame.hasReservedSlot) {
             this->ast->nodes[frame.reservedSlot] = frame.astNode;
         }
@@ -177,6 +177,7 @@ namespace Parser::Visitors {
         if (this->configs.buildAST && rule.astKind != ASTKind::None) {
             ASTFrame frame{
                 .cstNode = node,
+                .cstFieldId = this->currentFieldId,
                 .astNode = ASTNode{.kind = rule.astKind, .range = Internal::CSTDiagnostics::toRange(node)},
             };
 
@@ -231,11 +232,12 @@ namespace Parser::Visitors {
         this->handledStack.clear();
         this->astStack.clear();
         this->extraRootId = ts::NodeID{};
+        this->currentFieldId = ts::FieldId::None;
         this->ast = (this->configs.buildAST && !root.isNull()) ? std::make_unique<AST>() : nullptr;
         this->syntaxErrors = false;
 
         if (!root.isNull()) {
-            ts::visit(root, *this);
+            ts::visitWithFields(root, *this);
         }
 
         // Clear tracking data
@@ -243,9 +245,15 @@ namespace Parser::Visitors {
         this->handledStack.clear();
         this->astStack.clear();
         this->extraRootId = ts::NodeID{};
+        this->currentFieldId = ts::FieldId::None;
     }
 
     ts::VisitAction CSTVisitor::onEnter(ts::Node node) {
+        return this->onEnter(node, ts::FieldId::None);
+    }
+    ts::VisitAction CSTVisitor::onEnter(ts::Node node, ts::FieldId fieldId) {
+        this->currentFieldId = fieldId;
+
         // Track extra nodes (for exclusion from unused node tracking)
         const bool isExtra = node.isExtra();
         if (this->extraRootId == ts::NodeID{} && isExtra) {

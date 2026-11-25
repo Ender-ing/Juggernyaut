@@ -71,22 +71,28 @@ namespace Parser::Visitors {
         return fid.has_value() ? this->lookupFieldRole(*fid) : ASTRole::None;
     }
     ASTRole ASTMapper::resolveChildRole(ts::Node childNode) const noexcept {
+        if (childNode.isNull() || !childNode.isNamed()) {
+            return ASTRole::None;
+        }
+
         const std::optional<ts::Node> cstParent = childNode.getParent();
         if (!cstParent.has_value()) {
             return ASTRole::None;
         }
-        const ts::NodeID targetId = childNode.getID();
-        const uint32_t namedCount = cstParent->getNumNamedChildren();
-        for (uint32_t i = 0; i < namedCount; ++i) {
-            const std::optional<ts::Node> candidate = cstParent->getNamedChild(i);
 
-            if (candidate.has_value() && candidate->getID() == targetId) {
-                if (const std::optional<std::string_view> fieldName = cstParent->getFieldNameForNamedChild(i); fieldName.has_value()) {
-                    return this->lookupFieldRole(*fieldName);
+        const ts::NodeID targetId = childNode.getID();
+
+        // Look for childNode's role
+        ts::TraversalCursor cursor;
+        cursor.reset(*cstParent);
+        if (cursor.gotoFirstChild()) {
+            do {
+                if (cursor.currentNode().getID() == targetId) {
+                    return this->lookupFieldRole(cursor.currentFieldId());
                 }
-                break;
-            }
+            } while (cursor.gotoNextSibling());
         }
+
         return ASTRole::None;
     }
 

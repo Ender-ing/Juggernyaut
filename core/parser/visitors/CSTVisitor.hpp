@@ -67,13 +67,15 @@ namespace Parser::Visitors {
             // AST builder frame
             struct ASTFrame {
                 ts::Node cstNode;
+                ts::FieldId cstFieldId = ts::FieldId::None;
                 uint32_t reservedSlot = 0;
                 bool hasReservedSlot = false;
                 ASTNode astNode{};
-                std::vector<std::pair<ts::Node, ASTNode>> pendingChildren;
+                std::vector<std::pair<ts::FieldId, ASTNode>> pendingChildren;
             };
             std::vector<bool> handledStack;
             std::vector<ASTFrame> astStack;
+            ts::FieldId currentFieldId = ts::FieldId::None;
 
             // AST
             const ASTMapper *mapper = nullptr;
@@ -123,8 +125,9 @@ namespace Parser::Visitors {
             // Iteratively visits the subtree rooted at `root`.
             void visit(ts::Node root) ;
 
-            // Entry hook required by `ts::TreeVisitor`
+            // Entry hooks (`onEnter(node)` satisfies `ts::TreeVisitor`)
             [[nodiscard]] ts::VisitAction onEnter(ts::Node node) ;
+            [[nodiscard]] ts::VisitAction onEnter(ts::Node node, ts::FieldId fieldId) ;
             // Post-order hook required by `ts::LeavingTreeVisitor`
             virtual void onLeave(ts::Node node) ;
 
