@@ -1,5 +1,6 @@
 const KWD = require('../base/keywords');
 const SYM = require('../base/symbols');
+const { withModifiers } = require('./modifiers');
 
 module.exports = {
     rules: {
@@ -10,7 +11,7 @@ module.exports = {
         ),
 
         // Data declaration
-        decl_data: $ => seq(
+        decl_data: $ => withModifiers($,
             field('state', $.data_storage),
             $.data_item,
             repeat(seq(SYM.SYM_COMMA, $.data_item)),
@@ -31,7 +32,7 @@ module.exports = {
         data_storage: _ => choice(KWD.KWD_LET, KWD.KWD_CONST, KWD.KWD_REF),
 
         // Function declaration
-        decl_function: $ => seq(
+        decl_function: $ => withModifiers($,
             field('details', $.function_details),
             field('body', $.generic_block)
         ),

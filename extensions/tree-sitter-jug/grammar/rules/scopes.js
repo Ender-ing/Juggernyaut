@@ -9,10 +9,7 @@ module.exports = {
         // Globals
         _global: $ => seq(
             optional(field('directives', repeat1($.directive))),
-            choice(
-                $._root_statement,
-                seq(optional(KWD.KWD_EXPORT), $._declaration)
-            )
+            choice($._root_statement, $._declaration)
         ),
 
         // Zoned blocks

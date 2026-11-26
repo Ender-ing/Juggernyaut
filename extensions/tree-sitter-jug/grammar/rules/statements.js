@@ -1,5 +1,6 @@
 const KWD = require('../base/keywords');
 const SYM = require('../base/symbols');
+const { withModifiers } = require('./modifiers');
 
 module.exports = {
     rules: {
@@ -77,8 +78,7 @@ module.exports = {
         ),
 
         // Bind statement
-        stat_bind: $ => seq(
-            optional(KWD.KWD_EXPORT),
+        stat_bind: $ => withModifiers($,
             KWD.KWD_BIND,
             optional(field('bindMode', $.lit_string)),
             choice($.bind_item, $.bind_block)

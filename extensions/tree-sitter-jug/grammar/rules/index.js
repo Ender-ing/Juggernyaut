@@ -5,6 +5,7 @@ const expressions = require('./expressions');
 const operations = require('./operations');
 const types = require('./types');
 const directives = require('./directives');
+const modifiers = require('./modifiers');
 
 module.exports = {
     PREC: expressions.PREC,
@@ -24,6 +25,7 @@ module.exports = {
         ...types.rules,
         ...expressions.rules,
         ...operations.rules,
-        ...directives.rules
+        ...directives.rules,
+        ...modifiers.rules
     }
 };

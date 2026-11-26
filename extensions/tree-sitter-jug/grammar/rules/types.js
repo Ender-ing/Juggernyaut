@@ -1,13 +1,11 @@
 const KWD = require('../base/keywords');
 const SYM = require('../base/symbols');
+const { withModifiers } = require('./modifiers');
 
 module.exports = {
     rules: {
         // Type declarations
-        decl_type: $ => choice(
-            $.type_alias,
-            $.abstract_alias
-        ),
+        decl_type: $ => withModifiers($, choice($.type_alias, $.abstract_alias)),
 
         type_alias: $ => seq(
             KWD.KWD_TYPE,
