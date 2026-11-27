@@ -27,6 +27,7 @@ namespace Parser::Visitors {
         Helper::resetBuffer(this->traversalStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
         this->extraDepth = 0u;
         this->emittedSyntaxDiagnostics = 0u;
+        this->emittedUnusedCSTNodeDiagnostics = 0u;
         this->currentFieldId = ts::FieldId::None;
         this->consumer = ConsumerBridge{};
     }
@@ -61,6 +62,12 @@ namespace Parser::Visitors {
         if (this->onDiagnostic == nullptr || !this->configs.reportUnusedCSTNodes) {
             return;
         }
+
+        if (this->configs.maxUnusedCSTNodeDiagnostics > 0u &&
+            this->emittedUnusedCSTNodeDiagnostics >= this->configs.maxUnusedCSTNodeDiagnostics) {
+            return;
+        }
+        ++(this->emittedUnusedCSTNodeDiagnostics);
 
         Diagnostic diag = Internal::CSTDiagnostics::buildRangedDiagnostic(first, last, this->file);
         USE_CODE(diag, Hint, 200009);
@@ -100,6 +107,23 @@ namespace Parser::Visitors {
         const size_t start = frame.pendingStart;
         const size_t total = this->unusedPendingNodes.size();
 
+        const auto dropPendingTail = [&]() {
+            if (total > start) {
+                this->unusedPendingNodes.erase(
+                    this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
+                    this->unusedPendingNodes.end()
+                );
+            }
+        };
+        const auto unusedCapReached = [this]() noexcept {
+            return this->configs.maxUnusedCSTNodeDiagnostics > 0u &&
+                   this->emittedUnusedCSTNodeDiagnostics >= this->configs.maxUnusedCSTNodeDiagnostics;
+        };
+        if (unusedCapReached()) {
+            dropPendingTail();
+            return;
+        }
+
         uint32_t siblingSeq = 0u;
         if (!this->unusedStack.empty()) {
             siblingSeq = ++this->unusedStack.back().childCounter;
@@ -107,12 +131,7 @@ namespace Parser::Visitors {
 
         // Collapse entire unhandled subtree into its parent node
         if (frame.isUnused && !frame.hasUsedDescendant) {
-            if (total > start) {
-                this->unusedPendingNodes.erase(
-                    this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
-                    this->unusedPendingNodes.end()
-                );
-            }
+            dropPendingTail();
             if (!this->unusedStack.empty()) {
                 this->unusedPendingNodes.push_back(PendingUnused{
                     .node = node,
@@ -145,10 +164,7 @@ namespace Parser::Visitors {
                 prevSeq = curr.siblingSeq;
             }
             this->emitUnusedNodeDiagnostic(runStart, runEnd);
-            this->unusedPendingNodes.erase(
-                this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
-                this->unusedPendingNodes.end()
-            );
+            dropPendingTail();
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
