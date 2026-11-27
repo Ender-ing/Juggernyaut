@@ -52,6 +52,7 @@ namespace Data {
         struct DebugConfigs {
             bool sayMeow = false;
             bool reportCSTData = false;
+            bool reportASTData = false;
             bool reportUnusedCSTNodes = false;
 
             bool operator==(const DebugConfigs&) const noexcept = default;

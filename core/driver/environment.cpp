@@ -280,6 +280,7 @@ namespace Driver {
             static const std::unordered_map<std::string_view, bool DebugConfigs::*> debugMapping = {
                 { "say-meow", &DebugConfigs::sayMeow },
                 { "report-cst-data", &DebugConfigs::reportCSTData },
+                { "report-ast-data", &DebugConfigs::reportASTData },
                 { "report-unused-cst-nodes", &DebugConfigs::reportUnusedCSTNodes }
             };
             for (const auto& [fKey, fVal] : tbl) {

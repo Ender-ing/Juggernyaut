@@ -163,10 +163,10 @@ namespace Parser {
         
         // Borrow raw pointer — avoids atomic shared_ptr refcount increment/decrement
         if (const auto *tree = static_cast<const ts::Tree*>(cst.get()); tree != nullptr) {
-                // Report (debug) data
-                if (this->env->debug.reportCSTData) {
-                    this->sendCSTDataReport(file, tree->getRootNode().getSExpr());
-                }
+            // Report (debug) data
+            if (this->env->debug.reportCSTData) {
+                this->sendCSTDataReport(file, tree->getRootNode().getSExpr());
+            }
 
             Visitors::CSTVisitor &visitor = Internal::getCSTVisitor();
             Lowering::ASTBuilder &builder = Internal::getASTBuilder();
@@ -183,6 +183,11 @@ namespace Parser {
 
             result.hasSyntaxErrors = visitor.hasSyntaxErrors();
             result.ast = builder.takeAST();
+
+            // Report (debug) data
+            if (this->env->debug.reportASTData) {
+                this->sendCSTDataReport(file, result.ast->toSExpr({.pretty = true}));
+            }
         }
 
         // Handle CST cache
