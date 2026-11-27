@@ -18,10 +18,11 @@ namespace Data::Parser {
     // Diagnostics
     using Range = Diagnostics::Range;
 
-    // Instructions for adding new ASTKind/ASTRole/*SubKind data:
+    // Instructions for adding new ASTKind/ASTRole/*SubKind/*Flags data:
     // - All ASTKind values must be given a string representation in 'astKindName'
     // - All ASTRole values must be given a string representation in 'astRoleName'
     // - All *SubKind values must be given a string representation in 'astSubKindName'
+    // - All *Flags bit-flags must be given a string representation in 'astFlagName'
 
     enum class ASTKind : uint16_t {
         // Technical
@@ -138,6 +139,24 @@ namespace Data::Parser {
                 switch (subKind) {
                     case ImportSubKind::Discrete:                       return "Discrete";
                     case ImportSubKind::Encapsulate:                    return "Encapsulate";
+                    default:                                            return "";
+                }
+            default:
+                return "";
+        }
+    }
+    [[nodiscard]] constexpr std::string_view astFlagName(ASTKind kind, uint16_t flagBit) noexcept {
+        // Common flags shared across all ASTKinds
+        switch (flagBit) {
+            case ASTFlags::None:                                        return "";
+            case ASTFlags::HasError:                                    return "HasError";
+            default:                                                    break;
+        }
+        // Per-ASTKind flags (lower bits)
+        switch (kind) {
+            case ASTKind::ImportStmt:
+                switch (flagBit) {
+                    case ImportFlags::External:                         return "External";
                     default:                                            return "";
                 }
             default:
