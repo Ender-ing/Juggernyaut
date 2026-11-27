@@ -241,12 +241,18 @@ namespace Parser::Visitors {
             }
         }
 
-        // Skip valid comment / trivia subtrees without polluting `unusedStack`
+        // Skip valid comment / trivia subtrees while splitting unused-node ranges around them
         if (this->extraDepth > 0u) {
             this->traversalStack.push_back(TraversalTag::ExtraOrError);
             return ts::VisitAction::Continue;
         }
         if (node.isExtra()) {
+            // Advance `childCounter` to split sibling runs across comments, and mark
+            // `hasUsedDescendant` so enclosing unhandled rules don't collapse over inline comments
+            if (!this->unusedStack.empty()) {
+                ++this->unusedStack.back().childCounter;
+                this->unusedStack.back().hasUsedDescendant = true;
+            }
             if (!node.hasError()) {
                 this->traversalStack.push_back(TraversalTag::ExtraOrError);
                 return ts::VisitAction::SkipChildren;
