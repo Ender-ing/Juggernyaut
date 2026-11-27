@@ -107,7 +107,12 @@ namespace Parser::Visitors {
 
         // Collapse entire unhandled subtree into its parent node
         if (frame.isUnused && !frame.hasUsedDescendant) {
-            this->unusedPendingNodes.resize(start);
+            if (total > start) {
+                this->unusedPendingNodes.erase(
+                    this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
+                    this->unusedPendingNodes.end()
+                );
+            }
             if (!this->unusedStack.empty()) {
                 this->unusedPendingNodes.push_back(PendingUnused{
                     .node = node,
@@ -140,7 +145,10 @@ namespace Parser::Visitors {
                 prevSeq = curr.siblingSeq;
             }
             this->emitUnusedNodeDiagnostic(runStart, runEnd);
-            this->unusedPendingNodes.resize(start);
+            this->unusedPendingNodes.erase(
+                this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
+                this->unusedPendingNodes.end()
+            );
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {

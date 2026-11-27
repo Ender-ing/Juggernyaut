@@ -44,14 +44,20 @@ namespace Parser::Visitors {
         { consumer.onSyntaxError(node) } -> std::same_as<void>; // Watch out: The visitor already reports syntax errors!
     };
 
+    // Per-walk visitor behavior and diagnostic limits
     struct CSTVisitorConfigs {
-        bool reportUnusedCSTNodes = false;   // Debug flag
-        uint32_t maxSyntaxDiagnostics = 100; // Max syntax diagnostics emitted per `visit` (0 = unlimited)
+        // Debug flag: emits hint diagnostics on valid named CST subtrees rejected by the consumer.
+        bool reportUnusedCSTNodes = false;
+        // Caps how many rich syntax-error `Diagnostic` objects are built/emitted per `visit` (`0` = unlimited).
+        // Prevents error-cascade floods (and repeated `TSLookaheadIterator` allocations) on broken files
+        // while still notifying `consumer.onSyntaxError` for every error span so AST error flags stay exact.
+        uint32_t maxSyntaxDiagnostics = 100;
     };
 
     class JUG_PARSER_API CSTVisitor {
         private:
-            // Non-owning type-erased binding active only during `visitImpl`
+            // Non-owning type-erased binding to a concrete `CSTConsumer`, active only during `visitImpl`.
+            // Keeps `CSTVisitor`'s traversal implementation compiled once inside the parser library.
             struct ConsumerBridge {
                 void *ctx = nullptr;
                 bool (*onValidEnter)(void*, ts::Node, ts::FieldId) = nullptr;
@@ -75,33 +81,46 @@ namespace Parser::Visitors {
                 }
             };
 
-            // Cached per-depth traversal state (eliminates duplicate `classify`/`isExtra` calls in `onLeave`)
+            // 1-byte classification pushed onto `traversalStack` in `onEnter` and popped in `onLeave`.
+            // Records how each CST node was classified and handled on entry so `onLeave` can:
+            //   1. Avoid re-running `classify(node)` and `node.isExtra()` C-API queries on exit, and
+            //   2. Skip calling `consumer.onValidLeave` on unhandled tokens (e.g. `;`, `,`, `(`, `)`).
             enum class TraversalTag : uint8_t {
-                ExtraOrError    = 0, // Extra trivia/comment leaf or syntax-error node
-                ExtraScope      = 1, // Root of an extra node containing inner error recovery tokens
-                ValidUnhandled  = 2, // Valid non-extra node; neither consumer nor parent handled it
-                ParentInherited = 3, // Valid unnamed token inheriting handled status (`consumerHandled == false`)
-                ConsumerHandled = 4 // Valid non-extra node where `consumer.onValidEnter` returned `true`
+                ExtraOrError    = 0, // Trivia/comment leaf or syntax-error node (no consumer leave or unused frame).
+                ExtraScope      = 1, // Root of an `extra` node that contains inner recovery errors (`extraDepth` reset on leave).
+                ValidUnhandled  = 2, // Valid non-extra node rejected by both `consumer.onValidEnter` and its parent.
+                ParentInherited = 3, // Valid unnamed token (`;`, `{`, `,`) inheriting handled status from its parent rule.
+                ConsumerHandled = 4, // Valid non-extra node accepted by `consumer.onValidEnter` (requires `onValidLeave`).
             };
 
+            // Collapsed unhandled child CST node staged in `unusedPendingNodes` when `reportUnusedCSTNodes` is active.
+            // Pairs the CST `node` with its 1-based non-extra `siblingSeq` under its parent so `finalizeUnusedFrame`
+            // can coalesce adjacent unhandled siblings via `curr.siblingSeq == prevSeq + 1` in O(1) instead of
+            // calling `ts::Node::getNextSibling()` (which walks from the CST root and turns large blocks into O(N^2)),
+            // while naturally bridging across interspersed comments.
             struct PendingUnused {
-                ts::Node node;
-                uint32_t siblingSeq = 0;
+                ts::Node node{TSNode{}};
+                uint32_t siblingSeq = 0; // 1-based position among non-extra direct children of the parent frame
             };
 
-            // Unused-node LIFO frame (12B; O(1) contiguous-sibling coalescing via `childCounter`)
+            // Per-node LIFO frame on `unusedStack` (12B, trivially copyable), active only when
+            // `reportUnusedCSTNodes` is enabled. Tracks whether an unhandled subtree can collapse into a
+            // single parent diagnostic or must emit coalesced runs of its unhandled children.
             struct UnusedFrame {
-                uint32_t pendingStart = 0;
-                uint32_t childCounter = 0;
-                bool isUnused = false;
-                bool hasUsedDescendant = false;
+                uint32_t pendingStart = 0;      // Start index of this node's slice in `unusedPendingNodes`
+                uint32_t childCounter = 0;      // Monotonic count of non-extra direct children (generates `siblingSeq`)
+                bool isUnused = false;          // True if this node itself was not handled
+                bool hasUsedDescendant = false; // True if any descendant was handled or contained a syntax error
             };
 
+            // Unused-node debug tracking buffers (empty & untouched during normal parses)
             std::vector<UnusedFrame> unusedStack;
             std::vector<PendingUnused> unusedPendingNodes;
-            std::vector<TraversalTag> traversalStack;
-            uint32_t extraDepth = 0;
-            uint32_t emittedSyntaxDiagnostics = 0;
+
+            // Active traversal state
+            std::vector<TraversalTag> traversalStack; // Parallel to active cursor depth (1 entry per entered CST node)
+            uint32_t extraDepth = 0;                  // Non-zero while descending inside an error-bearing `extra` subtree
+            uint32_t emittedSyntaxDiagnostics = 0;    // Count of syntax `Diagnostic`s emitted so far in current `visit`
             ts::FieldId currentFieldId = ts::FieldId::None;
             ConsumerBridge consumer{};
 
