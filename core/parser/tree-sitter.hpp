@@ -69,24 +69,28 @@ namespace ts {
     void visitWithFields(Node root, V&& visitor) {
         TraversalCursor cursor;
         cursor.reset(root);
+        Node current = cursor.currentNode();
         while (true) {
-            const VisitAction action = visitor.onEnter(cursor.currentNode(), cursor.currentFieldId()); // This is needed!
+            const VisitAction action = visitor.onEnter(current, cursor.currentFieldId());
             if (action == VisitAction::Stop) {
                 return;
             }
             if (action != VisitAction::SkipChildren && cursor.gotoFirstChild()) {
+                current = cursor.currentNode();
                 continue;
             }
             while (true) {
-                if constexpr (requires { visitor.onLeave(cursor.currentNode()); }) {
-                    visitor.onLeave(cursor.currentNode());
+                if constexpr (requires { visitor.onLeave(current); }) {
+                    visitor.onLeave(current);
                 }
                 if (cursor.gotoNextSibling()) {
+                    current = cursor.currentNode();
                     break;
                 }
                 if (!cursor.gotoParent()) {
                     return;
                 }
+                current = cursor.currentNode();
             }
         }
     }

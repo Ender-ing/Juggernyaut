@@ -5,26 +5,37 @@
 
 #include "ASTBuilder.hpp"
 
+// C++ headers
 #include <algorithm>
-#include "../internal/cstDiagnostics.hpp"
 
 namespace Parser::Lowering {
-    ASTBuilder::ASTBuilder(const LoweringTable *loweringTable) noexcept
-        : table(loweringTable) {}
+    namespace Helper {
+        constexpr size_t MAX_RETAINED_STACK_CAPACITY = 4096u;
+        constexpr size_t MAX_RETAINED_PENDING_CAPACITY = 65536u;
+        constexpr size_t MAX_INITIAL_AST_RESERVE = 1048576u; // 1M nodes (~32 MB cap on initial reserve)
 
-    void ASTBuilder::clearScratch() noexcept {
-        this->astStack.clear();
-        this->astPendingChildren.clear();
-        this->forwardedFieldStack.clear();
+        template <typename T>
+        void resetBuffer(std::vector<T> &vec, bool trimExcess, size_t maxRetainedCap) noexcept {
+            vec.clear();
+            if (trimExcess && vec.capacity() > maxRetainedCap) {
+                std::vector<T>{}.swap(vec);
+            }
+        }
+    }
+
+    void ASTBuilder::clearScratch(bool trimExcessCapacity) noexcept {
+        Helper::resetBuffer(this->cstStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
+        Helper::resetBuffer(this->astStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
+        Helper::resetBuffer(this->astPendingChildren, trimExcessCapacity, Helper::MAX_RETAINED_PENDING_CAPACITY);
+        Helper::resetBuffer(this->astPendingFields, trimExcessCapacity, Helper::MAX_RETAINED_PENDING_CAPACITY);
+        Helper::resetBuffer(this->forwardedFieldStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
     }
     void ASTBuilder::finalizeFrame(ts::Node node, const SymbolRule &rule) {
-        // Ignore non-matching stacks
         if (this->ast == nullptr || this->astStack.empty() ||
             this->astStack.back().nodeId != node.getID()) {
             return;
         }
 
-        // Grab frame
         ASTFrame frame = this->astStack.back();
         this->astStack.pop_back();
 
@@ -33,55 +44,72 @@ namespace Parser::Lowering {
 
         if (total > start) {
             const size_t count = total - start;
-            std::span<PendingASTChild> children(this->astPendingChildren.data() + start, count);
+            std::span<ASTNode> children(this->astPendingChildren.data() + start, count);
 
-            // Process the children of the current node
             if (this->table != nullptr && rule.resolveChildRoles) {
-                const ASTKind roleOwner = (frame.astNode.kind != ASTKind::Dirty) ? frame.astNode.kind : rule.astKind; // Fallback to the rule's 'astKind' for dirty nodes
-                for (PendingASTChild &child : children) {
-                    if (child.cstFieldId != ts::FieldId::None) {
-                        // Process children's role
-                        child.astNode.role = this->table->lookupRole(roleOwner, child.cstFieldId);
+                std::span<const ts::FieldId> fields(this->astPendingFields.data() + start, count);
+                const ASTKind roleOwner = (frame.astNode.kind != ASTKind::Dirty) ? frame.astNode.kind : rule.astKind;
+                for (size_t i = 0; i < count; ++i) {
+                    if (fields[i] != ts::FieldId::None) {
+                        children[i].role = this->table->lookupRole(roleOwner, fields[i]);
                     }
                 }
             }
 
-            // Save children's AST location
             frame.astNode.firstChild = static_cast<uint32_t>(this->ast->nodes.size());
             frame.astNode.childCount = static_cast<uint32_t>(count);
-            for (const PendingASTChild &child : children) {
-                this->ast->nodes.push_back(child.astNode);
-            }
+            this->ast->nodes.insert(this->ast->nodes.end(), children.begin(), children.end());
 
-            // Delete processed up children
             this->astPendingChildren.resize(start);
+            this->astPendingFields.resize(start);
         }
 
-        // Trigger 'leave' event for valid nodes
-        if (rule.onLeave != nullptr && frame.astNode.kind != ASTKind::Dirty) {
+        if (rule.onLeave != nullptr && (!frame.astNode.hasError() || rule.runHooksOnError)) {
             rule.onLeave(*this, node, frame.astNode);
         }
 
-        // Queue up frame's node
-        if (!(this->astStack.empty())) {
-            this->astPendingChildren.push_back(PendingASTChild{
-                .astNode = frame.astNode,
-                .cstFieldId = frame.cstFieldId,
-            });
+        if (!this->astStack.empty()) {
+            const uint32_t stagedIdx = static_cast<uint32_t>(this->astPendingChildren.size());
+            this->astPendingChildren.push_back(frame.astNode);
+            this->astPendingFields.push_back(frame.cstFieldId);
+            if (rule.attachToNext) {
+                ASTFrame &parent = this->astStack.back();
+                if (parent.prefixStart == ASTFrame::NO_SLOT) {
+                    parent.prefixStart = stagedIdx;
+                }
+            }
         } else if (frame.reservedSlot != ASTFrame::NO_SLOT) {
             this->ast->nodes[frame.reservedSlot] = frame.astNode;
         }
     }
 
-    void ASTBuilder::reset(const File *targetFile, std::vector<ImportRequest> *importSink) {
-        this->clearScratch();
+    ASTBuilder::ASTBuilder(const LoweringTable *loweringTable) noexcept
+        : table(loweringTable) {}
+
+    void ASTBuilder::setTable(const LoweringTable *loweringTable) noexcept {
+        this->table = loweringTable;
+    }
+    const LoweringTable* ASTBuilder::getTable() const noexcept {
+        return this->table;
+    }
+
+    void ASTBuilder::reset(const File *targetFile, std::vector<ImportRequest> *importSink,
+        const LoweringTable *overrideTable, void *perParseUserContext) {
+        this->clearScratch(false);
+        if (overrideTable != nullptr) {
+            this->table = overrideTable;
+        }
         this->file = targetFile;
         this->imports = importSink;
+        this->userContext = perParseUserContext;
         this->ast = std::make_unique<AST>();
 
-        // Prevent frequest vector reallocations
+        // ~1 AST node per 8 source bytes avoids repeated multi-megabyte vector reallocations
         if (targetFile != nullptr) {
-            const size_t estimatedNodes = std::min<size_t>(targetFile->content.byteLength() / 32u, 65536u); // ~1.75 MB cap
+            const size_t estimatedNodes = std::min<size_t>(
+                targetFile->content.byteLength() / 8u,
+                Helper::MAX_INITIAL_AST_RESERVE
+            );
             if (estimatedNodes > 0u) {
                 this->ast->nodes.reserve(estimatedNodes);
             }
@@ -93,12 +121,21 @@ namespace Parser::Lowering {
             return false;
         }
 
-        const SymbolRule &rule = this->table->lookupSymbol(node.getSymbol());
+        const ts::Symbol sym = node.getSymbol();
+        const ts::Symbol cstParent = !this->cstStack.empty()
+            ? this->cstStack.back().symbol
+            : LoweringTable::ANY_CST_SYMBOL;
+        const ASTKind astParent = !this->astStack.empty()
+            ? this->astStack.back().astNode.kind
+            : ASTKind::None;
+
+        const SymbolRule &rule = this->table->lookupSymbol(sym, cstParent, astParent);
         switch (rule.op) {
             case LoweringOp::Unhandled:
                 return false;
 
             case LoweringOp::Ignore: {
+                this->cstStack.push_back(ActiveCSTEntry{.symbol = sym, .rule = &rule});
                 if (rule.onEnter != nullptr) {
                     ASTNode dummy{};
                     rule.onEnter(*this, node, dummy);
@@ -107,16 +144,17 @@ namespace Parser::Lowering {
             }
 
             case LoweringOp::MutateParent: {
-                if (!(this->astStack.empty())) {
+                this->cstStack.push_back(ActiveCSTEntry{.symbol = sym, .rule = &rule});
+                if (!this->astStack.empty()) {
                     ASTFrame &parent = this->astStack.back();
                     if (rule.targetParent == ASTKind::None || parent.astNode.kind == rule.targetParent) {
                         if (rule.astKind != ASTKind::None && parent.astNode.kind != ASTKind::Dirty) {
                             parent.astNode.kind = rule.astKind;
                         }
-                        if (rule.subKind != 0u) {
+                        if (rule.subKind != 0u && (rule.clobberSubKind || parent.astNode.subKind == 0u)) {
                             parent.astNode.subKind = rule.subKind;
                         }
-                        parent.astNode.flags |= rule.flags; // Only respect triggered flags
+                        parent.astNode.flags = static_cast<uint16_t>(parent.astNode.flags | rule.flags);
                         if (rule.onEnter != nullptr) {
                             rule.onEnter(*this, node, parent.astNode);
                         }
@@ -125,10 +163,28 @@ namespace Parser::Lowering {
                 return true;
             }
 
+            case LoweringOp::MutateNext: {
+                this->cstStack.push_back(ActiveCSTEntry{.symbol = sym, .rule = &rule});
+                if (!this->astStack.empty()) {
+                    ASTFrame &scope = this->astStack.back();
+                    if (rule.targetParent == ASTKind::None || scope.astNode.kind == rule.targetParent) {
+                        if (rule.subKind != 0u && (rule.clobberSubKind || scope.pendingNextSubKind == 0u)) {
+                            scope.pendingNextSubKind = rule.subKind;
+                        }
+                        scope.pendingNextFlags = static_cast<uint16_t>(scope.pendingNextFlags | rule.flags);
+                        if (rule.onEnter != nullptr) {
+                            ASTNode dummy{};
+                            rule.onEnter(*this, node, dummy);
+                        }
+                    }
+                }
+                return true;
+            }
+
             case LoweringOp::PassThrough: {
-                if (!(this->astStack.empty())) {
+                this->cstStack.push_back(ActiveCSTEntry{.symbol = sym, .rule = &rule});
+                if (!this->astStack.empty()) {
                     ASTFrame &parent = this->astStack.back();
-                    // Pass on the current node's field
                     const ts::FieldId prev = parent.activeForwardedField;
                     const ts::FieldId next = rule.forwardField
                         ? ((fieldId != ts::FieldId::None) ? fieldId : prev)
@@ -149,30 +205,56 @@ namespace Parser::Lowering {
             }
 
             case LoweringOp::EmitNode: {
+                this->cstStack.push_back(ActiveCSTEntry{.symbol = sym, .rule = &rule});
                 if (this->ast == nullptr) {
                     this->ast = std::make_unique<AST>();
                 }
 
-                // Use forwarded fields (when there's the current node has no field value)
                 ts::FieldId effectiveField = fieldId;
-                if (effectiveField == ts::FieldId::None && !(this->astStack.empty())) {
-                    effectiveField = this->astStack.back().activeForwardedField;
+                uint32_t startOffset = static_cast<uint32_t>(this->astPendingChildren.size());
+                uint16_t initialSubKind = rule.subKind;
+                uint16_t initialFlags = rule.flags;
+
+                if (!this->astStack.empty()) {
+                    ASTFrame &parent = this->astStack.back();
+                    if (effectiveField == ts::FieldId::None) {
+                        effectiveField = parent.activeForwardedField;
+                    }
+                    // Claim staged sibling-prefix modifiers & prefix nodes (e.g. `@directive`, `export`)
+                    if (!rule.attachToNext) {
+                        if (parent.pendingNextSubKind != 0u && initialSubKind == 0u) {
+                            initialSubKind = parent.pendingNextSubKind;
+                        }
+                        initialFlags = static_cast<uint16_t>(initialFlags | parent.pendingNextFlags);
+                        parent.pendingNextSubKind = 0u;
+                        parent.pendingNextFlags = 0u;
+
+                        if (parent.prefixStart != ASTFrame::NO_SLOT) {
+                            startOffset = parent.prefixStart;
+                            parent.prefixStart = ASTFrame::NO_SLOT;
+                        }
+                    }
                 }
 
-                // Generate inital ASTFrame
+                const ts::Extent<uint32_t> bytes = node.getByteRange();
+                Data::Parser::LexemeId lexId = Data::Parser::INVALID_LEXEME_ID;
+                if (rule.internText && this->file != nullptr) {
+                    lexId = this->ast->internLexeme(this->sourceText(node));
+                }
+
                 ASTFrame frame{
                     .nodeId = node.getID(),
                     .astNode = ASTNode{
                         .kind = rule.astKind,
-                        .subKind = rule.subKind,
-                        .flags = rule.flags,
-                        .range = Internal::CSTDiagnostics::toRange(node),
+                        .subKind = initialSubKind,
+                        .flags = initialFlags,
+                        .span = Data::Parser::ByteSpan{.start = bytes.start, .end = bytes.end},
+                        .lexemeId = lexId,
                     },
-                    .pendingStart = static_cast<uint32_t>(this->astPendingChildren.size()),
+                    .pendingStart = startOffset,
                     .cstFieldId = effectiveField,
                 };
 
-                // Push the frame into the stack
                 if (this->astStack.empty()) {
                     frame.reservedSlot = static_cast<uint32_t>(this->ast->nodes.size());
                     this->ast->nodes.emplace_back();
@@ -189,27 +271,29 @@ namespace Parser::Lowering {
         }
     }
     void ASTBuilder::onValidLeave(ts::Node node) {
-        if (this->table == nullptr) {
+        if (this->table == nullptr || this->cstStack.empty()) {
             return;
         }
 
-        // Restore original field
-        if (!(this->forwardedFieldStack.empty()) &&
+        const ActiveCSTEntry active = this->cstStack.back();
+        this->cstStack.pop_back();
+
+        const SymbolRule &rule = *active.rule;
+        if (rule.op == LoweringOp::PassThrough &&
+            !this->forwardedFieldStack.empty() &&
             this->forwardedFieldStack.back().nodeId == node.getID()) {
             const ts::FieldId restored = this->forwardedFieldStack.back().prevField;
             this->forwardedFieldStack.pop_back();
-            if (!(this->astStack.empty())) {
+            if (!this->astStack.empty()) {
                 this->astStack.back().activeForwardedField = restored;
             }
         }
 
-        const SymbolRule &rule = this->table->lookupSymbol(node.getSymbol());
         if (rule.op == LoweringOp::EmitNode) {
-            // Inject final ASTNode
             this->finalizeFrame(node, rule);
-        } else if (rule.op != LoweringOp::Unhandled && rule.onLeave != nullptr && !node.hasError()) {
+        } else if (rule.onLeave != nullptr && (!node.hasError() || rule.runHooksOnError)) {
             if (rule.op == LoweringOp::MutateParent) {
-                if (!(this->astStack.empty())) {
+                if (!this->astStack.empty()) {
                     ASTFrame &parent = this->astStack.back();
                     if (rule.targetParent == ASTKind::None || parent.astNode.kind == rule.targetParent) {
                         rule.onLeave(*this, node, parent.astNode);
@@ -226,17 +310,20 @@ namespace Parser::Lowering {
             return;
         }
 
-        // Keep syntax-error-affected nodes
-        // (This is done to allow for some degree of useful extra analysis in later stages)
         ASTFrame &top = this->astStack.back();
-        if (top.astNode.kind == ASTKind::Program || top.astNode.kind == ASTKind::Block) {
-            this->astPendingChildren.push_back(PendingASTChild{
-                .astNode = ASTNode{.kind = ASTKind::Dirty, .range = Internal::CSTDiagnostics::toRange(errorNode)},
-                .cstFieldId = ts::FieldId::None,
-            });
-        } else {
-            top.astNode.kind = ASTKind::Dirty;
-        }
+        // Preserve `top.astNode.kind` so valid sibling/body subtrees stay analyzable in IDE/semantic passes
+        top.astNode.flags = static_cast<uint16_t>(top.astNode.flags | Data::Parser::ASTFlags::HasError);
+        top.prefixStart = ASTFrame::NO_SLOT;
+        top.pendingNextSubKind = 0u;
+        top.pendingNextFlags = 0u;
+
+        const ts::Extent<uint32_t> bytes = errorNode.getByteRange();
+        this->astPendingChildren.push_back(ASTNode{
+            .kind = ASTKind::Dirty,
+            .flags = Data::Parser::ASTFlags::HasError,
+            .span = Data::Parser::ByteSpan{.start = bytes.start, .end = bytes.end},
+        });
+        this->astPendingFields.push_back(top.activeForwardedField);
     }
 
     // Context helpers exposed to `SymbolRule::Hook`
@@ -260,12 +347,19 @@ namespace Parser::Lowering {
         const size_t length = std::min<size_t>(bytes.end - bytes.start, src.size() - bytes.start);
         return src.substr(bytes.start, length);
     }
-    std::span<ASTNode> ASTBuilder::childrenOf(const ASTNode &parent) noexcept {
+    std::span<const ASTNode> ASTBuilder::childrenOf(const ASTNode &parent) const noexcept {
         if (this->ast == nullptr || parent.childCount == 0u ||
             (static_cast<size_t>(parent.firstChild) + parent.childCount) > this->ast->nodes.size()) {
             return {};
         }
-        return std::span<ASTNode>(this->ast->nodes.data() + parent.firstChild, parent.childCount);
+        return std::span<const ASTNode>(this->ast->nodes.data() + parent.firstChild, parent.childCount);
+    }
+    ASTNode* ASTBuilder::mutableChildAt(const ASTNode &parent, uint32_t index) noexcept {
+        if (this->ast == nullptr || index >= parent.childCount) {
+            return nullptr;
+        }
+        const size_t absIndex = static_cast<size_t>(parent.firstChild) + index;
+        return absIndex < this->ast->nodes.size() ? &this->ast->nodes[absIndex] : nullptr;
     }
     void ASTBuilder::pushImport(ImportRequest &&request) {
         if (this->imports != nullptr) {
@@ -275,9 +369,10 @@ namespace Parser::Lowering {
 
     // Output extraction
     std::unique_ptr<AST> ASTBuilder::takeAST() noexcept {
-        this->clearScratch();
+        this->clearScratch(true);
         this->file = nullptr;
         this->imports = nullptr;
+        this->userContext = nullptr;
         return std::move(this->ast);
     }
 }

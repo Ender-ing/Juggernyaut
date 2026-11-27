@@ -20,8 +20,13 @@ namespace Parser::Internal::CSTDiagnostics {
         }
 
         std::optional<ts::Node> findPrevSibling(ts::Node node) noexcept {
+            constexpr size_t MAX_EXTRA_HOPS = 32;
             std::optional<ts::Node> prev = node.getPreviousSibling();
+            size_t hops = 0;
             while (prev.has_value() && prev->isExtra()) {
+                if (++hops > MAX_EXTRA_HOPS) {
+                    return std::nullopt;
+                }
                 prev = prev->getPreviousSibling();
             }
             return prev;

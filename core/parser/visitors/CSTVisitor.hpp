@@ -45,7 +45,8 @@ namespace Parser::Visitors {
     };
 
     struct CSTVisitorConfigs {
-        bool reportUnusedCSTNodes = false; // Debug flag
+        bool reportUnusedCSTNodes = false;   // Debug flag
+        uint32_t maxSyntaxDiagnostics = 100; // Max syntax diagnostics emitted per `visit` (0 = unlimited)
     };
 
     class JUG_PARSER_API CSTVisitor {
@@ -74,19 +75,33 @@ namespace Parser::Visitors {
                 }
             };
 
-            // Unused-node LIFO frame (16B, trivially copyable; children live in `unusedPendingNodes`)
+            // Cached per-depth traversal state (eliminates duplicate `classify`/`isExtra` calls in `onLeave`)
+            enum class TraversalTag : uint8_t {
+                ExtraOrError    = 0, // Extra trivia/comment leaf or syntax-error node
+                ExtraScope      = 1, // Root of an extra node containing inner error recovery tokens
+                ValidUnhandled  = 2, // Valid non-extra node; neither consumer nor parent handled it
+                ParentInherited = 3, // Valid unnamed token inheriting handled status (`consumerHandled == false`)
+                ConsumerHandled = 4 // Valid non-extra node where `consumer.onValidEnter` returned `true`
+            };
+
+            struct PendingUnused {
+                ts::Node node;
+                uint32_t siblingSeq = 0;
+            };
+
+            // Unused-node LIFO frame (12B; O(1) contiguous-sibling coalescing via `childCounter`)
             struct UnusedFrame {
-                ts::NodeID nodeId{};
                 uint32_t pendingStart = 0;
+                uint32_t childCounter = 0;
                 bool isUnused = false;
                 bool hasUsedDescendant = false;
             };
-            std::vector<UnusedFrame> unusedStack;
-            std::vector<ts::Node> unusedPendingNodes;
-            ts::NodeID extraRootId{};
 
-            // Active traversal state
-            std::vector<uint8_t> handledStack;
+            std::vector<UnusedFrame> unusedStack;
+            std::vector<PendingUnused> unusedPendingNodes;
+            std::vector<TraversalTag> traversalStack;
+            uint32_t extraDepth = 0;
+            uint32_t emittedSyntaxDiagnostics = 0;
             ts::FieldId currentFieldId = ts::FieldId::None;
             ConsumerBridge consumer{};
 
@@ -98,7 +113,8 @@ namespace Parser::Visitors {
             // Configs
             CSTVisitorConfigs configs{};
 
-            void resetState() noexcept;
+            void resetState(bool trimExcessCapacity) noexcept;
+            void visitImpl(const ts::Tree &tree, ConsumerBridge boundConsumer) ;
             void visitImpl(ts::Node root, ConsumerBridge boundConsumer) ;
 
         protected:
@@ -124,7 +140,8 @@ namespace Parser::Visitors {
             CSTVisitor(CSTVisitor&&) noexcept = default;
             CSTVisitor& operator=(CSTVisitor&&) noexcept = default;
 
-            void configure(CSTVisitorConfigs configurations, const File *targetFile, const ModifiableEvent *diagnosticCallback) noexcept;
+            void configure(CSTVisitorConfigs configurations, const File *targetFile,
+                const ModifiableEvent *diagnosticCallback) noexcept;
 
             // Standalone CST walk (syntax & unused-node diagnostics only)
             void visit(const ts::Tree &tree) ;
@@ -133,7 +150,7 @@ namespace Parser::Visitors {
             // Consumer-driven CST walk
             template <CSTConsumer C>
             void visit(const ts::Tree &tree, C &targetConsumer) {
-                this->visitImpl(tree.getRootNode(), ConsumerBridge::bind(targetConsumer));
+                this->visitImpl(tree, ConsumerBridge::bind(targetConsumer));
             }
             template <CSTConsumer C>
             void visit(ts::Node root, C &targetConsumer) {
@@ -147,10 +164,8 @@ namespace Parser::Visitors {
 
             // Static helpers
             [[nodiscard]] static NodeState classify(ts::Node node) noexcept;
-            [[nodiscard]] static Diagnostic buildSyntaxDiagnostic(
-                ts::Node node,
-                std::string_view source = "",
-                const File *originFile = nullptr) ;
+            [[nodiscard]] static Diagnostic buildSyntaxDiagnostic(ts::Node node,
+                std::string_view source = "", const File *originFile = nullptr) ;
 
             // Queries
             [[nodiscard]] bool hasSyntaxErrors() const noexcept;

@@ -8,23 +8,40 @@
 #include "../internal/cstDiagnostics.hpp"
 
 namespace Parser::Visitors {
-    void CSTVisitor::resetState() noexcept {
-        this->unusedStack.clear();
-        this->unusedPendingNodes.clear();
-        this->handledStack.clear();
-        this->extraRootId = ts::NodeID{};
+    namespace Helper {
+        constexpr size_t MAX_RETAINED_STACK_CAPACITY = 4096u;
+        constexpr size_t MAX_RETAINED_PENDING_CAPACITY = 16384u;
+
+        template <typename T>
+        void resetBuffer(std::vector<T> &vec, bool trimExcess, size_t maxRetainedCap) noexcept {
+            vec.clear();
+            if (trimExcess && vec.capacity() > maxRetainedCap) {
+                std::vector<T>{}.swap(vec);
+            }
+        }
+    }
+
+    void CSTVisitor::resetState(bool trimExcessCapacity) noexcept {
+        Helper::resetBuffer(this->unusedStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
+        Helper::resetBuffer(this->unusedPendingNodes, trimExcessCapacity, Helper::MAX_RETAINED_PENDING_CAPACITY);
+        Helper::resetBuffer(this->traversalStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
+        this->extraDepth = 0u;
+        this->emittedSyntaxDiagnostics = 0u;
         this->currentFieldId = ts::FieldId::None;
         this->consumer = ConsumerBridge{};
+    }
+    void CSTVisitor::visitImpl(const ts::Tree &tree, ConsumerBridge boundConsumer) {
+        this->visitImpl(tree.getRootNode(), boundConsumer);
     }
     void CSTVisitor::visitImpl(ts::Node root, ConsumerBridge boundConsumer) {
         struct VisitScopeGuard {
             CSTVisitor *self;
             ~VisitScopeGuard() noexcept {
-                self->resetState();
+                self->resetState(true);
             }
         } guard{this};
 
-        this->resetState();
+        this->resetState(false);
         this->consumer = boundConsumer;
         this->syntaxErrors = false;
 
@@ -41,7 +58,7 @@ namespace Parser::Visitors {
         }
     }
     void CSTVisitor::emitUnusedNodeDiagnostic(ts::Node first, ts::Node last) {
-        if (this->onDiagnostic == nullptr || !(this->configs.reportUnusedCSTNodes)) {
+        if (this->onDiagnostic == nullptr || !this->configs.reportUnusedCSTNodes) {
             return;
         }
 
@@ -62,6 +79,11 @@ namespace Parser::Visitors {
         if (this->onDiagnostic == nullptr) {
             return;
         }
+        if (this->configs.maxSyntaxDiagnostics > 0u &&
+            this->emittedSyntaxDiagnostics >= this->configs.maxSyntaxDiagnostics) {
+            return;
+        }
+        ++this->emittedSyntaxDiagnostics;
 
         const std::string_view source = this->file != nullptr ? this->file->content.view() : std::string_view{};
         Diagnostic diag = buildSyntaxDiagnostic(node, source, this->file);
@@ -78,77 +100,78 @@ namespace Parser::Visitors {
         const size_t start = frame.pendingStart;
         const size_t total = this->unusedPendingNodes.size();
 
+        uint32_t siblingSeq = 0u;
+        if (!this->unusedStack.empty()) {
+            siblingSeq = ++this->unusedStack.back().childCounter;
+        }
+
         // Collapse entire unhandled subtree into its parent node
-        if (frame.isUnused && !(frame.hasUsedDescendant)) {
-            if (total > start) {
-                this->unusedPendingNodes.erase(
-                    this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
-                    this->unusedPendingNodes.end()
-                );
-            }
-            if (!(this->unusedStack.empty())) {
-                this->unusedPendingNodes.push_back(node);
+        if (frame.isUnused && !frame.hasUsedDescendant) {
+            this->unusedPendingNodes.resize(start);
+            if (!this->unusedStack.empty()) {
+                this->unusedPendingNodes.push_back(PendingUnused{
+                    .node = node,
+                    .siblingSeq = siblingSeq,
+                });
             } else {
                 this->emitUnusedNodeDiagnostic(node, node);
             }
             return;
         }
 
-        // Coalesce contiguous unused sibling runs
-        if (!(this->unusedStack.empty())) {
+        // Coalesce contiguous unused sibling runs in O(1) per sibling via `siblingSeq`
+        if (!this->unusedStack.empty()) {
             this->unusedStack.back().hasUsedDescendant = true;
         }
         if (total > start) {
-            std::span<const ts::Node> pending(this->unusedPendingNodes.data() + start, total - start);
-            ts::Node runStart = pending.front();
+            std::span<const PendingUnused> pending(this->unusedPendingNodes.data() + start, total - start);
+            ts::Node runStart = pending.front().node;
             ts::Node runEnd = runStart;
+            uint32_t prevSeq = pending.front().siblingSeq;
             for (size_t i = 1; i < pending.size(); ++i) {
-                const ts::Node curr = pending[i];
-                const std::optional<ts::Node> next = runEnd.getNextSibling();
-                if (next.has_value() && next->impl.id == curr.impl.id) {
-                    runEnd = curr;
+                const PendingUnused &curr = pending[i];
+                if (curr.siblingSeq == prevSeq + 1u) {
+                    runEnd = curr.node;
                 } else {
                     this->emitUnusedNodeDiagnostic(runStart, runEnd);
-                    runStart = curr;
-                    runEnd = curr;
+                    runStart = curr.node;
+                    runEnd = curr.node;
                 }
+                prevSeq = curr.siblingSeq;
             }
             this->emitUnusedNodeDiagnostic(runStart, runEnd);
-
-            this->unusedPendingNodes.erase(
-                this->unusedPendingNodes.begin() + static_cast<std::ptrdiff_t>(start),
-                this->unusedPendingNodes.end()
-            );
+            this->unusedPendingNodes.resize(start);
         }
     }
     void CSTVisitor::reportUnusedNode(ts::Node node, NodeState state) {
-        if (state != NodeState::Valid || node.isExtra() || this->extraRootId != ts::NodeID{}) {
+        if (state != NodeState::Valid || this->extraDepth > 0u) {
             return;
         }
-        if (this->onDiagnostic == nullptr || !(this->configs.reportUnusedCSTNodes)) {
+        if (this->onDiagnostic == nullptr || !this->configs.reportUnusedCSTNodes) {
             return;
         }
-        if (!this->unusedStack.empty() && this->unusedStack.back().nodeId == node.getID()) {
+        if (!this->unusedStack.empty()) {
             this->unusedStack.back().isUnused = true;
             return;
         }
         this->emitUnusedNodeDiagnostic(node, node);
     }
 
+    // Node dispatch hooks
     ts::VisitAction CSTVisitor::onNode(ts::Node node) {
-        // Ignore extra nodes (comments / trivia)
-        if (node.isExtra() || this->extraRootId != ts::NodeID{}) {
-            return ts::VisitAction::Continue;
-        }
-
-        const bool parentHandled = !(this->handledStack.empty()) && (this->handledStack.back() != 0u);
+        const bool parentHandled = !this->traversalStack.empty() &&
+            (this->traversalStack.back() == TraversalTag::ConsumerHandled ||
+             this->traversalStack.back() == TraversalTag::ParentInherited);
         const bool consumerHandled = (this->consumer.onValidEnter != nullptr)
             ? this->consumer.onValidEnter(this->consumer.ctx, node, this->currentFieldId)
             : false;
 
         // Unnamed punctuation/keywords inherit handled status from their enclosing named CST rule
         const bool effectiveHandled = node.isNamed() ? consumerHandled : (consumerHandled || parentHandled);
-        this->handledStack.push_back(effectiveHandled ? uint8_t{1} : uint8_t{0});
+        const TraversalTag tag = consumerHandled
+            ? TraversalTag::ConsumerHandled
+            : (effectiveHandled ? TraversalTag::ParentInherited : TraversalTag::ValidUnhandled);
+        this->traversalStack.push_back(tag);
 
         if (!effectiveHandled) {
             this->reportUnusedNode(node, NodeState::Valid);
@@ -191,53 +214,75 @@ namespace Parser::Visitors {
     ts::VisitAction CSTVisitor::onEnter(ts::Node node, ts::FieldId fieldId) {
         this->currentFieldId = fieldId;
 
-        // Track extra subtrees (for exclusion from unused-node tracking)
-        const bool isExtra = node.isExtra();
-        if (this->extraRootId == ts::NodeID{} && isExtra) {
-            this->extraRootId = node.getID();
-            if (!(this->unusedStack.empty())) {
+        // Classify syntax errors BEFORE checking `isExtra()` (Tree-sitter marks `ERROR` nodes as extra)
+        const NodeState state = classify(node);
+        if (state != NodeState::Valid) {
+            if (this->extraDepth == 0u && !this->unusedStack.empty()) {
+                ++this->unusedStack.back().childCounter;
                 this->unusedStack.back().hasUsedDescendant = true;
+            }
+            this->traversalStack.push_back(TraversalTag::ExtraOrError);
+            switch (state) {
+                case NodeState::Error:
+                    return this->onError(node);
+                case NodeState::Unexpected:
+                    return this->onUnexpected(node);
+                case NodeState::Missing:
+                default:
+                    return this->onMissing(node);
             }
         }
 
-        const bool trackUnused = this->configs.reportUnusedCSTNodes &&
-            this->onDiagnostic != nullptr &&
-            this->extraRootId == ts::NodeID{};
+        // Skip valid comment / trivia subtrees without polluting `unusedStack`
+        if (this->extraDepth > 0u) {
+            this->traversalStack.push_back(TraversalTag::ExtraOrError);
+            return ts::VisitAction::Continue;
+        }
+        if (node.isExtra()) {
+            if (!node.hasError()) {
+                this->traversalStack.push_back(TraversalTag::ExtraOrError);
+                return ts::VisitAction::SkipChildren;
+            }
+            this->extraDepth = 1u;
+            this->traversalStack.push_back(TraversalTag::ExtraScope);
+            return ts::VisitAction::Continue;
+        }
+
+        const bool trackUnused = this->configs.reportUnusedCSTNodes && (this->onDiagnostic != nullptr);
         if (trackUnused) {
             this->unusedStack.push_back(UnusedFrame{
-                .nodeId = node.getID(),
                 .pendingStart = static_cast<uint32_t>(this->unusedPendingNodes.size()),
             });
         }
 
-        switch (classify(node)) {
-            case NodeState::Valid:
-                return this->onNode(node);
-            case NodeState::Error:
-                return this->onError(node);
-            case NodeState::Unexpected:
-                return this->onUnexpected(node);
-            case NodeState::Missing:
-                return this->onMissing(node);
-            default:
-                return ts::VisitAction::Continue;
+        const size_t depthBefore = this->traversalStack.size();
+        const ts::VisitAction action = this->onNode(node);
+        if (this->traversalStack.size() == depthBefore) {
+            this->traversalStack.push_back(TraversalTag::ParentInherited);
         }
+        return action;
     }
     void CSTVisitor::onLeave(ts::Node node) {
-        if (classify(node) == NodeState::Valid && !node.isExtra() && this->extraRootId == ts::NodeID{}) {
-            if (this->consumer.onValidLeave != nullptr) {
-                this->consumer.onValidLeave(this->consumer.ctx, node);
-            }
-            if (!this->handledStack.empty()) {
-                this->handledStack.pop_back();
-            }
+        if (this->traversalStack.empty()) {
+            return;
         }
 
-        if (!(this->unusedStack.empty()) && this->unusedStack.back().nodeId == node.getID()) {
-            this->finalizeUnusedFrame(node);
+        const TraversalTag tag = this->traversalStack.back();
+        this->traversalStack.pop_back();
+
+        if (tag == TraversalTag::ExtraScope) {
+            this->extraDepth = 0u;
+            return;
         }
-        if (node.getID() == this->extraRootId) {
-            this->extraRootId = ts::NodeID{};
+        if (tag == TraversalTag::ExtraOrError) {
+            return;
+        }
+
+        if (tag == TraversalTag::ConsumerHandled && this->consumer.onValidLeave != nullptr) {
+            this->consumer.onValidLeave(this->consumer.ctx, node);
+        }
+        if (!this->unusedStack.empty()) {
+            this->finalizeUnusedFrame(node);
         }
     }
 
