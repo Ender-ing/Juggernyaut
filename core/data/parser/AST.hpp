@@ -23,6 +23,15 @@
 #endif
 
 namespace Data::Parser {
+    // Formatting options for `AST::toSExpr`
+    struct ASTDumpOptions {
+        bool pretty = false;        // Multi-line indented tree vs single-line S-expression
+        bool includeSpans = false;  // Emit `@start..end` byte offsets on every node (`Dirty` always emits spans)
+        bool includeLexemes = true; // Emit escaped `"..."` text for nodes with an interned `lexemeId`
+        uint8_t indentSpaces = 2;   // Spaces per nesting level when `pretty == true`
+        size_t maxBytes = 0;        // `0` = unlimited; otherwise stops cleanly once output reaches `maxBytes`
+    };
+
     struct JUG_DATA_API AST {
         std::vector<ASTNode> nodes;
         std::vector<std::string> lexemes;
@@ -41,6 +50,9 @@ namespace Data::Parser {
         // Source text & diagnostic range resolution from compact `ByteSpan`
         [[nodiscard]] std::string_view textOf(const ASTNode &target, const Host::File &sourceFile) const noexcept;
         [[nodiscard]] Diagnostics::Range rangeOf(const ASTNode &target, const Host::File &sourceFile) const noexcept;
+
+        // Iterative S-expression debug dump
+        [[nodiscard]] std::string toSExpr(ASTDumpOptions options = {}, uint32_t rootIndex = 0u) const ;
     };
 }
 
