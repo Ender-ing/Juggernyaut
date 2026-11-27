@@ -298,31 +298,28 @@ namespace Driver {
         }
 
         void refreshEnvironment(VFS *vfs, Environment* env, const Data::Diagnostics::Event &emit) {
-            if (env == nullptr) {
+            if (env == nullptr || env->file == nullptr) {
                 return;
             }
-            const File*& file = env->file;
-            if (file == nullptr) {
-                return;
-            }
-            env->package = {};
-            env->build = {};
-            env->localDeps.clear();
-            env->onlineDeps.clear();
+            const File *file = env->file;
+            env->fileVersion = file->version;
 
-            // Update environment version
-            env->version = env->file->version;
-
-            // Process TOML data
+            // Parse TOML BEFORE mutating `env` so transient mid-typing syntax errors
+            // don't wipe `env->build` and detach/re-parse the workspace!
             toml::parse_result result = toml::parse(file->content.view());
             if (!result) {
-                const toml::parse_error& err = result.error();
+                const toml::parse_error &err = result.error();
                 std::string description = std::string(err.description());
 
                 emitDiagnostic(emit, file, err.source(), Data::Diagnostics::Severity::Error, CODE_700007(description), 700007);
-
                 return;
             }
+
+            PackageConfigs nextPackage;
+            BuildConfigs nextBuild;
+            std::vector<LocalDependency> nextLocalDeps;
+            std::vector<OnlineDependency> nextOnlineDeps;
+            DebugConfigs nextDebug;
 
             toml::table table = std::move(result).table();
 
@@ -331,31 +328,51 @@ namespace Driver {
                 std::string_view sectionName = key.str();
                 if (sectionName == "package") {
                     if (const auto* sub_tbl = val.as_table()) {
-                        processPackageSection(emit, file, *sub_tbl, env->package);
+                        processPackageSection(emit, file, *sub_tbl, nextPackage);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Data::Diagnostics::Severity::Error, CODE_700005("expected 'package' to be a section table."), 700005);
                     }
                 } else if (sectionName == "build") {
                     if (const auto* sub_tbl = val.as_table()) {
-                        processBuildSection(vfs, emit, file, *sub_tbl, env->build);
+                        processBuildSection(vfs, emit, file, *sub_tbl, nextBuild);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Data::Diagnostics::Severity::Error, CODE_700005("expected 'build' to be a section table."), 700005);
                     }
                 } else if (sectionName == "dependencies") {
                     if (const auto* sub_tbl = val.as_table()) {
-                        processDependenciesSection(emit, file, *sub_tbl, env->localDeps, env->onlineDeps);
+                        processDependenciesSection(emit, file, *sub_tbl, nextLocalDeps, nextOnlineDeps);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Data::Diagnostics::Severity::Error, CODE_700005("expected 'dependencies' to be a section table."), 700005);
                     }
                 } else if (sectionName == "debug") {
                     if (const auto* sub_tbl = val.as_table()) {
-                        processDebugSection(emit, file, *sub_tbl, env->debug);
+                        processDebugSection(emit, file, *sub_tbl, nextDebug);
                     } else {
                         emitDiagnostic(emit, file, val.source(), Data::Diagnostics::Severity::Error, CODE_700005("expected 'debug' to be a section table."), 700005);
                     }
                 } else {
                     // UNKNOWN TOP-LEVEL SECTION OR VARIABLE
                     emitDiagnostic(emit, file, val.source(), Data::Diagnostics::Severity::Warning, CODE_700008(std::string(sectionName)), 700008);
+                }
+            }
+
+            const bool compilationChanged =
+                (env->version == 0u) ||
+                (nextBuild != env->build) ||
+                (nextLocalDeps != env->localDeps) ||
+                (nextOnlineDeps != env->onlineDeps) ||
+                (nextDebug != env->debug);
+
+            env->package = std::move(nextPackage);
+            env->build = std::move(nextBuild);
+            env->localDeps = std::move(nextLocalDeps);
+            env->onlineDeps = std::move(nextOnlineDeps);
+            env->debug = nextDebug;
+
+            if (compilationChanged) {
+                ++(env->version);
+                if (env->version == 0u) {
+                    env->version = 1u;
                 }
             }
         }

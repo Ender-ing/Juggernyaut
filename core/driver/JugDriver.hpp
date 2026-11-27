@@ -53,47 +53,37 @@ namespace Driver::JugDriver {
             };
 
         private:
-            // Project & session graph (mutated exclusively by the thread owning the `isBusy` lease)
+            // Project & session graph (mutated exclusively under `runMtx`)
             std::vector<std::unique_ptr<Setup>> setups;
             std::vector<Unit> units;
             std::vector<std::vector<UnitId>> executionWaves;
             std::vector<UnitId> entryPoints;
 
-            // Concurrency & lease coordination:
-            // `stateMtx` is a strict leaf lock guarding `isBusy`, `rerunRequested`, and `pendingPaths`.
-            // Never hold `stateMtx` while calling into `VFS` or acquiring `hookMtx`.
-            mutable std::mutex stateMtx;
-            std::atomic<bool> busyFlag{false}; // Lock-free mirror of `isBusy` for `busy()` queries
-            bool isBusy = false;               // Exclusive lease over `setups` / `units` / `entryPoints`
-            bool rerunRequested = false;       // Coalesces `run()` calls that arrive while `isBusy` is held
+            // Concurrency:
+            // - `runMtx`: guards `setups`, `units`, `executionWaves`, and `entryPoints`.
+            // - `pathsMtx`: leaf lock for `pendingPaths` when `runMtx` is busy.
+            // - `hookMtx`: serializes `emitDiagnostic`.
+            std::mutex runMtx;
+            std::mutex pathsMtx;
+            std::mutex hookMtx;
+            std::atomic<uint32_t> activeOwners{0};
+            std::atomic<bool> runningPass{false};
             std::vector<std::string> pendingPaths;
-            std::mutex hookMtx;                // Serializes outgoing `driver` and `unitSources` hook callbacks
 
-            // Exclusive-lease internal helpers (caller must own `isBusy` lease inside VFS Safe Mode)
-            bool finishLease(bool runPass) ;
-            void drainPendingPathsExclusive() ;
-            void processPathsExclusive(const std::vector<std::string> &paths) ;
-            void addProjectExclusive(const std::string &path) ;
+            // Internal (`runMtx` must be held by caller)
+            void drainPendingPaths(bool inSafeMode) ;
+            void processPathsExclusive(const std::vector<std::string> &paths, bool inSafeMode) ;
+            void addProjectExclusive(const std::string &path, bool inSafeMode) ;
             void addStrayFileExclusive(const std::string &path) ;
             bool dirConfigLookup(Data::Host::VFS *vfs, const std::string &uri,
                 const std::string &sourceUri, std::string &outputUri) ;
             UnitId createUnit(const Setup *setup) ;
-            void loadProject(const std::string &path) ; // Assumes the path has been validated!
+            void loadProject(const std::string &path, bool inSafeMode) ; // Assumes the path has been validated!
 
-            // Lifetime Management (Internal, exclusive-lease only)
+            // Lifetime Management (Internal, called under `runMtx` inside VFS Safe Mode)
             void refreshSetups() ;          // Checks jug.toml files for updates
             bool refreshDependencyGraph() ; // Updates dependency graph for parallel processing
             void runUnits() ;
-
-            // Serialized hook dispatchers (`hookMtx`)
-            void emitEnvironmentLoad(const Data::Host::File *file) ;
-            void emitEnvironmentChange(const Data::Host::File *file) ;
-            void emitRunFinished() ;
-            void emitUnitContextSkip(const Data::Host::File *file) ;
-            void emitUnitContextStart(const Data::Host::File *file) ;
-            void emitUnitParserContextEnd(const Data::Host::File *file) ;
-            void emitUnitContextEnd(const Data::Host::File *file) ;
-            void emitUnitContextDetached(const Data::Host::File *file) ;
 
         public:
             // NOTE: When the driver is busy(), never change the state of the inputed variables or their children!
@@ -106,10 +96,9 @@ namespace Driver::JugDriver {
 
             // Lifetime Management (Always causes the driver to become busy!)
             // VFS is switched to "Safe Mode" when the function runs!
-            // If called while busy, coalesces a follow-up pass on the active runner and returns `false`.
             bool run() ;
 
-            // Adding projects/stray files (thread-safe; queued into `pendingPaths` when busy)
+            // Adding projects/stray files (queued into `pendingPaths` without blocking when busy)
             void processPaths(std::vector<std::string> &paths) ;
             void addProject(const std::string &path) ;
             void addStrayFile(const std::string &path) ;

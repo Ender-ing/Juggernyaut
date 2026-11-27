@@ -10,113 +10,57 @@
 #include "environment.hpp"
 
 namespace Driver::JugDriver {
-    // Exclusive-lease lifecycle coordinator
-    bool JugDriver::finishLease(bool runPass) {
-        Data::Host::VFS *vfs = this->host.vfs;
-        if (vfs == nullptr) {
-            std::lock_guard<std::mutex> lock(this->stateMtx);
-            this->pendingPaths.clear();
-            this->rerunRequested = false;
-            this->isBusy = false;
-            this->busyFlag.store(false, std::memory_order_release);
-            return false;
-        }
+    namespace Helper {
+        struct SafeModeScope {
+            Data::Host::VFS *vfs = nullptr;
+            bool active = false;
 
-        bool safeModeActive = false;
-        auto enterSafeMode = [&]() {
-            if (!safeModeActive) {
-                vfs->setSafeMode(true);
-                safeModeActive = true;
+            SafeModeScope(Data::Host::VFS *targetVfs, bool enter)
+                : vfs(targetVfs), active(enter && targetVfs != nullptr) {
+                if (this->active) {
+                    this->vfs->setSafeMode(true);
+                }
             }
-        };
-        auto exitSafeMode = [&]() {
-            if (safeModeActive) {
-                vfs->setSafeMode(false);
-                safeModeActive = false;
+            ~SafeModeScope() noexcept {
+                if (this->active) {
+                    this->vfs->setSafeMode(false);
+                }
             }
+
+            SafeModeScope(const SafeModeScope&) = delete;
+            SafeModeScope& operator=(const SafeModeScope&) = delete;
         };
 
-        // Exception-safety guard so an unexpected throw never strands VFS Safe Mode or `isBusy`
-        struct LeaseGuard {
-            JugDriver *self;
-            Data::Host::VFS *vfsPtr;
-            bool *safeActive;
-            bool ownsLease = true;
+        struct BusyScope {
+            std::atomic<uint32_t> *counter;
 
-            ~LeaseGuard() noexcept {
-                if (!this->ownsLease) {
-                    return;
-                }
-                if (*this->safeActive) {
-                    this->vfsPtr->setSafeMode(false);
-                    *this->safeActive = false;
-                }
-                std::lock_guard<std::mutex> lock(this->self->stateMtx);
-                this->self->isBusy = false;
-                this->self->busyFlag.store(false, std::memory_order_release);
+            explicit BusyScope(std::atomic<uint32_t> *target) noexcept : counter(target) {
+                this->counter->fetch_add(1u, std::memory_order_release);
             }
-        } guard{this, vfs, &safeModeActive, true};
-
-        bool ranAnyPass = false;
-
-        while (true) {
-            enterSafeMode();
-
-            // Drain queued project/file registrations inside Safe Mode so `toml::parse` views stay immutable
-            this->drainPendingPathsExclusive();
-
-            if (runPass) {
-                this->refreshSetups();
-                if (this->refreshDependencyGraph()) {
-                    this->runUnits();
-                    ranAnyPass = true;
-                }
+            ~BusyScope() noexcept {
+                this->counter->fetch_sub(1u, std::memory_order_release);
             }
 
-            // Exit VFS Safe Mode BEFORE releasing `isBusy` so staged VFS edits flush atomically
-            // before any concurrent `run()` can increment `VFS::safetyCount` (preventing 1 -> 2 -> 1 skip).
-            exitSafeMode();
-
-            if (runPass) {
-                this->emitRunFinished();
-            }
-
-            {
-                std::lock_guard<std::mutex> lock(this->stateMtx);
-                if (this->rerunRequested) {
-                    this->rerunRequested = false;
-                    runPass = true;
-                    continue;
-                }
-                if (!this->pendingPaths.empty()) {
-                    // Drain paths queued while `runUnits()` / `onRunFinished()` was executing
-                    continue;
-                }
-
-                this->isBusy = false;
-                this->busyFlag.store(false, std::memory_order_release);
-                guard.ownsLease = false;
-                break;
-            }
-        }
-
-        return ranAnyPass;
+            BusyScope(const BusyScope&) = delete;
+            BusyScope& operator=(const BusyScope&) = delete;
+        };
     }
-    // Internal (caller owns `isBusy` lease inside VFS Safe Mode)
-    void JugDriver::drainPendingPathsExclusive() {
+
+    // Internal (`runMtx` held by caller)
+    void JugDriver::drainPendingPaths(bool inSafeMode) {
         while (true) {
             std::vector<std::string> batch;
             {
-                std::lock_guard<std::mutex> lock(this->stateMtx);
+                std::lock_guard<std::mutex> lock(this->pathsMtx);
                 if (this->pendingPaths.empty()) {
                     break;
                 }
                 batch.swap(this->pendingPaths);
             }
-            this->processPathsExclusive(batch);
+            this->processPathsExclusive(batch, inSafeMode);
         }
     }
-    void JugDriver::processPathsExclusive(const std::vector<std::string> &paths) {
+    void JugDriver::processPathsExclusive(const std::vector<std::string> &paths, bool inSafeMode) {
         Data::Host::VFS *vfs = this->host.vfs;
         if (vfs == nullptr) {
             return;
@@ -124,13 +68,13 @@ namespace Driver::JugDriver {
 
         for (const std::string &path : paths) {
             if (vfs->isDirectory(path) || vfs->filename(path) == "jug.toml") {
-                this->addProjectExclusive(path);
+                this->addProjectExclusive(path, inSafeMode);
             } else {
                 this->addStrayFileExclusive(path);
             }
         }
     }
-    void JugDriver::addProjectExclusive(const std::string &path) {
+    void JugDriver::addProjectExclusive(const std::string &path, bool inSafeMode) {
         Data::Host::VFS *vfs = this->host.vfs;
         if (vfs == nullptr) {
             return;
@@ -140,11 +84,11 @@ namespace Driver::JugDriver {
             SET_CODE(err, Error, 700001, path);
             this->emitDiagnostic(err);
         } else if (vfs->filename(path) == "jug.toml") {
-            this->loadProject(path);
+            this->loadProject(path, inSafeMode);
         } else if (vfs->isDirectory(path)) {
             std::string configUri;
             if (this->dirConfigLookup(vfs, path, path, configUri)) {
-                this->loadProject(configUri);
+                this->loadProject(configUri, inSafeMode);
             }
         } else {
             SET_CODE(err, Error, 700003, path);
@@ -192,19 +136,29 @@ namespace Driver::JugDriver {
         const UnitId id = static_cast<UnitId>(this->units.size());
         this->units.emplace_back(this->host.vfs, setup, UnitConfigs{}, UnitHooks{
             .onContextSkip = [this](const Data::Host::File *file) {
-                this->emitUnitContextSkip(file);
+                if (this->configs.hooks.unitSources.onContextSkip != nullptr) {
+                    this->configs.hooks.unitSources.onContextSkip(file);
+                }
             },
             .onContextStart = [this](const Data::Host::File *file) {
-                this->emitUnitContextStart(file);
+                if (this->configs.hooks.unitSources.onContextStart != nullptr) {
+                    this->configs.hooks.unitSources.onContextStart(file);
+                }
             },
             .onParserContextEnd = [this](const Data::Host::File *file) {
-                this->emitUnitParserContextEnd(file);
+                if (this->configs.hooks.unitSources.onParserContextEnd != nullptr) {
+                    this->configs.hooks.unitSources.onParserContextEnd(file);
+                }
             },
             .onContextEnd = [this](const Data::Host::File *file) {
-                this->emitUnitContextEnd(file);
+                if (this->configs.hooks.unitSources.onContextEnd != nullptr) {
+                    this->configs.hooks.unitSources.onContextEnd(file);
+                }
             },
             .onContextDetached = [this](const Data::Host::File *file) {
-                this->emitUnitContextDetached(file);
+                if (this->configs.hooks.unitSources.onContextDetached != nullptr) {
+                    this->configs.hooks.unitSources.onContextDetached(file);
+                }
             },
             .onDiagnostic = [this](const Diagnostic &diag) {
                 this->emitDiagnostic(diag);
@@ -212,38 +166,39 @@ namespace Driver::JugDriver {
         });
         return id;
     }
-    void JugDriver::loadProject(const std::string &path) {
+    void JugDriver::loadProject(const std::string &path, bool inSafeMode) {
         Data::Host::VFS *vfs = this->host.vfs;
         if (vfs == nullptr) {
             return;
         }
 
-        // Get the environment's source file
         const Data::Host::File *file = vfs->readFile(path);
         if (file == nullptr) {
             return;
         }
 
-        // Skip if environment is already loaded
+        // Skip if environment is already loaded (no VFS Safe Mode toggle needed)
         for (const auto &existing : this->setups) {
             if (existing != nullptr && existing->file == file) {
                 return;
             }
         }
 
-        // Load a new environment
-        this->setups.push_back(
-            std::make_unique<Setup>(Environment::fetchEnvironment(vfs, this->diagnosticEmitter, path))
-        );
+        // Guard `toml::parse(file->content.view())` if called outside `run()`
+        {
+            Helper::SafeModeScope safeGuard(vfs, !inSafeMode);
+            this->setups.push_back(
+                std::make_unique<Setup>(Environment::fetchEnvironment(vfs, this->diagnosticEmitter, path))
+            );
+        }
         const Setup *setup = this->setups.back().get();
 
-        // Fire relevant events
-        this->emitEnvironmentLoad(file);
+        if (this->configs.hooks.driver.onEnvironmentLoad != nullptr) {
+            this->configs.hooks.driver.onEnvironmentLoad(file);
+        }
 
-        // Create a unit!
         this->entryPoints.push_back(this->createUnit(setup));
 
-        // Declare the project to the user!
         SET_CODE(diag, Info, 700018, path);
         this->emitDiagnostic(diag);
     }
@@ -251,18 +206,17 @@ namespace Driver::JugDriver {
     // Lifetime Management (Internal)
     void JugDriver::refreshSetups() {
         for (std::unique_ptr<Setup> &setup : this->setups) {
-            if (setup != nullptr && setup->file != nullptr && setup->file->version > setup->version) {
+            if (setup != nullptr && setup->file != nullptr && setup->file->version > setup->fileVersion) {
                 Environment::refreshEnvironment(this->host.vfs, setup.get(), this->diagnosticEmitter);
-                this->emitEnvironmentChange(setup->file);
+
+                if (this->configs.hooks.driver.onEnvironmentChange != nullptr) {
+                    this->configs.hooks.driver.onEnvironmentChange(setup->file);
+                }
             }
         }
     }
     bool JugDriver::refreshDependencyGraph() {
         // PLANNED: Topological Wave (Level) Scheduling (Kahn's algorithm)
-        // NOTE: Project dependencies haven't been implemented yet!
-        // As such, this is a dummy call for the time being that adds one
-        // execution layer!
-
         this->executionWaves.clear();
 
         if (!this->entryPoints.empty()) {
@@ -272,24 +226,23 @@ namespace Driver::JugDriver {
         return true;
     }
     void JugDriver::runUnits() {
-        // Execute each topological wave in order
-        const unsigned int systemThreadMax = std::max(1u, std::thread::hardware_concurrency());
-        const unsigned int maxThreads = this->configs.maxThreadsAllowed == 0
-            ? systemThreadMax
-            : std::min(this->configs.maxThreadsAllowed, systemThreadMax);
+        // Reserve 1 hardware thread for LSP/UI responsiveness when `maxThreadsAllowed == 0`
+        const unsigned int hardwareThreads = std::max(1u, std::thread::hardware_concurrency());
+        const unsigned int autoBudget = hardwareThreads > 1u ? (hardwareThreads - 1u) : 1u;
+        const unsigned int maxThreads = this->configs.maxThreadsAllowed == 0u
+            ? autoBudget
+            : std::min(this->configs.maxThreadsAllowed, hardwareThreads);
 
         for (const std::vector<UnitId> &wave : this->executionWaves) {
             if (wave.empty()) {
                 continue;
             }
 
-            // Handle single jobs without spawning a thread
-            if (wave.size() == 1) {
+            if (wave.size() == 1u) {
                 this->units[wave[0]].run();
                 continue;
             }
 
-            // Run independent units in parallel
             std::atomic<size_t> nextIdx{0};
             const size_t waveSize = wave.size();
             const size_t workerCount = std::min<size_t>(waveSize, maxThreads);
@@ -306,83 +259,46 @@ namespace Driver::JugDriver {
                     }
                 });
             }
-
-            // NOTE: 'std::jthread' destructors automatically join all workers!
-        }
-    }
-
-    // Serialized Hook Dispatchers
-    void JugDriver::emitDiagnostic(const Diagnostic &diag) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.driver.onDiagnostic != nullptr) {
-            this->configs.hooks.driver.onDiagnostic(diag);
-        }
-    }
-    void JugDriver::emitEnvironmentLoad(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.driver.onEnvironmentLoad != nullptr) {
-            this->configs.hooks.driver.onEnvironmentLoad(file);
-        }
-    }
-    void JugDriver::emitEnvironmentChange(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.driver.onEnvironmentChange != nullptr) {
-            this->configs.hooks.driver.onEnvironmentChange(file);
-        }
-    }
-    void JugDriver::emitRunFinished() {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.driver.onRunFinished != nullptr) {
-            this->configs.hooks.driver.onRunFinished();
-        }
-    }
-    void JugDriver::emitUnitContextSkip(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.unitSources.onContextSkip != nullptr) {
-            this->configs.hooks.unitSources.onContextSkip(file);
-        }
-    }
-    void JugDriver::emitUnitContextStart(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.unitSources.onContextStart != nullptr) {
-            this->configs.hooks.unitSources.onContextStart(file);
-        }
-    }
-    void JugDriver::emitUnitParserContextEnd(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.unitSources.onParserContextEnd != nullptr) {
-            this->configs.hooks.unitSources.onParserContextEnd(file);
-        }
-    }
-    void JugDriver::emitUnitContextEnd(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.unitSources.onContextEnd != nullptr) {
-            this->configs.hooks.unitSources.onContextEnd(file);
-        }
-    }
-    void JugDriver::emitUnitContextDetached(const Data::Host::File *file) {
-        std::lock_guard<std::mutex> lock(this->hookMtx);
-        if (this->configs.hooks.unitSources.onContextDetached != nullptr) {
-            this->configs.hooks.unitSources.onContextDetached(file);
         }
     }
 
     JugDriver::JugDriver(HostConfigs hostConfigs, DriverConfigs driverConfigs)
         : host(hostConfigs), configs(std::move(driverConfigs)) {}
 
-    // Lifetime Management (Always causes the driver to become busy!)
     bool JugDriver::run() {
+        Data::Host::VFS *vfs = this->host.vfs;
+        if (vfs == nullptr) {
+            return false;
+        }
+        if (this->runningPass.exchange(true, std::memory_order_acq_rel)) {
+            return false;
+        }
+        struct PassGuard {
+            std::atomic<bool> *flag;
+            ~PassGuard() noexcept { this->flag->store(false, std::memory_order_release); }
+        } passGuard{&this->runningPass};
+
+        std::lock_guard<std::mutex> lock(this->runMtx);
+        Helper::BusyScope busyScope(&this->activeOwners);
+
         {
-            std::lock_guard<std::mutex> lock(this->stateMtx);
-            if (this->isBusy) {
-                this->rerunRequested = true;
+            // Exit VFS Safe Mode BEFORE releasing `runMtx` and BEFORE `onRunFinished`
+            Helper::SafeModeScope safeScope(vfs, true);
+
+            this->drainPendingPaths(true);
+            this->refreshSetups();
+            if (!this->refreshDependencyGraph()) {
                 return false;
             }
-            this->isBusy = true;
-            this->busyFlag.store(true, std::memory_order_release);
-            this->rerunRequested = false;
+            this->runUnits();
         }
-        return this->finishLease(true);
+
+        if (this->configs.hooks.driver.onRunFinished != nullptr) {
+            this->configs.hooks.driver.onRunFinished();
+        }
+
+        this->drainPendingPaths(false);
+        return true;
     }
 
     // Adding projects/stray files
@@ -390,57 +306,44 @@ namespace Driver::JugDriver {
         if (paths.empty()) {
             return;
         }
-
-        bool acquiredLease = false;
-        {
-            std::lock_guard<std::mutex> lock(this->stateMtx);
+        std::unique_lock<std::mutex> lock(this->runMtx, std::try_to_lock);
+        if (!lock.owns_lock()) {
+            std::lock_guard<std::mutex> qlock(this->pathsMtx);
             this->pendingPaths.insert(this->pendingPaths.end(), paths.begin(), paths.end());
-            if (!this->isBusy) {
-                this->isBusy = true;
-                this->busyFlag.store(true, std::memory_order_release);
-                acquiredLease = true;
-            }
+            return;
         }
-        if (acquiredLease) {
-            (void)this->finishLease(false);
-        }
+        Helper::BusyScope busyScope(&this->activeOwners);
+        this->drainPendingPaths(false);
+        this->processPathsExclusive(paths, false);
     }
     void JugDriver::addProject(const std::string &path) {
-        bool acquiredLease = false;
-        {
-            std::lock_guard<std::mutex> lock(this->stateMtx);
+        std::unique_lock<std::mutex> lock(this->runMtx, std::try_to_lock);
+        if (!lock.owns_lock()) {
+            std::lock_guard<std::mutex> qlock(this->pathsMtx);
             this->pendingPaths.push_back(path);
-            if (!this->isBusy) {
-                this->isBusy = true;
-                this->busyFlag.store(true, std::memory_order_release);
-                acquiredLease = true;
-            }
+            return;
         }
-        if (acquiredLease) {
-            (void)this->finishLease(false);
-        }
+        Helper::BusyScope busyScope(&this->activeOwners);
+        this->drainPendingPaths(false);
+        this->addProjectExclusive(path, false);
     }
     void JugDriver::addStrayFile(const std::string &path) {
-        bool acquiredLease = false;
-        {
-            std::lock_guard<std::mutex> lock(this->stateMtx);
+        std::unique_lock<std::mutex> lock(this->runMtx, std::try_to_lock);
+        if (!lock.owns_lock()) {
+            std::lock_guard<std::mutex> qlock(this->pathsMtx);
             this->pendingPaths.push_back(path);
-            if (!this->isBusy) {
-                this->isBusy = true;
-                this->busyFlag.store(true, std::memory_order_release);
-                acquiredLease = true;
-            }
+            return;
         }
-        if (acquiredLease) {
-            (void)this->finishLease(false);
-        }
+        Helper::BusyScope busyScope(&this->activeOwners);
+        this->drainPendingPaths(false);
+        this->addStrayFileExclusive(path);
     }
 
     // Tools
     std::string JugDriver::lookupProject(const std::string &path, const std::string &previous) {
         Data::Host::VFS *vfs = this->host.vfs;
         if (vfs == nullptr || path.empty() || path == previous) {
-            return ""; // Missing VFS or reached filesystem root
+            return "";
         }
 
         if (vfs->filename(path) == "jug.toml") {
@@ -460,9 +363,17 @@ namespace Driver::JugDriver {
         return this->lookupProject(vfs->getParentDirectory(path), path);
     }
 
+    // Hooks
+    void JugDriver::emitDiagnostic(const Diagnostic &diag) {
+        std::lock_guard<std::mutex> lock(this->hookMtx);
+        if (this->configs.hooks.driver.onDiagnostic != nullptr) {
+            this->configs.hooks.driver.onDiagnostic(diag);
+        }
+    }
+
     // Queries
     bool JugDriver::busy() const noexcept {
-        return this->busyFlag.load(std::memory_order_acquire);
+        return this->activeOwners.load(std::memory_order_acquire) > 0u;
     }
     std::vector<Diagnostic> JugDriver::getDriverDiagnostics() {
         return {};
