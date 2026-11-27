@@ -78,7 +78,7 @@ namespace Parser::Lowering {
     class JUG_PARSER_API LoweringTable {
         public:
             using RawSymbol = std::underlying_type_t<ts::Symbol>;
-            static constexpr ts::Symbol ANY_CST_SYMBOL = static_cast<ts::Symbol>(~RawSymbol{0});
+            static constexpr ts::Symbol ANY_CST_SYMBOL = static_cast<ts::Symbol>(std::numeric_limits<RawSymbol>::max());
 
         private:
             // Half-open slice `[offset, offset + count)` into `scopedRules` for a given `ts::Symbol`.
