@@ -18,6 +18,11 @@ namespace Data::Parser {
     // Diagnostics
     using Range = Diagnostics::Range;
 
+    // Instructions for adding new ASTKind/ASTRole/*SubKind data:
+    // - All ASTKind values must be given a string representation in 'astKindName'
+    // - All ASTRole values must be given a string representation in 'astRoleName'
+    // - All *SubKind values must be given a string representation in 'astSubKindName'
+
     enum class ASTKind : uint16_t {
         // Technical
         None = 0,  // Transparent wrapper / unset
@@ -100,4 +105,43 @@ namespace Data::Parser {
         }
     };
     static_assert(sizeof(ASTNode) == 32, "ASTNode must remain 32 bytes (2 per cache line)");
+
+    // Debug name lookups (kept adjacent to enum definitions so new kinds/roles stay in sync)
+    [[nodiscard]] constexpr std::string_view astKindName(ASTKind kind) noexcept {
+        switch (kind) {
+            case ASTKind::None:                                         return "None";
+            case ASTKind::Dirty:                                        return "Dirty";
+            case ASTKind::Program:                                      return "Program";
+            case ASTKind::Block:                                        return "Block";
+            case ASTKind::Identifier:                                   return "Identifier";
+            case ASTKind::StringLiteral:                                return "StringLiteral";
+            case ASTKind::ImportStmt:                                   return "ImportStmt";
+            case ASTKind::ImportLibrary:                                return "ImportLibrary";
+            default:                                                    return "?UnknownKind?";
+        }
+    }
+    [[nodiscard]] constexpr std::string_view astRoleName(ASTRole role) noexcept {
+        switch (role) {
+            case ASTRole::None:                                         return "";
+            case ASTRole::Source:                                       return "source";
+            case ASTRole::Symbol:                                       return "symbol";
+            case ASTRole::Alias:                                        return "alias";
+            default:                                                    return "?unknown_role?";
+        }
+    }
+    [[nodiscard]] constexpr std::string_view astSubKindName(ASTKind kind, uint16_t subKind) noexcept {
+        if (subKind == 0u) {
+            return "";
+        }
+        switch (kind) {
+            case ASTKind::ImportStmt:
+                switch (subKind) {
+                    case ImportSubKind::Discrete:                       return "Discrete";
+                    case ImportSubKind::Encapsulate:                    return "Encapsulate";
+                    default:                                            return "";
+                }
+            default:
+                return "";
+        }
+    }
 }
