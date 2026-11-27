@@ -124,15 +124,7 @@ namespace Parser {
             this->emitDiagnostic(file, diag);
             return nullptr;
         }
-        auto newTree = std::make_shared<ts::Tree>(std::move(*treeRes));
-
-        // Report (debug) data (if needed)
-        const bool reportCSTData = (this->env != nullptr) && this->env->debug.reportCSTData;
-        if (reportCSTData) {
-            std::string sExpr = newTree->getRootNode().getSExpr();
-            this->sendCSTDataReport(file, std::move(sExpr));
-        }
-        return newTree;
+        return std::make_shared<ts::Tree>(std::move(*treeRes));
     }
     constexpr size_t MAX_CACHED_CST_BYTES = 4 * 1024 * 1024; // 4 MB (~120,000 LOC)
     constexpr uint32_t MAX_CACHED_ROOT_NODES = 50000;
@@ -173,6 +165,11 @@ namespace Parser {
         
         // Borrow raw pointer — avoids atomic shared_ptr refcount increment/decrement
         if (const auto *tree = static_cast<const ts::Tree*>(cst.get()); tree != nullptr) {
+                // Report (debug) data
+                if (this->env->debug.reportCSTData) {
+                    this->sendCSTDataReport(file, tree->getRootNode().getSExpr());
+                }
+
             Visitors::CSTVisitor &visitor = Internal::getCSTVisitor();
             Lowering::ASTBuilder &builder = Internal::getASTBuilder();
 
