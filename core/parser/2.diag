@@ -1,4 +1,5 @@
 1:
 -Failed to generate a CST tree! (Internal issue)
-2:
--RESERVED (CST REPORTS)
+2[TXT $DATA]:
+-Debug data report:
+-$DATA

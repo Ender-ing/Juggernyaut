@@ -70,7 +70,7 @@ namespace Parser::Visitors {
         ++(this->emittedUnusedCSTNodeDiagnostics);
 
         Diagnostic diag = Internal::CSTDiagnostics::buildRangedDiagnostic(first, last, this->file);
-        USE_CODE(diag, Hint, 200009);
+        USE_CODE(diag, Info, 200009, "CST-to-AST");
         diag.isUnnecessary = true;
         this->emitDiagnostic(diag);
     }

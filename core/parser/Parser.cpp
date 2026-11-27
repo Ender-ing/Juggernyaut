@@ -62,9 +62,7 @@ namespace Parser {
         }
 
         Data::Diagnostics::Diagnostic diag = {.file = file};
-        diag.severity = Data::Diagnostics::Severity::Info;
-        diag.code = 200002;
-        diag.message = std::move(data);
+        USE_CODE(diag, Info, 200002, std::move(data));
 
         this->hooks.onDiagnostic(diag);
     }
