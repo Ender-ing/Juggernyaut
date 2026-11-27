@@ -51,10 +51,10 @@ namespace Parser::Visitors {
         // Caps how many rich syntax-error `Diagnostic` objects are built/emitted per `visit` (`0` = unlimited).
         // Prevents error-cascade floods (and repeated `TSLookaheadIterator` allocations) on broken files
         // while still notifying `consumer.onSyntaxError` for every error span so AST error flags stay exact.
-        uint32_t maxSyntaxDiagnostics = 100;
+        uint32_t maxSyntaxDiagnostics = 500; // ~750 KB/file
         // Caps how many unused-CST-node hint `Diagnostic`s are emitted per `visit` (`0` = unlimited).
         // Prevents multi-megabyte LSP diagnostic bursts on large files when rules are still unmapped.
-        uint32_t maxUnusedCSTNodeDiagnostics = 600;
+        uint32_t maxUnusedCSTNodeDiagnostics = 2048; // ~3 MB/file
     };
 
     class JUG_PARSER_API CSTVisitor {
