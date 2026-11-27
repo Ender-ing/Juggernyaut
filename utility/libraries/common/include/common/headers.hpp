@@ -12,16 +12,22 @@
 //#include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <span>
 #include <iostream>
 #include <vector>
 #include <array>
-#include <limits.h>
+#include <limits>
 #include <optional>
 #include <cstdint>
 #include <cmath>
 #include <functional>
 #include <unordered_map>
 #include <memory>
+#include <ranges>
+#include <mutex>
+#include <shared_mutex>
+#include <atomic>
 
 // TMP
 #define BAD_CODE_OR_MEMORY_LEAKS "\nPossible memory leaks/bad code. Please contact the developers!"

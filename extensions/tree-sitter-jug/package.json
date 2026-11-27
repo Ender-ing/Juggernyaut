@@ -1,0 +1,22 @@
+{
+    "name": "tree-sitter-jug",
+    "version": "0.1.0",
+    "description": "Juggernyaut grammar for tree-sitter",
+    "main": "bindings/node",
+    "keywords": [
+        "incremental",
+        "parsing",
+        "tree-sitter",
+        "jug",
+        "juggernyaut"
+    ],
+    "devDependencies": {
+        "tree-sitter-cli": "^0.24.0"
+    },
+    "scripts": {
+        "generate:parser": "tree-sitter generate",
+        "generate:vscode": "node scripts/generate-vscode.js",
+        "generate:prism": "node scripts/generate-prism.js",
+        "generate": "npm run generate:parser && npm run generate:vscode && npm run generate:prism"
+    }
+}

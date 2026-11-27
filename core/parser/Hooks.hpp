@@ -9,41 +9,23 @@
 #include "dynamic.hpp" // JUG_PARSER_API
 
 // Diagnostics
-#include "../diagnostics/Diagnostic.hpp"
+#include "../data/diagnostics/Diagnostic.hpp"
 
 namespace Parser {
-    typedef std::function<void(const uint8_t&, const std::string&)> TokenReport;
-    typedef std::function<void(const std::string&)> TreeReport;
-    typedef std::function<void(const Data::Store::SourceId)> StageCall;
-
-    typedef std::function<void(const Diagnostics::Diagnostic&)> ParserDiagEvent;
+    using FileEvent = Data::Diagnostics::FileEvent;
+    using ModifiableEvent = Data::Diagnostics::ModifiableEvent;
 
     // typedef std::function<Data::Store::Source(const std::string)> SourceRequest;
 
     struct Hooks {
-        // [StageCall]
-        StageCall onContextSkip = nullptr; // Context has already been processed
-        StageCall onContextStart = nullptr; // Fresh check started
-        StageCall onLexerContextEnd = nullptr; // Lexer checks ended
-        StageCall onContextEnd = nullptr; // Check ended
-        // [TokenReport]
-        // Args: <stage> (const uint8_t&), <token_text> (const std::string&)
-        // Note: stage - 1: triggered before tokens are processed, 2: token is processed, 3: all tokens have been processed
-        TokenReport onANTLRTokenDetected = nullptr;
-        // [TreeReport]
-        // Args: <AST_text> (const std::string&)
-        TreeReport onANTLRTreeGenerated = nullptr;
+        // [Source Stage Lifecycle]
+        FileEvent onContextSkip = nullptr; // Context is already up-to-date
+        FileEvent onContextStart = nullptr; // Fresh lex/parse started for file
+        FileEvent onParserContextEnd = nullptr; // Parser stage finished for file
+        FileEvent onContextEnd = nullptr; // Full parser workflow finished for file
 
-        // [ParserDiagEvent]
+        // [Diagnostic Events]
         // Args: <diagnostics_obj> (Diagnostics::Diagnostic)
-        ParserDiagEvent onSyntaxError = nullptr;
-        ParserDiagEvent onAmbiguity = nullptr;
-        ParserDiagEvent onAttemptingFullContext = nullptr;
-        ParserDiagEvent onContextSensitivity = nullptr;
-
-        //// [SourceRequest]
-        //// Args: <file_uri> (const std::string)
-        //// Returns: <file_source_obj> (Data::Store::Source)
-        // SourceRequest onSourceRequest = nullptr;
+        ModifiableEvent onDiagnostic = nullptr;
     };
 }

@@ -1,6 +1,0 @@
-1[TXT $PATH]:
--couldn't fetch configurations from "$PATH"
-2[TXT $MSG]:
--TOML parsing error: $MSG
-3:
--invalid/inaccessible import directory (path ignored)

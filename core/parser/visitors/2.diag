@@ -1,4 +1,4 @@
-9[TXT $PATH, TXT $CAUSE]:
--failed to resolve import path "$PATH": $CAUSE
-10:
--external module inclusion is disabled. (Check project configurations)
+8:
+-invalid syntax node
+9[TXT $IMP]:
+-unused source code detected (Internal '$IMP' implementation may be incomplete)

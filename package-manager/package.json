@@ -14,6 +14,8 @@
         "debug-t": "cd .. && mkdir .build && cd package-manager && npm run debug-t-build-cmake && npm run debug-build-binary",
         "test-d": "cd .. && cd .build && ctest -C Debug -V -j 3",
         "win64": "cd .. && mkdir .build && cd package-manager && npm run build-cmake-win-64 && npm run build-binary",
-        "lix64": "cd .. && mkdir .build && cd package-manager && npm run build-cmake-lix-64 && npm run build-binary"
+        "lix64": "cd .. && mkdir .build && cd package-manager && npm run build-cmake-lix-64 && npm run build-binary",
+        "update": "cmake --build ../.build --config Release",
+        "debug-update": "cmake --build ../.build --config Debug"
     }
 }

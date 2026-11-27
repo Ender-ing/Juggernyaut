@@ -17,7 +17,13 @@
           "include": "#literals"
         },
         {
+          "include": "#directives"
+        },
+        {
           "include": "#keywords"
+        },
+        {
+          "include": "#operators"
         }
       ]
     },
@@ -36,7 +42,7 @@
         {
           "name": "comment.line.double-slash.juggernyaut",
           "begin": "//",
-          "end": "\\\n",
+          "end": "\\n",
           "patterns": [
             {
               "include": "#comment-highlights"
@@ -90,6 +96,57 @@
       "patterns": [
         {
           "include": "#strings"
+        },
+        {
+          "include": "#chars"
+        },
+        {
+          "include": "#booleans"
+        },
+        {
+          "include": "#numbers"
+        }
+      ]
+    },
+    "directives": {
+      "patterns": [
+        {
+          "name": "meta.directive.juggernyaut",
+          "begin": "(@)([a-zA-Z_][a-zA-Z0-9_]*)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function.decorator.juggernyaut"
+            },
+            "2": {
+              "name": "entity.name.function.decorator.juggernyaut"
+            },
+            "3": {
+              "name": "punctuation.section.arguments.begin.juggernyaut"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.arguments.end.juggernyaut"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#root-order"
+            }
+          ]
+        },
+        {
+          "name": "meta.directive.juggernyaut",
+          "match": "(@)([a-zA-Z_][a-zA-Z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.decorator.juggernyaut"
+            },
+            "2": {
+              "name": "entity.name.function.decorator.juggernyaut"
+            }
+          }
         }
       ]
     },
@@ -107,23 +164,69 @@
         }
       ]
     },
+    "chars": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.juggernyaut",
+          "begin": "'",
+          "end": "(((?<!\\\\)')|((?<!\\\\)\\r?\\n))",
+          "patterns": [
+            {
+              "include": "#escapeSequences"
+            }
+          ]
+        }
+      ]
+    },
     "escapeSequences": {
       "patterns": [
         {
           "name": "constant.character.escape.juggernyaut",
-          "match": "\\\\([\"\\\\\n])"
+          "match": "\\\\([nrt0\"'bfv\\\\]|\\r?\\n)"
         },
         {
           "name": "invalid.illegal.juggernyaut",
-          "match": "\\\\([^\"\\\\\n])"
+          "match": "\\\\([^nrt0\"'bfv\\\\\\r\\n])"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.juggernyaut",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.juggernyaut",
+          "match": "\\b(0[bB][01]*|0[oO][0-7]*|0[xX][0-9a-fA-F]*|([1-9]|[12][0-9]|3[0-6])d[0-9a-zA-Z]*|[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+\\.([eE][+-]?[0-9]+)?|[0-9]+)\\b"
         }
       ]
     },
     "keywords": {
       "patterns": [
         {
+          "name": "keyword.control.import.juggernyaut",
+          "match": "\\b(import|export|bind)\\b"
+        },
+        {
+          "name": "storage.type.juggernyaut",
+          "match": "\\b(let|func|type|abstract)\\b"
+        },
+        {
+          "name": "storage.modifier.juggernyaut",
+          "match": "\\b(const|ref)\\b"
+        },
+        {
           "name": "keyword.control.logic.juggernyaut",
-          "match": "\\b(import|from|as|TMP|TMP2)\\b"
+          "match": "\\b(from|as|return|if|else|while|for|do|end|skip|in|switch|case|fall)\\b"
+        },
+        {
+          "name": "keyword.control.silly.juggernyaut",
+          "match": "\\b(cat|kitty|meow|bad_code)\\b"
         }
       ]
     },
@@ -131,7 +234,7 @@
       "patterns": [
         {
           "name": "keyword.operator.juggernyaut",
-          "match": ";|,|."
+          "match": "(\\*\\*=|\\\\\\\\=|%%=|<<=|>>=|\\$\\$=|##=|~~=|->|\\+\\+|--|\\*\\*|\\\\\\\\|%%|\\.\\.|<<|>>|\\$\\$|##|~~|\\+=|-=|\\*=|/=|\\\\=|%=|&=|\\|=|\\^=|\\$=|#=|~=|==|!=|<=|>=|&&|\\|\\||\\^\\^|;|:|\\.|,|@|\\+|-|!|~|\\*|/|\\\\|%|&|\\||\\^|\\$|#|=|<|>)"
         }
       ]
     }

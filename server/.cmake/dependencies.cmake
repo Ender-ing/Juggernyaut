@@ -32,22 +32,11 @@ else()
                 -P "${JUG_CMAKE_DIR}/LSP/patches/apply.cmake"
             )
     endif()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(lsp)
+    ignore_external_directory_warnings("${lsp_BINARY_DIR}")
 endif()
 if(TARGET lsp)
-    # Turn off the "unused-result" warning for the lsp target specifically
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(lsp PRIVATE -Wno-unused-result -Wno-shadow
-        -Wno-sign-conversion)
-        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-            target_compile_options(lsp PRIVATE -Wno-maybe-uninitialized)
-        endif()
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        target_compile_options(lsp PRIVATE
-        /wd4834 /wd6031
-        /wd4456 /wd4457 /wd4458 /wd4459)
-    endif()
-
     # Use custom malloc
     custom_malloc(lsp)
 endif()

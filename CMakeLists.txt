@@ -44,7 +44,6 @@ include(${JUG_CMAKE_DIR}/shared.cmake)
 # ONLY DIRECT TOOLCHAIN PROJECTS ARE ALLOWED HERE!
 set(JUG_GLOBAL_BUILD ON)
 add_subdirectory(core)
-add_subdirectory(configs)
 add_subdirectory(compiler)
 add_subdirectory(server)
 add_subdirectory(package-manager)
@@ -57,3 +56,6 @@ option(JUG_BUILD_TESTS "Build the test suite" OFF)
 if(JUG_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
+# Codebase Docs
+include(${JUG_CMAKE_DIR}/docs.cmake)

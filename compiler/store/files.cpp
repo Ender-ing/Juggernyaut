@@ -109,4 +109,7 @@ namespace Store {
         // Success
         return true;
     }
+    std::string getWorkingDir() {
+        return std::filesystem::current_path().string();
+    }
 }

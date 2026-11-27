@@ -1,6 +1,7 @@
 message(STATUS "[DEPENDENCIES] Checking dependencies...")
 
 include(FetchContent)
+include(${JUG_CMAKE_DIR}/shared-cmake.cmake)
 
 # VERSION CONTROL
 # Manage the versions for used dependencies
@@ -174,7 +175,9 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(MI_BUILD_TESTS OFF CACHE BOOL "Skip mimalloc tests" FORCE)
         set(MI_OVERRIDE ON CACHE BOOL "Override standard allocations" FORCE)
         set(MI_NO_OPT_ARCH ON CACHE BOOL "No architecture optimisation" FORCE)
+        set(MI_EXTRA_CPPDEFS "MI_DEFAULT_ARENA_RESERVE=65536;MI_DEFAULT_ARENA_EAGER_COMMIT=0" CACHE STRING "" FORCE)
         FetchContent_MakeAvailable(mimalloc)
+        ignore_external_directory_warnings("${mimalloc_BINARY_DIR}")
         set_target_properties(mimalloc PROPERTIES
             CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
         )
@@ -211,6 +214,7 @@ if(DEFINED NEED_FMT_LIB)
                 SYSTEM)
         endif()
     endif()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(fmt)
 
     if(TARGET fmt)
@@ -221,25 +225,22 @@ endif()
 
 # MSIX generator
 if(WIN32)
-    if(DEFINED CPACK_MSIX_GENERATOR)
+    set(JUG_DEP_MSIX_GEN_PATH ${JUG_DEPENDENCIES_DIR}/msix-gen)
+    if(EXISTS ${JUG_DEP_MSIX_GEN_PATH}/CMakeLists.txt)
         message(STATUS "[DEPENDENCIES] MSIX generator is present!")
+        FetchContent_Declare(MSIXGen
+            SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
+            EXCLUDE_FROM_ALL
+            SYSTEM)
     else()
-        # Download dep
         message(STATUS "[DEPENDENCIES] Fetching MSIX generator...")
-        set(JUG_DEP_MSIX_GEN_PATH ${JUG_DEPENDENCIES_DIR}/msix-gen)
-        if(EXISTS ${JUG_DEP_MSIX_GEN_PATH}/CMakeLists.txt)
-            FetchContent_Declare(MSIXGen
-                SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
-                EXCLUDE_FROM_ALL
-                SYSTEM)
-        else()
-            FetchContent_Declare(MSIXGen
-                GIT_REPOSITORY https://github.com/Ender-ing/cpack-msix-generator
-                GIT_TAG main
-                SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
-                EXCLUDE_FROM_ALL
-                SYSTEM)
-        endif()
+        FetchContent_Declare(MSIXGen
+            GIT_REPOSITORY https://github.com/Ender-ing/cpack-msix-generator
+            GIT_TAG main
+            SOURCE_DIR ${JUG_DEP_MSIX_GEN_PATH}
+            EXCLUDE_FROM_ALL
+            SYSTEM)
     endif()
     FetchContent_MakeAvailable(MSIXGen)
 endif()
+

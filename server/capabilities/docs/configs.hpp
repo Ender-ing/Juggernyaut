@@ -11,19 +11,13 @@
 // lsp-framework
 #include "../../lspFramework.hpp"
 
-// Session
-#include "../../../core/session/session.hpp"
-
-// Configs
-#include "../../../configs/configs.hpp"
-
-#include "../../session/SessionDebouncer.hpp"
+// Front-End Driver
+#include "../../../core/driver/JugDriver.hpp"
+#include "../../driver/DriverDebouncer.hpp"
 
 namespace Capabilities {
     namespace Docs {
-        extern Configs::BreakingChanges updateSessionConfigs(lsp::ServerEndpoint &endpoint,
-            Session::Session &session, const std::string &configUri) ;
-        extern void registerConfigsWatcher(lsp::ServerEndpoint &endpoint, Session::Session &session,
-            std::unique_ptr<Session::SessionDebouncer> &debouncer, const std::string &configUri) ;
+        extern void registerConfigsWatcher(lsp::ServerEndpoint &endpoint, Driver::JugDriver::JugDriver &driver,
+            std::unique_ptr<Driver::DriverDebouncer> &debouncer, const std::string &configUri) ;
     }
 }

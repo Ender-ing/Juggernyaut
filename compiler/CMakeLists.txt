@@ -50,9 +50,6 @@ include(${JUG_CMAKE_DIR}/shared.cmake)
 if(NOT DEFINED JUG_CORE_BUILD)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../core ${JUG_BUILD_DIR}/compiler_core)
 endif()
-if(NOT DEFINED JUG_CONFIGS_BUILD)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../configs ${JUG_BUILD_DIR}/compiler_configs)
-endif()
 
 # Build the compiler executable!
 include(${JUG_COMPILER_CMAKE_DIR}/build-executable.cmake)

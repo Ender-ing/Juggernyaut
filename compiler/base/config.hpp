@@ -29,9 +29,8 @@ namespace Base {
 
         // Debug-related
         namespace Debug {
-            // --debug-antlr-syntax
             namespace Parser {
-                extern bool activateAntlrSyntaxTest;
+                // ...
             }
         }
 
@@ -52,6 +51,5 @@ namespace Base {
         // Process and update values through program arguments!
         // [true - sucess, false - failure]
         extern bool updateUsingArgs(int argc, const char *argv[]) ;
-        extern void configsFallback() ;
     }
 }

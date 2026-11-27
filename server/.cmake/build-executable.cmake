@@ -7,13 +7,13 @@ add_executable(
 # Add internal files
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/base/*.cpp FALSE)
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/store/*.cpp FALSE)
-target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/session/*.cpp FALSE)
+target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/driver/*.cpp FALSE)
 target_sources_search(JuggernyautServer ${JUG_SERVER_SOURCE_DIR}/capabilities/*.cpp TRUE)
 
 # Link libraries
 jug_common(JuggernyautServer)
-add_dependencies(JuggernyautServer JuggernyautSessionLibrary JuggernyautConfigsLibrary)
-target_link_libraries(JuggernyautServer PRIVATE JuggernyautSessionLibrary JuggernyautConfigsLibrary)
+add_dependencies(JuggernyautServer JuggernyautDriverLibrary)
+target_link_libraries(JuggernyautServer PRIVATE JuggernyautDriverLibrary)
 
 # Link external libraries
 # lsp-framework

@@ -1,0 +1,36 @@
+1[TXT $PATH]:
+-couldn't access/find the file/directory: "$PATH"
+2[TXT $PATH]:
+-couldn't find a valid 'jug.toml' configuration file in "$PATH" or any parent directories.
+3[TXT $PATH]:
+-"$PATH" isn't considered a valid project configuration file. (try to reference either a 'jug.toml' file, or a directory that contains a 'jug.toml')
+4[TXT $PATH]:
+-"$PATH" isn't considered a valid source file. (try to reference a file with the extension '.jug')
+5[TXT $MSG]:
+-data type mismatch: $MSG
+6[TXT $VAR, TXT $SECTION]:
+-Unknown variable '$VAR' in '$SECTION'! (The value is ignored)
+7[TXT $MSG]:
+-TOML parsing error: $MSG
+8[TXT $NAME]:
+-unknown section or top-level variable '$NAME'! (The value is ignored)
+9:
+-online dependencies must include a non-empty 'version' value!
+10:
+-detected an invalid package/dependency 'name' value.
+11:
+-detected an invalid 'publisher' value.
+12:
+-detected an invalid package 'version' value.
+13:
+-detected an invalid dependency 'version' value.
+14:
+-'path' cannot be used within an online dependency reference.
+15:
+-an online dependency reference must always include a 'version' value.
+16:
+-detected an invalid dependency 'path' value. (Expecting a valid path to a 'jug.toml' file)
+17:
+-detected an invalid input/export uri value. (Expecting a valid path to a '.jug' source file)
+18[TXT $NAME]:
+-the project '$NAME' has been added.

@@ -88,76 +88,6 @@ namespace Base {
                 }
             ),
             DEFINE_ACTION(
-                "d", "dirs",
-                "Set import directories.",
-                { "<path> (<path>)*" },
-                {
-                    // Store
-                    std::string dirPath;
-
-                    // Get the next argument and save it!
-                    bool success = getNextArg(&dirPath, false);
-
-                    // Check if the action was successful!
-                    if (!success || dirPath.at(0) == '-') {
-                        // Missing input argument!
-                        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                            "missing the <path> argument! (-d, --dirs)", Console::END_REPORT);
-                        ACTION_FATAL_FAILURE;
-                    }
-
-                    do {
-                        // Keep the value!
-                        getNextArg(nullptr, true); // Skip the item
-                        Base::InitialConfigs::Input::importDirs.push_back(dirPath);
-                    } while(getNextArg(&dirPath, false) && dirPath.at(0) != '-');
-
-                    ACTION_PROGRESS;
-                }
-            ),
-            DEFINE_ACTION(
-                "c", "config",
-                "Set configuration file path.",
-                { "<path>" },
-                {
-                    // Store
-                    std::string filePath;
-
-                    // Get the next argument and save it!
-                    bool success = getNextArg(&filePath, false);
-
-                    // Check if the action was successful!
-                    if (!success || filePath.at(0) == '-') {
-                        // Missing input argument!
-                        REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                            "missing the <path> argument! (-c, --config)", Console::END_REPORT);
-                        ACTION_FATAL_FAILURE;
-                    } else {
-                        getNextArg(nullptr, true); // Skip the item
-
-                        if (!filePath.ends_with("jug.toml")) {
-                            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                                "workspace configuration file is invalid: expecting a 'jug.toml' file, received '",
-                                filePath, "'", Console::END_REPORT);
-                            ACTION_FATAL_FAILURE;
-                        } else if (!Store::isFileAccessible(filePath)) {
-                            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT,
-                                "workspace configuration file is inaccessible or nonexistent: ",
-                                filePath, Console::END_REPORT);
-                            ACTION_FATAL_FAILURE;
-                        }
-
-                        // Report action
-                        REPORT(Console::START_REPORT, Console::ACTION_REPORT, "set workspace configuration file: ",
-                            filePath, Console::END_REPORT);
-
-                        Base::InitialConfigs::Input::config = std::move(filePath);
-
-                        ACTION_PROGRESS;
-                    }
-                }
-            ),
-            DEFINE_ACTION(
                 "l", "license",
                 "Get license text.",
                 {},
@@ -178,21 +108,6 @@ namespace Base {
 
                     // Print the license text
                     REPORT(Console::START_REPORT, Console::NORMAL_REPORT, content, Console::END_REPORT);
-
-                    ACTION_PROGRESS;
-                }
-            ),
-            DEFINE_ACTION(
-                "dbg-antlr", "debug-antlr-syntax",
-                "Print the parser's ANTLR4 tokens list and initial ANTLR4 tree.",
-                {},
-                {
-                    // Enable the test
-                    InitialConfigs::Debug::Parser::activateAntlrSyntaxTest = true;
-
-                    // Report status
-                    REPORT(Console::START_REPORT, Console::ACTION_REPORT, "enabled the ANTLR4 parser print syntax test!",
-                        Console::END_REPORT);
 
                     ACTION_PROGRESS;
                 }

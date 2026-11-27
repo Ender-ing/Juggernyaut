@@ -37,25 +37,16 @@ install_debug_symbols(JuggernyautCommonLibrary CmpJuggernyautCompiler CmpDebugJu
 install_debug_symbols(JuggernyautCatConsoleLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # Core
-install(TARGETS JuggernyautDiagnosticsLibrary JuggernyautDataLibrary
-        JuggernyautParserLibrary JuggernyautSessionLibrary JuggernyautManagerLibrary
+install(TARGETS JuggernyautDataLibrary
+        JuggernyautParserLibrary JuggernyautSessionLibrary JuggernyautDriverLibrary
     EXPORT JuggernyautToolchain
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
 )
-install_debug_symbols(JuggernyautDiagnosticsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautDataLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautParserLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 install_debug_symbols(JuggernyautSessionLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
-install_debug_symbols(JuggernyautManagerLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
-
-# Configs
-install(TARGETS JuggernyautConfigsLibrary
-    EXPORT JuggernyautToolchain
-    RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
-    LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
-)
-install_debug_symbols(JuggernyautConfigsLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
+install_debug_symbols(JuggernyautDriverLibrary CmpJuggernyautCompiler CmpDebugJuggernyautCore)
 
 # External deps (without installs/excluded)
 if(TARGET mimalloc)
@@ -80,11 +71,6 @@ if(TARGET mimalloc)
         " COMPONENT CmpJuggernyautCompiler)
     endif()
 endif()
-install(TARGETS antlr4_shared
-    RUNTIME DESTINATION bin COMPONENT CmpJuggernyautCompiler
-    LIBRARY DESTINATION lib COMPONENT CmpJuggernyautCompiler
-)
-install_debug_symbols(antlr4_shared CmpJuggernyautCompiler CmpDebugExternalCore)
 install(TARGETS libgit2package
     RUNTIME DESTINATION bin COMPONENT CmpJuggernyautPackageManager
     LIBRARY DESTINATION lib COMPONENT CmpJuggernyautPackageManager

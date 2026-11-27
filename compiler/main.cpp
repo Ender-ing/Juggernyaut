@@ -12,27 +12,24 @@
 #include "console/console.hpp"
 
 // Compiler Store
-#include "store/FileStore.hpp"
+#include "store/Documents.hpp"
 
-// Session
-#include "../core/session/session.hpp"
-
-// Configs
-#include "../configs/configs.hpp"
+// Front-End Driver
+#include "../core/driver/JugDriver.hpp"
 
 // Base
 #include "base/config.hpp"
 #include "base/info.hpp"
 
-const Console::ReportType getReportType(Diagnostics::Severity severity) {
+Console::ReportType getReportType(Data::Diagnostics::Severity severity) {
     switch (severity) {
-    case Diagnostics::Severity::Error:
+    case Data::Diagnostics::Severity::Error:
         return Console::CRITICAL_REPORT;
-    case Diagnostics::Severity::Warning:
+    case Data::Diagnostics::Severity::Warning:
         return Console::WARNING_REPORT;
-    case Diagnostics::Severity::Info:
+    case Data::Diagnostics::Severity::Info:
         return Console::NORMAL_REPORT;
-    case Diagnostics::Severity::Hint:
+    case Data::Diagnostics::Severity::Hint:
         return Console::NORMAL_REPORT;
     default:
         return Console::UNKNOWN_REPORT;
@@ -68,8 +65,6 @@ int main(int argc, const char *argv[]) {
         // End the program
         Console::finalize();
         return Console::ProcessReport::programStatus;
-    } else if (Base::InitialConfigs::Input::config.empty()) {
-        Base::InitialConfigs::configsFallback();
     }
 
     // Check if other delayed actions are allowed to run
@@ -79,80 +74,56 @@ int main(int argc, const char *argv[]) {
         return Console::ProcessReport::programStatus;
     }
 
-    // Setup session
-    Session::Session session = Session::getSessionDefaults();
-    Store::FileStore store = Store::FileStore();
-    session.store = &store;
+    // Set up the driver
+    auto docs = std::make_unique<Store::Documents>();
+    Driver::JugDriver::HostConfigs host;
+    host.vfs = docs.get();
+    Driver::JugDriver::DriverConfigs configs;
+    Driver::JugDriver::JugDriver driver(host, configs);
 
-    // Stats
-    uint32_t sourceVisits = 0;
-
-    // Load external configs
-    if (!Base::InitialConfigs::Input::config.empty()) {
-        std::vector<Diagnostics::Diagnostic> diags;
-        if (!Configs::modifySession(session, Base::InitialConfigs::Input::config, diags, false)) {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't process configuration file!",
-                Console::END_REPORT);
-        } else {
-            sourceVisits++;
-        }
-
-        for (const auto &diag : diags) {
+    // Handle diagnostics
+    driver.configs.hooks.driver.onDiagnostic = [](const Data::Diagnostics::Diagnostic &diag){
+        if (diag.file != nullptr) {
             // Get the position
-            Console::IndividualReport::path = Base::InitialConfigs::Input::config;
+            Console::IndividualReport::path = diag.file->canonical;
             Console::IndividualReport::startLine = diag.range.start.line;
             Console::IndividualReport::startColumn = diag.range.start.character;
             Console::IndividualReport::endLine = diag.range.end.line;
             Console::IndividualReport::endColumn = diag.range.end.character;
-
-            Console::IndividualReport::code = diag.code;
-
-            // Update stage data
-            int stageId = static_cast<int>(std::floor(diag.code / 100000));
-            if (stageId == 5) {
-                Console::IndividualReport::stage = "Configs";
-            } else {
-                Console::IndividualReport::stage = "?Unknown Stage?";
-            }
-            REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
         }
 
-        diags.clear();
-        diags.shrink_to_fit();
-    }
+        Console::IndividualReport::code = diag.code;
 
-    // Add import directories
-    for (const auto &dir : Base::InitialConfigs::Input::importDirs) {
-        store.addImportDir(dir);
-    }
+        // Update stage data
+        int stageId = static_cast<int>(std::floor(diag.code / 100000));
+        if (stageId == 1) {
+            Console::IndividualReport::stage = "Lexer";
+        } else if (stageId == 2) {
+            Console::IndividualReport::stage = "Parser";
+        } else if (stageId == 7) {
+            Console::IndividualReport::stage = "Driver";
+        } else {
+            Console::IndividualReport::stage = "?Unknown Stage?";
+        }
+        REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
+    };
+
+    // Stats
+    uint32_t sourceVisits = 0;
 
     // Add input files
-    std::string currentPath;
-    for (const auto &path : Base::InitialConfigs::Input::entryPaths) {
-        if (store.resolvePath(path, currentPath)) {
-            store.addSource(currentPath, true);
-        } else {
-            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't resolve input path: ", store._getCanonical(path), Console::END_REPORT);
-        }
-    }
-    currentPath.clear();
-    currentPath.shrink_to_fit();
+    if (Base::InitialConfigs::Input::entryPaths.empty()) {
+        const std::string configUri = driver.lookupProject(driver.host.vfs->cwd());
+        if (configUri == "") {
+            REPORT(Console::START_REPORT, Console::CRITICAL_REPORT, "couldn't find a 'jug.toml' configuration file!", Console::END_REPORT);
 
-    // Debug action
-    if (Base::InitialConfigs::Debug::Parser::activateAntlrSyntaxTest) {
-        session.hooks.parser.onANTLRTokenDetected = [](const uint8_t &stage, const std::string &tokenText) {
-            if (stage == 2) {
-                REPORT(tokenText, "\n");
-            } else if (stage == 1) {
-                REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "tokens: \n");
-            } else if (stage == 3) {
-                REPORT(Console::END_REPORT);
-            }
-        };
-        session.hooks.parser.onANTLRTreeGenerated = [](const std::string &treeText) {
-            REPORT(Console::START_REPORT, Console::DEBUG_REPORT, "parse tree: \n", treeText, Console::END_REPORT);
-        };
+            return 1;
+        }
+        driver.addProject(configUri);
+    } else {
+        driver.processPaths(Base::InitialConfigs::Input::entryPaths);
     }
+    // sourceVisits; // THIS IS OUT OF SYNC! 
 
     // Check for requested termination
     if (Base::InitialConfigs::Technical::terminateAfterActions) {
@@ -161,7 +132,7 @@ int main(int argc, const char *argv[]) {
         return Console::ProcessReport::programStatus;
     }
 
-    session.hooks.parser.onContextStart = [&session, &sourceVisits](const Data::Store::SourceId srcId) {
+    /*session.hooks.parser.onContextStart = [&session, &sourceVisits](const Data::Store::SourceId srcId) {
         std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
 
         REPORT(Console::START_REPORT, Console::NORMAL_REPORT, "\n#", ++sourceVisits, ": ", source->uri, Console::END_REPORT);
@@ -172,7 +143,7 @@ int main(int argc, const char *argv[]) {
         std::unique_ptr<Data::Store::Source> &source = (session.store)->getSourceById(srcId);
         const std::string &srcPath = source->uri;
 
-        source->visitParserDiagnostics([&srcPath](const Diagnostics::Diagnostic &diag) {
+        source->visitParserDiagnostics([&srcPath](const Data::Diagnostics::Diagnostic &diag) {
             // Get the position
             Console::IndividualReport::path = srcPath;
             Console::IndividualReport::startLine = diag.range.start.line;
@@ -193,10 +164,10 @@ int main(int argc, const char *argv[]) {
             }
             REPORT(Console::START_REPORT, getReportType(diag.severity), diag.message, Console::END_REPORT);
         });
-    };
+    };*/
 
     // Begin the actual work here...
-    Session::initiate(session);
+    driver.run();
     
     // End the program
     Console::finalize(sourceVisits);
