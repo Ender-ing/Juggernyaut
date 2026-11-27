@@ -5,18 +5,28 @@
 
 #include "JugASTMapper.hpp"
 
+// C++ headers
+#include <cassert>
+
+// Base rules
+#include "base/identifiers.hpp"
+#include "base/literals.hpp"
+
 namespace Parser::Rules {
-    void registerScopes(Lowering::LoweringTable &table) {
-        table.bindNode("prog", Data::Parser::ASTKind::Program);
-        table.bindNode("generic_block", Data::Parser::ASTKind::Block);
+    void registerBase(Lowering::LoweringTable &table) {
+        Base::registerIdentifiers(table);
+        Base::registerLiterals(table);
     }
 
     const Lowering::LoweringTable& getJugLoweringTable(ts::Language lang) {
         // Read-only shared instance
         static const Lowering::LoweringTable instance = [&]() {
             Lowering::LoweringTable t(lang);
+            registerBase(t);
             registerScopes(t);
-            //registerStatements(t);
+            registerStatements(t);
+
+            assert(!t.hasRegistrationIssues());
             return t;
         }();
         return instance;

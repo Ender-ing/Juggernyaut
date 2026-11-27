@@ -25,18 +25,44 @@ namespace Data::Parser {
 
         // Basic
         Program,
-        Block
+        Block,
+
+        // Terminals & literals
+        Identifier,
+        StringLiteral,
+
+        // Statements
+        ImportStmt,
+        ImportLibrary
     };
 
     // Semantic role this node occupies inside its parent ASTNode
     enum class ASTRole : uint16_t {
-        None = 0 // Positional / unfielded child
+        None = 0, // Positional / unfielded child
+
+        // Module & symbol relations
+        Source, // Import target (`import_path` string literal or `import_library`)
+        Symbol, // Discrete imported/exported symbol identifier (`import { a, b }`)
+        Alias   // Encapsulated module handle (`import ... as handle`)
     };
+
+    // Sub-kinds
+    // `ASTNode::subKind` discriminators for `ASTKind::ImportStmt` (`0` = unset)
+    namespace ImportSubKind {
+        constexpr uint16_t None        = 0u;
+        constexpr uint16_t Discrete    = 1u; // `import { ... } from ...;`
+        constexpr uint16_t Encapsulate = 2u; // `import ... as ...;`
+    }
 
     // Reserved & common bit-flags on `ASTNode::flags` (lower bits available per-ASTKind)
     namespace ASTFlags {
         constexpr uint16_t None     = 0u;
         constexpr uint16_t HasError = uint16_t{1u} << 15u; // Subtree contains syntax error(s); `kind` is preserved
+    }
+
+    // Per-node bit-flags for `ASTKind::ImportStmt`
+    namespace ImportFlags {
+        constexpr uint16_t External = uint16_t{1u} << 0u; // Library import (`import_library`) vs local file (`import_path`)
     }
 
     // Half-open UTF-8 byte span `[start, end)` within `File::content`

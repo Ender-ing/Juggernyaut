@@ -7,11 +7,14 @@
 
 #include "../lowering/LoweringTable.hpp"
 
+// Rule categories
+#include "scopes.hpp"
+#include "statements/statements.hpp"
+
 namespace Parser::Rules {
-    void registerScopes(Lowering::LoweringTable &table) ;
-    // void registerStatements(Lowering::LoweringTable &table);
+    JUG_PARSER_API void registerBase(Lowering::LoweringTable &table) ;
     // void registerDeclarations(Lowering::LoweringTable &table);
     // void registerExpressions(Lowering::LoweringTable &table);
 
-    [[nodiscard]] const Lowering::LoweringTable& getJugLoweringTable(ts::Language lang) ;
+    [[nodiscard]] JUG_PARSER_API const Lowering::LoweringTable& getJugLoweringTable(ts::Language lang) ;
 }
