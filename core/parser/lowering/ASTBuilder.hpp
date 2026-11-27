@@ -113,8 +113,12 @@ namespace Parser::Lowering {
             std::vector<ASTNode> astPendingChildren;
             std::vector<ts::FieldId> astPendingFields;
             std::vector<ForwardedFieldFrame> forwardedFieldStack;
+            // Transient per-file lexeme deduplication map (borrows immutable `File::content` slices during parse;
+            // cleared on `takeAST` so persisted `AST`s retain zero hash-table overhead).
+            std::unordered_map<std::string_view, Data::Parser::LexemeId> lexemeScratchIndex;
 
             void clearScratch(bool trimExcessCapacity) noexcept;
+            [[nodiscard]] Data::Parser::LexemeId internSourceLexeme(std::string_view sourceSlice) ;
             void finalizeFrame(ts::Node node, const SymbolRule &rule) ;
 
         public:

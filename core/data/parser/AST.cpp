@@ -32,13 +32,9 @@ namespace Data::Parser {
         return nullptr;
     }
 
-    [[nodiscard]] LexemeId AST::internLexeme(std::string_view text) {
-        if (const auto it = this->lexemeIndex.find(text); it != this->lexemeIndex.end()) {
-            return it->second; // Zero allocations on repeat identifiers
-        }
+    [[nodiscard]] LexemeId AST::pushLexeme(std::string_view text) {
         const auto id = static_cast<LexemeId>(this->lexemes.size());
         this->lexemes.emplace_back(text);
-        this->lexemeIndex.emplace(this->lexemes.back(), id);
         return id;
     }
     [[nodiscard]] std::string_view AST::lexemeText(LexemeId id) const noexcept {

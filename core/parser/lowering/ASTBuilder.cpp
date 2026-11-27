@@ -10,10 +10,10 @@
 
 namespace Parser::Lowering {
     namespace Helper {
-        constexpr size_t MAX_RETAINED_STACK_CAPACITY = 4096u;
-        constexpr size_t MAX_RETAINED_PENDING_CAPACITY = 65536u;
-        constexpr size_t MAX_INITIAL_AST_RESERVE = 1048576u; // 1M nodes (~32 MB cap on initial reserve)
-
+        constexpr size_t MAX_RETAINED_STACK_CAPACITY = 512u;
+        constexpr size_t MAX_RETAINED_PENDING_CAPACITY = 4096u;
+        constexpr size_t MAX_RETAINED_LEXEME_BUCKETS = 4096u;
+        constexpr size_t MAX_INITIAL_AST_RESERVE = 65536u; // ~2 MB cap on initial reserve
         template <typename T>
         void resetBuffer(std::vector<T> &vec, bool trimExcess, size_t maxRetainedCap) noexcept {
             vec.clear();
@@ -29,6 +29,19 @@ namespace Parser::Lowering {
         Helper::resetBuffer(this->astPendingChildren, trimExcessCapacity, Helper::MAX_RETAINED_PENDING_CAPACITY);
         Helper::resetBuffer(this->astPendingFields, trimExcessCapacity, Helper::MAX_RETAINED_PENDING_CAPACITY);
         Helper::resetBuffer(this->forwardedFieldStack, trimExcessCapacity, Helper::MAX_RETAINED_STACK_CAPACITY);
+
+        this->lexemeScratchIndex.clear();
+        if (trimExcessCapacity && this->lexemeScratchIndex.bucket_count() > Helper::MAX_RETAINED_LEXEME_BUCKETS) {
+            std::unordered_map<std::string_view, Data::Parser::LexemeId>{}.swap(this->lexemeScratchIndex);
+        }
+    }
+    Data::Parser::LexemeId ASTBuilder::internSourceLexeme(std::string_view sourceSlice) {
+        if (const auto it = this->lexemeScratchIndex.find(sourceSlice); it != this->lexemeScratchIndex.end()) {
+            return it->second;
+        }
+        const Data::Parser::LexemeId id = this->ast->pushLexeme(sourceSlice);
+        this->lexemeScratchIndex.emplace(sourceSlice, id);
+        return id;
     }
     void ASTBuilder::finalizeFrame(ts::Node node, const SymbolRule &rule) {
         if (this->ast == nullptr || this->astStack.empty() ||
@@ -107,7 +120,7 @@ namespace Parser::Lowering {
         // ~1 AST node per 8 source bytes avoids repeated multi-megabyte vector reallocations
         if (targetFile != nullptr) {
             const size_t estimatedNodes = std::min<size_t>(
-                targetFile->content.byteLength() / 8u,
+                targetFile->content.byteLength() / 32u, // (You may try to optimise the value in the future!)
                 Helper::MAX_INITIAL_AST_RESERVE
             );
             if (estimatedNodes > 0u) {
@@ -236,10 +249,11 @@ namespace Parser::Lowering {
                     }
                 }
 
+                // Resolve raw string data address
                 const ts::Extent<uint32_t> bytes = node.getByteRange();
                 Data::Parser::LexemeId lexId = Data::Parser::INVALID_LEXEME_ID;
                 if (rule.internText && this->file != nullptr) {
-                    lexId = this->ast->internLexeme(this->sourceText(node));
+                    lexId = this->internSourceLexeme(this->sourceText(node));
                 }
 
                 ASTFrame frame{
@@ -373,6 +387,17 @@ namespace Parser::Lowering {
         this->file = nullptr;
         this->imports = nullptr;
         this->userContext = nullptr;
+
+        // Shrink the AST
+        if (this->ast != nullptr) {
+            if (this->ast->nodes.capacity() > std::max<size_t>(this->ast->nodes.size() * 2u, 64u)) {
+                this->ast->nodes.shrink_to_fit();
+            }
+            if (this->ast->lexemes.capacity() > std::max<size_t>(this->ast->lexemes.size() * 2u, 16u)) {
+                this->ast->lexemes.shrink_to_fit();
+            }
+        }
+
         return std::move(this->ast);
     }
 }
