@@ -33,5 +33,7 @@ export="lib.jug" # If you want to make a library, you need to specify one entry 
 
 # internal debug configs
 [debug]
+say-meow=false
 report-cst-data=false
+report-ast-data=false
 report-unused-cst-nodes=false
